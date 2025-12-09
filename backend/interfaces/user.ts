@@ -21,8 +21,7 @@ export interface UserRegisterResponse {
   id: string;
   email: string;
   username: string;
-  accessToken: string;
-  refreshToken: string;
+  token: string;
 }
 
 export const USER_PACKAGE_NAME = "user";

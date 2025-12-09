@@ -16,6 +16,5 @@ message UserRegisterResponse {
   string id = 1;
   string email = 2;
   string username = 3;
-  string accessToken = 4;
-  string refreshToken = 5;
+  string token = 4;
 }

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { UserService } from './user.service'
 import { RegisterUserDto } from './dto/user.dto'
+import { RequireLogin, UserInfo } from '@app/common/common.decorator'
 
 @Controller('user')
 export class UserController {
@@ -20,7 +21,8 @@ export class UserController {
   }
 
   @Get('user')
-  getUser() {
+  @RequireLogin()
+  getUser(@UserInfo() user: any) {
     return { message: 'Get user endpoint' }
   }
 }

@@ -4,6 +4,8 @@ import { AppService } from './app.service'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import { USER_PACKAGE_NAME, USER_SERVICE_NAME } from 'interfaces/user'
 import { UserModule } from './user/user.module'
+import { AuthGuard, CommonModule } from '@app/common'
+import { APP_GUARD } from '@nestjs/core'
 
 @Module({
   imports: [
@@ -19,9 +21,16 @@ import { UserModule } from './user/user.module'
       },
     ]),
     UserModule,
+    CommonModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
   exports: [ClientsModule],
 })
 export class AppModule {}
