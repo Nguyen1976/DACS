@@ -2,6 +2,7 @@
 import { DynamicModule, Module, Global } from '@nestjs/common'
 import { RedisOptions } from 'ioredis'
 import Redis from 'ioredis'
+import { RedisService } from './redis.service'
 
 export interface RedisModuleOptions extends RedisOptions {}
 
@@ -19,8 +20,9 @@ export class RedisModule {
           provide: token,
           useFactory: () => new Redis(options),
         },
+        RedisService,
       ],
-      exports: [token],
+      exports: [token, RedisService],
     }
   }
 }

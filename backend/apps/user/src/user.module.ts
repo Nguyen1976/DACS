@@ -9,7 +9,7 @@ import { RedisModule } from '@app/redis'
       {
         host: 'localhost',
         port: 6379,
-        db: 1,
+        db: 0,
       },
       'USER_REDIS',
     ),

@@ -3,6 +3,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { ClientsModule, Transport } from '@nestjs/microservices'
 import { USER_PACKAGE_NAME, USER_SERVICE_NAME } from 'interfaces/user'
+import { UserModule } from './user/user.module'
 
 @Module({
   imports: [
@@ -17,8 +18,10 @@ import { USER_PACKAGE_NAME, USER_SERVICE_NAME } from 'interfaces/user'
         },
       },
     ]),
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
+  exports: [ClientsModule],
 })
 export class AppModule {}

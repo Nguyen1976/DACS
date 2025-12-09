@@ -11,28 +11,36 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "user";
 
-export interface userId {
-  id: string;
+export interface UserRegisterRequest {
+  email: string;
+  password: string;
+  username: string;
 }
 
-export interface User {
+export interface UserRegisterResponse {
   id: string;
-  name: string;
+  email: string;
+  username: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export const USER_PACKAGE_NAME = "user";
 
 export interface UserServiceClient {
-  getUser(request: userId, metadata?: Metadata): Observable<User>;
+  register(request: UserRegisterRequest, metadata?: Metadata): Observable<UserRegisterResponse>;
 }
 
 export interface UserServiceController {
-  getUser(request: userId, metadata?: Metadata): Promise<User> | Observable<User> | User;
+  register(
+    request: UserRegisterRequest,
+    metadata?: Metadata,
+  ): Promise<UserRegisterResponse> | Observable<UserRegisterResponse> | UserRegisterResponse;
 }
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getUser"];
+    const grpcMethods: string[] = ["register"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserService", method)(constructor.prototype[method], method, descriptor);
