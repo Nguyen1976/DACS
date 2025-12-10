@@ -21,6 +21,17 @@ export interface UserRegisterResponse {
   id: string;
   email: string;
   username: string;
+}
+
+export interface UserLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface UserLoginResponse {
+  id: string;
+  email: string;
+  username: string;
   token: string;
 }
 
@@ -28,6 +39,8 @@ export const USER_PACKAGE_NAME = "user";
 
 export interface UserServiceClient {
   register(request: UserRegisterRequest, metadata?: Metadata): Observable<UserRegisterResponse>;
+
+  login(request: UserLoginRequest, metadata?: Metadata): Observable<UserLoginResponse>;
 }
 
 export interface UserServiceController {
@@ -35,11 +48,16 @@ export interface UserServiceController {
     request: UserRegisterRequest,
     metadata?: Metadata,
   ): Promise<UserRegisterResponse> | Observable<UserRegisterResponse> | UserRegisterResponse;
+
+  login(
+    request: UserLoginRequest,
+    metadata?: Metadata,
+  ): Promise<UserLoginResponse> | Observable<UserLoginResponse> | UserLoginResponse;
 }
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["register"];
+    const grpcMethods: string[] = ["register", "login"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserService", method)(constructor.prototype[method], method, descriptor);

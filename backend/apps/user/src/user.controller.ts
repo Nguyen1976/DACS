@@ -20,4 +20,10 @@ export class UserController implements UserServiceController {
     const res = await this.userService.register(data)
     return res
   }
+
+  @GrpcMethod('UserService', 'login')
+  async login(data: any, metadata: Metadata): Promise<any> {
+    const res = await this.userService.login(data)
+    return res
+  }
 }

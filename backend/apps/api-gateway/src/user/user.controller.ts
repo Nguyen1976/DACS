@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common'
 import { UserService } from './user.service'
-import { RegisterUserDto } from './dto/user.dto'
+import { LoginUserDto, RegisterUserDto } from './dto/user.dto'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
 
 @Controller('user')
@@ -20,9 +20,8 @@ export class UserController {
     return await this.userService.register(registerUserDto)
   }
 
-  @Get('user')
-  @RequireLogin()
-  getUser(@UserInfo() user: any) {
-    return { message: 'Get user endpoint' }
+  @Post('login')
+  async login(@Body() loginUserDto: LoginUserDto) {
+    return await this.userService.login(loginUserDto)
   }
 }

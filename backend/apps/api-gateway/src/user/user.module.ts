@@ -5,9 +5,6 @@ import { AppModule } from '../app.module'
 @Module({
   imports: [forwardRef(() => AppModule)],
   controllers: [UserController],
-  providers: [
-    UserService,
-    
-  ],
+  providers: [UserService],
 })
 export class UserModule {}

@@ -6,6 +6,7 @@ import { PrismaModule } from '@app/prisma'
 import { JwtModule } from '@nestjs/jwt'
 import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard, CommonModule } from '@app/common'
+import { UtilModule } from '@app/util'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthGuard, CommonModule } from '@app/common'
     ),
     PrismaModule,
     CommonModule,
+    UtilModule,
   ],
   controllers: [UserController],
   providers: [UserService],

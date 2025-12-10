@@ -23,3 +23,12 @@ export class RegisterUserDto {
   })
   username: string
 }
+
+export class LoginUserDto {
+  @IsEmail()
+  @IsNotEmpty({ message: 'Email must not be empty' })
+  email: string
+
+  @IsNotEmpty({ message: 'Password must not be empty' })
+  password: string
+}

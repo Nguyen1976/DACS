@@ -38,7 +38,6 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
       context.getHandler(),
     ])
-    console.log('🚀 ~ auth.guard.ts:29 ~ requiredLogin:', requiredLogin)
 
     if (!requiredLogin) {
       return true

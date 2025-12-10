@@ -1,13 +1,21 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
-import { RegisterUserDto } from './dto/user.dto'
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common'
+import { LoginUserDto, RegisterUserDto } from './dto/user.dto'
 import {
   USER_SERVICE_NAME,
+  UserLoginRequest,
+  UserLoginResponse,
   UserRegisterRequest,
   UserRegisterResponse,
   UserServiceClient,
 } from 'interfaces/user'
 import type { ClientGrpc } from '@nestjs/microservices'
-import { firstValueFrom } from 'rxjs'
+import { catchError, firstValueFrom, throwError } from 'rxjs'
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -25,6 +33,14 @@ export class UserService implements OnModuleInit {
       password: dto.password,
       username: dto.username,
     } as UserRegisterRequest)
+    return await firstValueFrom(observable)
+  }
+  async login(dto: LoginUserDto): Promise<UserLoginResponse> {
+    let observable = this.userClient.login({
+      email: dto.email,
+      password: dto.password,
+    } as UserLoginRequest)
+
     return await firstValueFrom(observable)
   }
 }
