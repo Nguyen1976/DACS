@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common'
+import { Controller, Inject } from '@nestjs/common'
 import { UserService } from './user.service'
 import { GrpcMethod, MessagePattern } from '@nestjs/microservices'
 import type { Metadata, ServerUnaryCall } from '@grpc/grpc-js'
@@ -7,10 +7,15 @@ import type {
   UserRegisterResponse,
   UserServiceController,
 } from 'interfaces/user'
+import { EXCHANGE } from '@app/common/constants/exchange'
+import type { Channel } from 'amqplib'
 
 @Controller()
 export class UserController implements UserServiceController {
   constructor(private readonly userService: UserService) {}
+
+  @Inject(EXCHANGE.RMQ_PUBLISHER_CHANNEL)
+  private readonly channel: Channel
 
   @GrpcMethod('UserService', 'register')
   async register(

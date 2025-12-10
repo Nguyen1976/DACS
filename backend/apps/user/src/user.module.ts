@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard, CommonModule } from '@app/common'
 import { UtilModule } from '@app/util'
+import { RmqModule } from '@app/common/rmq/rmq.module'
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UtilModule } from '@app/util'
     PrismaModule,
     CommonModule,
     UtilModule,
+    RmqModule.registerDirectPublisher(),
   ],
   controllers: [UserController],
   providers: [UserService],
