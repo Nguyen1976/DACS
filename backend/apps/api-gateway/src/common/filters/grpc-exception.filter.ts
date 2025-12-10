@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common'
 import { status } from '@grpc/grpc-js'
-import { RpcException } from '@nestjs/microservices'
 
 @Catch()
 export class GrpcToHttpExceptionFilter implements ExceptionFilter {
@@ -14,7 +13,6 @@ export class GrpcToHttpExceptionFilter implements ExceptionFilter {
     // Giả sử host là HTTP (Gateway expose HTTP)
     const ctx = host.switchToHttp()
     const response = ctx.getResponse()
-    const request = ctx.getRequest()
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus()

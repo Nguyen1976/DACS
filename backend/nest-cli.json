@@ -28,6 +28,24 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "constant": {
+      "type": "library",
+      "root": "libs/constant",
+      "entryFile": "index",
+      "sourceRoot": "libs/constant/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/constant/tsconfig.lib.json"
+      }
+    },
+    "notification": {
+      "type": "application",
+      "root": "apps/notification",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification/tsconfig.app.json"
+      }
+    },
     "prisma": {
       "type": "library",
       "root": "libs/prisma",

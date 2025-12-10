@@ -28,6 +28,12 @@
       "@app/common/*": [
         "libs/common/src/*"
       ],
+      "@app/constant": [
+        "libs/constant/src"
+      ],
+      "@app/constant/*": [
+        "libs/constant/src/*"
+      ],
       "@app/prisma": [
         "libs/prisma/src"
       ],

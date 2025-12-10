@@ -30,6 +30,8 @@
     "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "6.19",
+    "@types/amqplib": "^0.10.8",
+    "amqplib": "^0.10.9",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
@@ -88,6 +90,7 @@
     ],
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
+      "^@app/constant(|/.*)$": "<rootDir>/libs/constant/src/$1",
       "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
       "^@app/redis(|/.*)$": "<rootDir>/libs/redis/src/$1",
       "^@app/util(|/.*)$": "<rootDir>/libs/util/src/$1"

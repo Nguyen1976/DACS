@@ -6,6 +6,7 @@ import { USER_PACKAGE_NAME, USER_SERVICE_NAME } from 'interfaces/user'
 import { UserModule } from './user/user.module'
 import { AuthGuard, CommonModule } from '@app/common'
 import { APP_GUARD } from '@nestjs/core'
+import { PORT_GRPC } from 'libs/constant/port-grpc.constant'
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { APP_GUARD } from '@nestjs/core'
         options: {
           package: USER_PACKAGE_NAME,
           protoPath: './proto/user.proto',
-          url: 'localhost:50051',
+          url: `localhost:${PORT_GRPC.USER_GRPC_PORT}`,
         },
       },
     ]),
