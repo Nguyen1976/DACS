@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  MaxLength,
+  MinLength,
+} from 'class-validator'
+import { FriendRequestStatus } from 'interfaces/user'
 
 export class RegisterUserDto {
   @IsEmail()
@@ -37,4 +44,16 @@ export class MakeFriendDto {
   @IsNotEmpty()
   @IsEmail()
   email: string
+}
+
+
+export class UpdateStatusMakeFriendDto {
+  @IsNotEmpty()
+  @IsEnum(FriendRequestStatus, {
+    message: `Status must be one of the following values: ${Object.values(FriendRequestStatus).join(', ')}`,
+  })
+  status: FriendRequestStatus
+
+  @IsNotEmpty()
+  inviterId: string
 }

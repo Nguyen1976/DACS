@@ -41,4 +41,5 @@ export class MailerService {
       html, // mail/templates/confirmation.hbs
     })
   }
+  
 }

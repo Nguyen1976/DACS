@@ -5,10 +5,12 @@ import type { Metadata, ServerUnaryCall } from '@grpc/grpc-js'
 import type {
   MakeFriendRequest,
   MakeFriendResponse,
+  UpdateStatusRequest,
+  UpdateStatusResponse,
   UserRegisterRequest,
   UserRegisterResponse,
   UserServiceController,
-} from 'interfaces/user'
+} from 'interfaces/user.grpc'
 import { EXCHANGE } from '@app/common/constants/exchange'
 import type { Channel } from 'amqplib'
 
@@ -37,6 +39,15 @@ export class UserController implements UserServiceController {
     metadata: Metadata,
   ): Promise<MakeFriendResponse> {
     const res = await this.userService.makeFriend(data)
+    return res
+  }
+
+  @GrpcMethod('UserService', 'updateStatusMakeFriend')
+  async updateStatusMakeFriend(
+    data: UpdateStatusRequest,
+    metadata: Metadata,
+  ): Promise<UpdateStatusResponse> {
+    const res = await this.userService.updateStatusMakeFriend(data)
     return res
   }
 }

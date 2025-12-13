@@ -8,7 +8,12 @@ import {
   Delete,
 } from '@nestjs/common'
 import { UserService } from './user.service'
-import { LoginUserDto, MakeFriendDto, RegisterUserDto } from './dto/user.dto'
+import {
+  LoginUserDto,
+  MakeFriendDto,
+  RegisterUserDto,
+  UpdateStatusMakeFriendDto,
+} from './dto/user.dto'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
 
 @Controller('user')
@@ -29,8 +34,21 @@ export class UserController {
   @RequireLogin()
   async makeFriend(@Body() body: MakeFriendDto, @UserInfo() user: any) {
     return await this.userService.makeFriend({
+      senderId: user.userId,
       username: user.username,
       friendEmail: body.email,
+    })
+  }
+
+  @Post('update-status-make-friend')
+  @RequireLogin()
+  async updateStatusMakeFriend(
+    @Body() body: UpdateStatusMakeFriendDto,
+    @UserInfo() user: any,
+  ) {
+    return await this.userService.updateStatusMakeFriend({
+      ...body,
+      inviteeId: user.userId,
     })
   }
 }

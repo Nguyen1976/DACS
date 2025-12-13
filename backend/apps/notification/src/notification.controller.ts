@@ -7,26 +7,13 @@ import { MailerService } from '@app/mailer'
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Inject(MailerService)
-  private readonly mailerService: MailerService
-
   @EventPattern('user.created')
   async handleUserRegistered(@Payload() data, @Ctx() context: RmqContext) {
     const channel = context.getChannelRef()
     const originalMsg = context.getMessage()
 
     try {
-      // 1. Thực hiện logic nghiệp vụ
-      console.log(
-        `📧 [Notification Service] Đang gửi email chào mừng tới: ${data.email}...`,
-      )
-
-      await this.mailerService.sendUserConfirmation(data)
-
-      console.log('✅ Email đã gửi thành công!')
-
-      // 2. QUAN TRỌNG: Xác nhận đã xử lý xong (ACK)
-      // Lúc này RabbitMQ mới xóa tin nhắn khỏi hàng đợi
+      this.notificationService.handleUserRegistered(data)
       channel.ack(originalMsg)
     } catch (error) {
       console.error('❌ Lỗi khi gửi email:', error)
@@ -39,11 +26,22 @@ export class NotificationController {
     const channel = context.getChannelRef()
     const originalMsg = context.getMessage()
     try {
-      console.log(
-        `📧 [Notification Service] Đang gửi email lời mời kết bạn tới: ${data.friendEmail}...`,
-      )
-      await this.mailerService.sendMakeFriendNotification(data)
-      console.log('✅ Email đã gửi thành công!')
+      await this.notificationService.handleMakeFriend(data)
+      channel.ack(originalMsg)
+    } catch (error) {
+      console.error('❌ Lỗi khi gửi email:', error)
+    }
+  }
+
+  @EventPattern('user.updateStatusMakeFriend')
+  async handleUpdateStatusMakeFriend(
+    @Payload() data,
+    @Ctx() context: RmqContext,
+  ) {
+    const channel = context.getChannelRef()
+    const originalMsg = context.getMessage()
+    try {
+      await this.notificationService.handleUpdateStatusMakeFriend(data)
       channel.ack(originalMsg)
     } catch (error) {
       console.error('❌ Lỗi khi gửi email:', error)

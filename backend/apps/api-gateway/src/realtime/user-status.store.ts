@@ -1,34 +1,38 @@
+import { Inject } from '@nestjs/common'
+
 export class UserStatusStore {
   // Map userId -> Set socketIds
-  private static users = new Map<string, Set<string>>()
 
-  static addConnection(userId: string, socketId: string) {
-    if (!this.users.has(userId)) {
-      this.users.set(userId, new Set())
+  constructor(private redisClient: any) {}
+  private getKey(userId: string) {
+    return `user:${userId}:sockets`
+  }
+
+  async addConnection(userId: string, socketId: string) {
+    await this.redisClient.sadd(this.getKey(userId), socketId)
+  }
+
+  async removeConnection(userId: string, socketId: string) {
+    const key = this.getKey(userId)
+
+    await this.redisClient.srem(key, socketId)
+
+    const count = await this.redisClient.scard(key)
+    if (count === 0) {
+      await this.redisClient.del(key)
     }
-    this.users.get(userId)?.add(socketId)
   }
 
-  static removeConnection(userId: string, socketId: string) {
-    if (!this.users.has(userId)) return
-
-    const connections = this.users.get(userId)!
-    connections.delete(socketId)
-
-    if (connections.size === 0) {
-      this.users.delete(userId)
-    }
+  async isOnline(userId: string): Promise<boolean> {
+    return (await this.redisClient.exists(this.getKey(userId))) === 1
   }
 
-  static isOnline(userId: string) {
-    return this.users.has(userId)
+  async getUserSockets(userId: string): Promise<string[]> {
+    return this.redisClient.smembers(this.getKey(userId))
   }
 
-  static getOnlineUsers() {
-    return [...this.users.keys()]
-  }
-
-  static getUserSockets(userId: string) {
-    return this.users.get(userId) || new Set()
+  async getOnlineUsers(): Promise<string[]> {
+    const keys = await this.redisClient.keys('user:*:sockets')
+    return keys.map((k) => k.split(':')[1])
   }
 }

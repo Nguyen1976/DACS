@@ -5,14 +5,17 @@ import { Inject, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ClientProxy, RpcException } from '@nestjs/microservices'
 import { stat } from 'fs'
+import { FriendRequestStatus } from 'interfaces/user'
 import {
   MakeFriendRequest,
   MakeFriendResponse,
+  UpdateStatusRequest,
+  UpdateStatusResponse,
   UserLoginRequest,
   UserLoginResponse,
   UserRegisterRequest,
   UserRegisterResponse,
-} from 'interfaces/user'
+} from 'interfaces/user.grpc'
 import { Redis as RedisClient } from 'ioredis'
 
 @Injectable()
@@ -114,6 +117,90 @@ export class UserService {
       receiverName: friend.username,
     })
 
-    return { status: 'pending' }
+    const res = await this.prisma.friendRequest.create({
+      data: {
+        fromUserId: data.senderId,
+        toUserId: friend.id,
+        status: FriendRequestStatus.PENDING,
+      },
+    })
+
+    return { status: res.status }
+  }
+
+  async updateStatusMakeFriend(
+    data: UpdateStatusRequest,
+  ): Promise<UpdateStatusResponse> {
+    //tìm bản ghi dựa vào inviterId và inviteeId
+    const friendRequest = await this.prisma.friendRequest.findFirst({
+      where: {
+        fromUserId: data.inviterId,
+        toUserId: data.inviteeId,
+      },
+    })
+    if (!friendRequest) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'Friend request not found',
+      })
+    }
+    //update status dựa theo status
+    await this.prisma.friendRequest.updateMany({
+      where: {
+        fromUserId: data.inviterId,
+        toUserId: data.inviteeId,
+      },
+      data: {
+        status: data.status as FriendRequestStatus,
+      },
+    })
+
+    let inventer
+    //nếu chấp nhận thì update friend ở cả 2 user
+    if (data.status === FriendRequestStatus.ACCEPT) {
+      //update mảng friends trong user của cả 2
+      inventer = await this.prisma.user.update({
+        where: {
+          id: data.inviterId,
+        },
+        data: {
+          friends: {
+            push: data.inviteeId,
+          },
+        },
+      })
+      await this.prisma.user.update({
+        where: {
+          id: data.inviteeId,
+        },
+        data: {
+          friends: {
+            push: data.inviterId,
+          },
+        },
+      })
+    }
+    //bắn message qua notification kèm theo status và trạng thái online của ô còn lại
+    this.client.emit('user.updateStatusMakeFriend', {
+      inviterId: data.inviterId,
+      inventerName: inventer ? inventer.username : '',
+      inviteeId: data.inviteeId,
+      status: data.status,
+      inviterStatus: data.inviterStatus,
+    })
+    return { status: 'SUCCESS' }
   }
 }
+
+/**
+ * model friendRequest {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  fromUserId String @db.ObjectId
+  toUserId String @db.ObjectId
+  status Status @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ * 
+ * 
+ */

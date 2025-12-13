@@ -10,8 +10,10 @@ import {
 } from '@nestjs/websockets'
 import { UserStatusStore } from './user-status.store'
 import { JwtService } from '@nestjs/jwt'
+import { Inject, Injectable } from '@nestjs/common'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
+@Injectable()
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -24,11 +26,20 @@ export class RealtimeGateway
   @WebSocketServer()
   server: Server
 
-  constructor(private jwtService: JwtService) {}
+  private userStatusStore: UserStatusStore
+  constructor(
+    private jwtService: JwtService,
+    @Inject('REDIS_CLIENT')
+    private redisClient: any,
+  ) {
+    this.userStatusStore = new UserStatusStore(this.redisClient)
+  }
+
   //default function
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.query.token
+      console.log(token)
       if (!token) {
         client.disconnect()
         return
@@ -43,9 +54,12 @@ export class RealtimeGateway
         exp: 1765557056
       }
        */
-      console.log(`✅ User ${payload.userId} connected`)
+      if (!payload.userId) {
+        client.disconnect()
+        return
+      }
       client.data.userId = payload.userId
-      UserStatusStore.addConnection(payload.userId, client.id)
+      await this.userStatusStore.addConnection(payload.userId, client.id)
 
       this.server.emit('user_online', { userId: payload.userId })
     } catch (error) {
@@ -56,18 +70,24 @@ export class RealtimeGateway
   handleDisconnect(client: Socket) {
     const userId = client.data.userId
     if (!userId) return
-    UserStatusStore.removeConnection(userId, client.id)
-    if (!UserStatusStore.isOnline(userId)) {
+    this.userStatusStore.removeConnection(userId, client.id)
+    if (!this.userStatusStore.isOnline(userId)) {
       console.log(`❌ User ${userId} offline`)
       this.server.emit('user_offline', { userId })
     }
   }
 
-  emitToUser(userId: string, event: string, data: any) {
-    const sockets = UserStatusStore.getUserSockets(userId)
+  async emitToUser(userId: string, event: string, data: any) {
+    const sockets = (await this.userStatusStore.getUserSockets(
+      userId,
+    )) as string[]
     sockets.forEach((socketId) => {
       this.server.to(socketId).emit(event, data)
     })
+  }
+
+  async checkUserOnline(userId: string): Promise<boolean> {
+    return this.userStatusStore.isOnline(userId)
   }
 
   @SubscribeMessage('message')

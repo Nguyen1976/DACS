@@ -3,6 +3,7 @@ import { NotificationController } from './notification.controller'
 import { NotificationService } from './notification.service'
 import { MailerModule } from '@app/mailer'
 import { ConfigModule } from '@nestjs/config'
+import { PrismaModule } from '@app/prisma'
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ConfigModule } from '@nestjs/config'
     }),
 
     MailerModule,
+    PrismaModule,
   ],
   controllers: [NotificationController],
   providers: [NotificationService],
