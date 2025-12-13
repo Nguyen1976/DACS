@@ -41,3 +41,45 @@ model notification {
   isRead Boolean @default(false)
   createdAt DateTime @default(now())
 }
+
+enum conversationType {
+  DIRECT
+  GROUP
+}
+
+model conversation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  type conversationType @default(DIRECT)
+
+  //trong trường hợp là cuộc trò chuyện cá nhận thì 2 thằng này là null
+  groupName String?
+  groupAvatar String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model conversationMember {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String @db.ObjectId
+
+  userId String? @db.ObjectId
+  role String? //nếu là nhóm thì có vai trò như admin hay member
+
+  joinedAt DateTime @default(now())
+}
+
+enum deleteType {
+  SELF
+  GLOBAL
+}
+model message {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String @db.ObjectId
+  senderId String @db.ObjectId
+  text String
+  replyToMessageId String? @db.ObjectId
+  isDeleted Boolean @default(false)
+  deleteType deleteType?
+  createdAt DateTime @default(now())
+}

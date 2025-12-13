@@ -4,6 +4,7 @@ import { NotificationService } from './notification.service'
 import { MailerModule } from '@app/mailer'
 import { ConfigModule } from '@nestjs/config'
 import { PrismaModule } from '@app/prisma'
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 
 @Module({
   imports: [
@@ -14,6 +15,16 @@ import { PrismaModule } from '@app/prisma'
 
     MailerModule,
     PrismaModule,
+    RabbitMQModule.forRoot({
+      exchanges: [
+        {
+          name: 'user.events',
+          type: 'topic',
+        },
+      ],
+      uri: 'amqp://localhost:5672',
+      connectionInitOptions: { wait: true },
+    }),
   ],
   controllers: [NotificationController],
   providers: [NotificationService],

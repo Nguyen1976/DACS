@@ -49,6 +49,7 @@ export class UserController {
     return await this.userService.updateStatusMakeFriend({
       ...body,
       inviteeId: user.userId,
+      inviteeName: user.username,
     })
   }
 }

@@ -2,23 +2,20 @@ import { Controller, Get, Inject } from '@nestjs/common'
 import { NotificationService } from './notification.service'
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices'
 import { MailerService } from '@app/mailer'
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 
 @Controller()
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @EventPattern('user.created')
-  async handleUserRegistered(@Payload() data, @Ctx() context: RmqContext) {
-    const channel = context.getChannelRef()
-    const originalMsg = context.getMessage()
-
-    try {
-      this.notificationService.handleUserRegistered(data)
-      channel.ack(originalMsg)
-    } catch (error) {
-      console.error('❌ Lỗi khi gửi email:', error)
-      // channel.nack(originalMsg)
-    }
+  @RabbitSubscribe({
+    exchange: 'user.events',
+    routingKey: 'user.created',
+    queue: 'notification_queue',
+  })
+  async handleUserRegistered(message: any) {
+    // this.notificationService.handleUserRegistered(data)
+    console.log('Notification received user.created event:')
   }
 
   @EventPattern('user.makeFriend')
@@ -44,7 +41,7 @@ export class NotificationController {
       await this.notificationService.handleUpdateStatusMakeFriend(data)
       channel.ack(originalMsg)
     } catch (error) {
-      console.error('❌ Lỗi khi gửi email:', error)
+      // console.error('❌ Lỗi khi gửi email:', error)
     }
   }
 }

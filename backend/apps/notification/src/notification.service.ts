@@ -1,6 +1,8 @@
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
+import { FriendRequestStatus } from 'interfaces/user'
 
 @Injectable()
 export class NotificationService {
@@ -9,8 +11,14 @@ export class NotificationService {
   @Inject(PrismaService)
   private readonly prisma: PrismaService
 
+  @RabbitSubscribe({
+    exchange: 'user.events',
+    routingKey: 'user.created',
+    queue: 'notification_queue',
+  })
   async handleUserRegistered(data: any) {
-    await this.mailerService.sendUserConfirmation(data)
+    // await this.mailerService.sendUserConfirmation(data)
+    console.log('Notification received user.created event:')
   }
 
   async handleMakeFriend(data: any) {
@@ -29,10 +37,10 @@ export class NotificationService {
     //   status: data.status,
     //   inviterStatus: data.inviterStatus,
     let message = ''
-    if (data.status === 'ACCEPT') {
-      message = `${data.inventerName} request has been accepted.`
+    if (data.status === FriendRequestStatus.ACCEPT) {
+      message = `Friend request to ${data.inviteeName} has been accepted.`
     } else {
-      message = `${data.inventerName} request has been rejected.`
+      message = `Friend request to ${data.inviteeName} has been rejected.`
     }
     await this.prisma.notification.create({
       data: {

@@ -80,7 +80,7 @@ export class UserService implements OnModuleInit {
         //trả về bản ghi thông báo luôn
         {
           inviteeId: dto.inviteeId,
-          status: dto.status,
+          message: `Friend request to ${dto.inviteeName} has been ${dto.status}.`,
         },
       )
     }

@@ -3,22 +3,9 @@ import { NotificationModule } from './notification.module'
 import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    NotificationModule,
-    {
-      transport: Transport.RMQ,
-      options: {
-        urls: ['amqp://localhost:5672'],
-        queue: 'notification_queue',
-        noAck: false,
-        queueOptions: {
-          durable: true,
-        },
-        prefetchCount: 1,
-      },
-    },
-  )
+  const app = await NestFactory.createApplicationContext(NotificationModule)
 
-  await app.listen()
+  // 2. Kích hoạt Shutdown Hooks để khi bạn tắt app (Ctrl+C), nó ngắt kết nối RabbitMQ sạch sẽ
+  app.enableShutdownHooks()
 }
 bootstrap()

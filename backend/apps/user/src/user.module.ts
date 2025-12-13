@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard, CommonModule } from '@app/common'
 import { UtilModule } from '@app/util'
 import { ClientsModule, Transport } from '@nestjs/microservices'
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 
 @Module({
   imports: [
@@ -22,19 +23,27 @@ import { ClientsModule, Transport } from '@nestjs/microservices'
     PrismaModule,
     CommonModule,
     UtilModule,
-    ClientsModule.register([
-      {
-        name: 'RABBITMQ_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://localhost:5672'], // Nên để trong process.env
-          queue: 'notification_queue',
-          queueOptions: {
-            durable: true, // Tin nhắn được lưu vào đĩa cứng, an toàn khi crash
-          },
+    // ClientsModule.register([
+    //   {
+    //     name: 'RABBITMQ_SERVICE',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: ['amqp://localhost:5672'], // Nên để trong process.env
+    //       exchange: 'user.events',
+    //       exchangeType: 'topic',
+    //     },
+    //   },
+    // ]),
+    RabbitMQModule.forRoot({
+      exchanges: [
+        {
+          name: 'user.events',
+          type: 'topic',
         },
-      },
-    ]),
+      ],
+      uri: 'amqp://localhost:5672',
+      connectionInitOptions: { wait: true },
+    }),
   ],
   controllers: [UserController],
   providers: [UserService],

@@ -1,5 +1,6 @@
 import { PrismaService } from '@app/prisma'
 import { UtilService } from '@app/util/util.service'
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { status } from '@grpc/grpc-js'
 import { Inject, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
@@ -25,7 +26,8 @@ export class UserService {
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject(UtilService) private readonly utilService: UtilService,
-    @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    // @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   async register(data: UserRegisterRequest): Promise<UserRegisterResponse> {
@@ -64,7 +66,7 @@ export class UserService {
       })
 
     //test emit event to rabbitmq
-    this.client.emit('user.created', {
+    this.amqpConnection.publish('user.events', 'user.created', {
       id: res.id,
       email: res.email,
       username: res.username,
@@ -111,11 +113,11 @@ export class UserService {
     }
     //gui mail moi ban be
     //username, email nhận
-    this.client.emit('user.makeFriend', {
-      senderName: data.senderName,
-      friendEmail: data.friendEmail,
-      receiverName: friend.username,
-    })
+    // this.client.emit('user.makeFriend', {
+    //   senderName: data.senderName,
+    //   friendEmail: data.friendEmail,
+    //   receiverName: friend.username,
+    // })
 
     const res = await this.prisma.friendRequest.create({
       data: {
@@ -155,11 +157,11 @@ export class UserService {
       },
     })
 
-    let inventer
+    let inventee
     //nếu chấp nhận thì update friend ở cả 2 user
     if (data.status === FriendRequestStatus.ACCEPT) {
       //update mảng friends trong user của cả 2
-      inventer = await this.prisma.user.update({
+      await this.prisma.user.update({
         where: {
           id: data.inviterId,
         },
@@ -169,7 +171,7 @@ export class UserService {
           },
         },
       })
-      await this.prisma.user.update({
+      inventee = await this.prisma.user.update({
         where: {
           id: data.inviteeId,
         },
@@ -181,13 +183,13 @@ export class UserService {
       })
     }
     //bắn message qua notification kèm theo status và trạng thái online của ô còn lại
-    this.client.emit('user.updateStatusMakeFriend', {
-      inviterId: data.inviterId,
-      inventerName: inventer ? inventer.username : '',
-      inviteeId: data.inviteeId,
-      status: data.status,
-      inviterStatus: data.inviterStatus,
-    })
+    // this.client.emit('user.updateStatusMakeFriend', {
+    //   inviterId: data.inviterId,
+    //   inviteeName: inventee ? inventee.username : '',
+    //   inviteeId: data.inviteeId,
+    //   status: data.status,
+    //   inviterStatus: data.inviterStatus,
+    // })
     return { status: 'SUCCESS' }
   }
 }
