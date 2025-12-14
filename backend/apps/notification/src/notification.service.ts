@@ -23,6 +23,7 @@ export class NotificationService {
   })
   async handleUserRegistered(data: any) {
     await this.mailerService.sendUserConfirmation(data)
+    //tạo thông báo
   }
 
   @RabbitSubscribe({
@@ -54,6 +55,7 @@ export class NotificationService {
       data: {
         userId: data.inviterId,
         message,
+        type: 'normal_notification',
       },
     })
     return {

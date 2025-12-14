@@ -102,7 +102,7 @@ export class UserService implements OnModuleInit {
         )
       }
     }
-
+    
     return await firstValueFrom(observable)
   }
 }

@@ -8,6 +8,7 @@
 import type { Metadata } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
+import { Timestamp } from "./google/protobuf/timestamp";
 
 export const protobufPackage = "chat";
 
@@ -28,10 +29,27 @@ export interface CreateConversationResponse {
   adminId?: string | undefined;
 }
 
+export interface SendMessageRequest {
+  conversationId: string;
+  senderId: string;
+  replyToMessageId: string;
+  message: string;
+}
+
+export interface SendMessageResponse {
+  conversationId: string;
+  senderId: string;
+  replyToMessageId: string;
+  message: string;
+  createdAt: Timestamp | undefined;
+}
+
 export const CHAT_PACKAGE_NAME = "chat";
 
 export interface ChatGrpcServiceClient {
   createConversation(request: CreateConversationRequest, metadata?: Metadata): Observable<CreateConversationResponse>;
+
+  sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
 }
 
 export interface ChatGrpcServiceController {
@@ -39,11 +57,16 @@ export interface ChatGrpcServiceController {
     request: CreateConversationRequest,
     metadata?: Metadata,
   ): Promise<CreateConversationResponse> | Observable<CreateConversationResponse> | CreateConversationResponse;
+
+  sendMessage(
+    request: SendMessageRequest,
+    metadata?: Metadata,
+  ): Promise<SendMessageResponse> | Observable<SendMessageResponse> | SendMessageResponse;
 }
 
 export function ChatGrpcServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createConversation"];
+    const grpcMethods: string[] = ["createConversation", "sendMessage"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("ChatGrpcService", method)(constructor.prototype[method], method, descriptor);

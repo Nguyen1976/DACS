@@ -4,6 +4,8 @@ import {
   CHAT_GRPC_SERVICE_NAME,
   CreateConversationRequest,
   CreateConversationResponse,
+  SendMessageRequest,
+  SendMessageResponse,
 } from 'interfaces/chat.grpc'
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
@@ -51,6 +53,19 @@ export class ChatService implements OnModuleInit {
   ): Promise<CreateConversationResponse> {
     //nhận vào type, memberIds, groupName?, groupAvatar?
     let observable = this.chatClientService.createConversation(dto)
+
+    return await firstValueFrom(observable)
+  }
+
+  async sendMessage(dto: SendMessageRequest): Promise<SendMessageResponse> {
+     /**
+     * conversationId: string
+     * senderId: string (client.data.userId) k cần truyền từ FE
+     * replyToMessageId?: string nếu k có thì đơn giản là hiển thị tin nhắn bthg
+     * thằng chat service sẽ thực hiện hành động emit 
+     */
+
+    let observable = this.chatClientService.sendMessage(dto)
     
     return await firstValueFrom(observable)
   }

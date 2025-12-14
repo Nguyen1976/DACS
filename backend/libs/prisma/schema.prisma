@@ -39,6 +39,7 @@ model notification {
   userId String @db.ObjectId
   message String
   isRead Boolean @default(false)
+  type String //friend_request, normal_notification
   createdAt DateTime @default(now())
 }
 

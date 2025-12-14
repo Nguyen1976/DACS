@@ -11,6 +11,7 @@ import {
 import { UserStatusStore } from './user-status.store'
 import { JwtService } from '@nestjs/jwt'
 import { Inject, Injectable } from '@nestjs/common'
+import { ChatService } from '../chat/chat.service'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
 @Injectable()
@@ -31,6 +32,8 @@ export class RealtimeGateway
     private jwtService: JwtService,
     @Inject('REDIS_CLIENT')
     private redisClient: any,
+    @Inject(ChatService)
+    private chatService: ChatService,
   ) {
     this.userStatusStore = new UserStatusStore(this.redisClient)
   }
@@ -92,15 +95,56 @@ export class RealtimeGateway
     return this.userStatusStore.isOnline(userId)
   }
 
-  @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): string {
-    console.log('Message received:', payload)
-    return 'Hello world!'
-  }
-
   @SubscribeMessage('ping')
   handlePing(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
     console.log('Received:', data)
     return { event: 'pong', data: 'hello from gateway' }
+  }
+
+  @SubscribeMessage('send_message')
+  async handleSendMessage(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    //gọi chat service để lưu tin nhắn
+    //định dạng dữ liệu cần
+
+    /**
+     * conversationId: string
+     * senderId: string (client.data.userId) k cần truyền từ FE
+     * replyToMessageId?: string nếu k có thì đơn giản là hiển thị tin nhắn bthg
+     * thằng chat service sẽ thực hiện hành động emit
+     */
+
+    //call chat service ....
+    let res = await this.chatService.sendMessage({
+      conversationId: data.conversationId,
+      senderId: client.data.userId,
+      message: data.message,
+      replyToMessageId: data.replyToMessageId,
+    })
+    /**
+       * Message saved: {
+          conversationId: '693e6e395030dd62ac2181dc',
+          senderId: '693befebbeed61ee46291bf3',
+          replyToMessageId: '',
+          message: 'Xin chào, rất vui được làm quen',
+          createdAt: {
+            seconds: Long { low: 1765703286, high: 0, unsigned: false },
+            nanos: 37000000
+          }
+        }
+          data.memberIds
+       */
+
+    this.emitToUser(
+      data.memberIds.filter(
+        async (id: string) =>
+          (await this.checkUserOnline(id)) && id !== res.senderId,
+      ),
+      'new_message',
+      res,
+    )
+    //trong tương lai trong redis có thể quản lý thêm các conversation map với user đang online để giảm số lần query xuoogns db
   }
 }

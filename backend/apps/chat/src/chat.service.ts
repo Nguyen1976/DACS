@@ -1,16 +1,23 @@
 import { PrismaService } from '@app/prisma/prisma.service'
+import { UtilService } from '@app/util'
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConversationType } from 'interfaces/chat'
 import {
   CreateConversationRequest,
+  SendMessageRequest,
+  SendMessageResponse,
   type CreateConversationResponse,
 } from 'interfaces/chat.grpc'
 import { FriendRequestStatus } from 'interfaces/user'
 
 @Injectable()
 export class ChatService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(UtilService)
+    private readonly utilService: UtilService,
+  ) {}
 
   async createConversation(
     data: CreateConversationRequest,
@@ -44,5 +51,24 @@ export class ChatService {
       memberIds: data.memberIds,
       adminId: data.type === ConversationType.GROUP ? data.createrId : '',
     } as CreateConversationResponse
+  }
+
+  async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
+    //tạo bản ghi tin nhắn
+    const message = await this.prisma.message.create({
+      data: {
+        conversationId: data.conversationId,
+        senderId: data.senderId,
+        text: data.message,
+        replyToMessageId: data.replyToMessageId || null,
+      },
+    })
+    return {
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      replyToMessageId: message.replyToMessageId || '',
+      message: message.text,
+      createdAt: this.utilService.dateToTimestamp(message.createdAt),
+    } as SendMessageResponse
   }
 }
