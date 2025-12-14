@@ -12,6 +12,7 @@ import { UserStatusStore } from './user-status.store'
 import { JwtService } from '@nestjs/jwt'
 import { Inject, Injectable } from '@nestjs/common'
 import { ChatService } from '../chat/chat.service'
+import { SOCKET_EVENTS } from 'libs/constant/socket.events'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
 @Injectable()
@@ -64,7 +65,7 @@ export class RealtimeGateway
       client.data.userId = payload.userId
       await this.userStatusStore.addConnection(payload.userId, client.id)
 
-      this.server.emit('user_online', { userId: payload.userId })
+      this.server.emit(SOCKET_EVENTS.CONNECTION, { userId: payload.userId })
     } catch (error) {
       client.disconnect()
     }
@@ -76,7 +77,7 @@ export class RealtimeGateway
     this.userStatusStore.removeConnection(userId, client.id)
     if (!this.userStatusStore.isOnline(userId)) {
       console.log(`❌ User ${userId} offline`)
-      this.server.emit('user_offline', { userId })
+      this.server.emit(SOCKET_EVENTS.DISCONNECTION, { userId })
     }
   }
 
@@ -101,7 +102,7 @@ export class RealtimeGateway
     return { event: 'pong', data: 'hello from gateway' }
   }
 
-  @SubscribeMessage('send_message')
+  @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
   async handleSendMessage(
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,
@@ -142,7 +143,7 @@ export class RealtimeGateway
         async (id: string) =>
           (await this.checkUserOnline(id)) && id !== res.senderId,
       ),
-      'new_message',
+      SOCKET_EVENTS.CHAT.NEW_MESSAGE,
       res,
     )
     //trong tương lai trong redis có thể quản lý thêm các conversation map với user đang online để giảm số lần query xuoogns db

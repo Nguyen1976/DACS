@@ -35,7 +35,7 @@ export class UserController {
       inviteeEmail: body.email,
     })
   }
-
+  
   @Post('update-status-make-friend')
   @RequireLogin()
   async updateStatusMakeFriend(

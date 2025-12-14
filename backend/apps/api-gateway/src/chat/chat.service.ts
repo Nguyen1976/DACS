@@ -24,30 +24,6 @@ export class ChatService implements OnModuleInit {
       )
   }
 
-  /**
-   * 
-   * model conversation {
-        id String @id @default(auto()) @map("_id") @db.ObjectId
-        type conversationType @default(DIRECT)
-
-        //trong trường hợp là cuộc trò chuyện cá nhận thì 2 thằng này là null
-        groupName String?
-        groupAvatar String?
-
-        createdAt DateTime @default(now())
-        updatedAt DateTime @updatedAt
-        }
-
-        model conversationMember {
-        id String @id @default(auto()) @map("_id") @db.ObjectId
-        conversationId String @db.ObjectId
-
-        userId String? @db.ObjectId
-        role String? //nếu là nhóm thì có vai trò như admin hay member
-
-        joinedAt DateTime @default(now())
-        }
-   */
   async createConversation(
     dto: CreateConversationRequest,
   ): Promise<CreateConversationResponse> {
@@ -58,15 +34,9 @@ export class ChatService implements OnModuleInit {
   }
 
   async sendMessage(dto: SendMessageRequest): Promise<SendMessageResponse> {
-     /**
-     * conversationId: string
-     * senderId: string (client.data.userId) k cần truyền từ FE
-     * replyToMessageId?: string nếu k có thì đơn giản là hiển thị tin nhắn bthg
-     * thằng chat service sẽ thực hiện hành động emit 
-     */
 
     let observable = this.chatClientService.sendMessage(dto)
-    
+
     return await firstValueFrom(observable)
   }
 }

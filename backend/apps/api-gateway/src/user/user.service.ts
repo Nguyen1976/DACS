@@ -18,6 +18,7 @@ import { FriendRequestStatus } from 'interfaces/user'
 import { NotificationService } from '../notification/notification.service'
 import { ChatService } from '../chat/chat.service'
 import { NotificationType } from 'interfaces/notification'
+import { SOCKET_EVENTS } from 'libs/constant/socket.events'
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -73,7 +74,7 @@ export class UserService implements OnModuleInit {
         })
       this.realtimeGateway.emitToUser(
         [dto.inviteeId],
-        'new-friend-request',
+        SOCKET_EVENTS.USER.NEW_FRIEND_REQUEST,
         createdNotification,
       )
     }
@@ -110,14 +111,14 @@ export class UserService implements OnModuleInit {
     if (inviterStatus) {
       this.realtimeGateway.emitToUser(
         [dto.inviterId],
-        'update-friend-request-status',
+        SOCKET_EVENTS.USER.UPDATE_FRIEND_REQUEST_STATUS,
         //trả về bản ghi thông báo luôn
         createdNotification,
       )
       if (dto.status === FriendRequestStatus.ACCEPT) {
         this.realtimeGateway.emitToUser(
           [dto.inviteeId, dto.inviterId],
-          'new-conversation',
+          SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
           createdConversation,
         )
       }
