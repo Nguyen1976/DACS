@@ -101,13 +101,15 @@ export class UserService implements OnModuleInit {
       },
     )
 
-    //xử lý tạo conversation rồi emit về
-    let createdConversation = await this.chatService.createConversation({
-      type: 'DIRECT',
-      memberIds: [dto.inviterId, dto.inviteeId],
-    })
-
-    //ở đây sẽ xử lý socket
+    if (dto.status === FriendRequestStatus.ACCEPT) {
+      //xử lý tạo conversation rồi emit về
+      await this.chatService.createConversation({
+        type: 'DIRECT',
+        memberIds: [dto.inviterId, dto.inviteeId],
+        createrId: dto.inviteeId,
+      })
+    }
+    
     if (inviterStatus) {
       this.realtimeGateway.emitToUser(
         [dto.inviterId],
@@ -115,13 +117,6 @@ export class UserService implements OnModuleInit {
         //trả về bản ghi thông báo luôn
         createdNotification,
       )
-      if (dto.status === FriendRequestStatus.ACCEPT) {
-        this.realtimeGateway.emitToUser(
-          [dto.inviteeId, dto.inviterId],
-          SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
-          createdConversation,
-        )
-      }
     }
 
     return await firstValueFrom(observable)

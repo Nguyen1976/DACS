@@ -29,7 +29,6 @@ export class ChatService {
     })
 
     //ở lần sau sẽ tối ưu bằng transaction
-
     await this.prisma.conversationMember.createMany({
       data: data.memberIds.map((memberId) => ({
         conversationId: conversation.id,

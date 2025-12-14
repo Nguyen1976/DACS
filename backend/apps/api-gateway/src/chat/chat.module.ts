@@ -4,6 +4,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices'
 import { CHAT_GRPC_SERVICE_NAME, CHAT_PACKAGE_NAME } from 'interfaces/chat.grpc'
 import { PORT_GRPC } from 'libs/constant/port-grpc.constant'
 import { AppModule } from '../app.module'
+import { ChatController } from './chat.controller'
 
 @Module({
   imports: [
@@ -20,7 +21,13 @@ import { AppModule } from '../app.module'
       },
     ]),
   ],
+  controllers: [ChatController],
   providers: [ChatService],
   exports: [ChatService],
 })
 export class ChatModule {}
+/**
+ * tạo conversation: conversationId, memberIds[]
+ * add member to conversation: conversationId, memberIds[]
+ * 
+ */
