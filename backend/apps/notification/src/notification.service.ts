@@ -1,8 +1,10 @@
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
 import { UtilService } from '@app/util'
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
+import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
+import { NotificationType } from 'interfaces/notification'
+import { Redis as RedisClient } from 'ioredis'
 
 @Injectable()
 export class NotificationService {
@@ -13,6 +15,10 @@ export class NotificationService {
 
   @Inject(UtilService)
   private readonly utilService: UtilService
+
+  @Inject('USER_REDIS')
+  private readonly redis: RedisClient
+  constructor(private readonly amqpConnection: AmqpConnection) {}
 
   @RabbitSubscribe({
     exchange: 'user.events',
@@ -30,25 +36,49 @@ export class NotificationService {
     queue: 'notification_queue',
   })
   async handleMakeFriend(data: any) {
-    await this.mailerService.sendMakeFriendNotification(data)
+    /**
+     * 
+     * inviterName: data.inviterName,
+      inviteeEmail: data.inviteeEmail,
+      inviteeName: friend.username,
+      inviteeId: res.toUserId,
+      inviterId: data.inviterId,
+     */
+    //vấn đề gặp phải đó là phải có inviteeId
+    const socketCount = await this.redis.scard(`user:${data.inviteeId}:sockets`)
+    let inviteeStatus = socketCount > 0
+
+    const notificationCreated = await this.createNotification({
+      inviteeId: data.inviteeId,
+      message: `${data.inviterName} đã gửi lời mời kết bạn cho bạn.`,
+      type: NotificationType.FRIEND_REQUEST,
+    })
+
+    if (!inviteeStatus) {
+      //nếu offline thì gửi mail
+      await this.mailerService.sendMakeFriendNotification({
+        senderName: data.inviterName,
+        friendEmail: data.inviteeEmail,
+        receiverName: data.inviteeName,
+      })
+    } else {
+      //bắn socket
+      this.amqpConnection.publish(
+        'notification.events',
+        'notification.created',
+        notificationCreated,
+      )
+    }
+
+    return
   }
 
   async createNotification(data: any) {
-    //kiểm tra nếu inviterStatus là online thì không gửi email
-    // if (!data.inviterStatus) {
-    //   // await this.mailerService.sendUpdateStatusMakeFriendNotification(data)
-    // }
-    //tạo bản ghi thông báo
-    //k cần gửi mail nữa
-    //  inviterId: data.inviterId,
-    //     inviteeName: inventee ? inventee.username : '',
-    //     status: data.status,
-   
     const res = await this.prisma.notification.create({
       data: {
-        userId: data.inviterId,
+        userId: data.inviteeId,
         message: data.message,
-        type: data.type,
+        type: data.type as NotificationType,
       },
     })
     return {

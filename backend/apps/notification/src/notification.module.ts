@@ -6,9 +6,18 @@ import { ConfigModule } from '@nestjs/config'
 import { PrismaModule } from '@app/prisma'
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 import { UtilModule } from '@app/util'
+import { RedisModule } from '@app/redis'
 
 @Module({
   imports: [
+    RedisModule.forRoot(
+      {
+        host: 'localhost',
+        port: 6379,
+        db: 0,
+      },
+      'USER_REDIS',
+    ),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -19,6 +28,10 @@ import { UtilModule } from '@app/util'
     RabbitMQModule.forRoot({
       exchanges: [
         {
+          name: 'notification.events',
+          type: 'topic',
+        },
+        {
           name: 'user.events',
           type: 'topic',
         },
@@ -26,7 +39,7 @@ import { UtilModule } from '@app/util'
       uri: 'amqp://localhost:5672',
       connectionInitOptions: { wait: true },
     }),
-    UtilModule
+    UtilModule,
   ],
   controllers: [NotificationController],
   providers: [NotificationService],

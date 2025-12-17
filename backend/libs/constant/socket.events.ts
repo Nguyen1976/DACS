@@ -12,4 +12,8 @@ export const SOCKET_EVENTS = {
     UPDATE_FRIEND_REQUEST_STATUS: 'user.update_friend_request_status', //listen
     NEW_FRIEND_REQUEST: 'user.new_friend_request', //listen
   },
+
+  NOTIFICATION: {
+    NEW_NOTIFICATION: 'notification.new_notification', //listen
+  },
 }

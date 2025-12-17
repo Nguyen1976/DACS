@@ -14,6 +14,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ChatService } from '../chat/chat.service'
 import { SOCKET_EVENTS } from 'libs/constant/socket.events'
 import type { SendMessagePayload } from 'libs/constant/socket.payload'
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
 @Injectable()
@@ -80,6 +81,20 @@ export class RealtimeGateway
       console.log(`❌ User ${userId} offline`)
       this.server.emit(SOCKET_EVENTS.DISCONNECTION, { userId })
     }
+  }
+
+  @RabbitSubscribe({
+    exchange: 'notification.events',
+    routingKey: 'notification.created',
+    queue: 'realtime_queue',
+  })
+  async emitNotificationToUser(data) {
+    console.log('Received notification to emit via socket:', data)
+    await this.emitToUser(
+      [data.userId],
+      SOCKET_EVENTS.NOTIFICATION.NEW_NOTIFICATION,
+      data,
+    )
   }
 
   async emitToUser(userIds: string[], event: string, data: any) {

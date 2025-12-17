@@ -36,7 +36,7 @@ model friendRequest {
 //thông báo cho việc là user đã đồng ý kết bạn hay chưa
 model notification {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String @db.ObjectId
+  userId String @db.ObjectId//người nhận thông báo
   message String
   isRead Boolean @default(false)
   type String //friend_request, normal_notification

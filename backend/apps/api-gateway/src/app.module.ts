@@ -10,6 +10,7 @@ import { RedisModule } from '@app/redis'
 import { NotificationModule } from './notification/notification.module'
 import { ChatController } from './chat/chat.controller'
 import { ChatModule } from './chat/chat.module'
+import { RealtimeModule } from './realtime/realtime.module'
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ChatModule } from './chat/chat.module'
     ),
     NotificationModule,
     ChatModule,
+    RealtimeModule,
   ],
   controllers: [AppController, ChatController],
   providers: [
@@ -33,8 +35,8 @@ import { ChatModule } from './chat/chat.module'
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    RealtimeGateway,
+    RealtimeModule,
   ],
-  exports: [RealtimeGateway, NotificationModule, ChatModule],
+  exports: [RealtimeModule, NotificationModule, ChatModule],
 })
 export class AppModule {}

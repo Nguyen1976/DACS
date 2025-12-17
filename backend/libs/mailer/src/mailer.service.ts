@@ -21,25 +21,24 @@ export class MailerService {
     })
   }
 
-  async sendMakeFriendNotification(data) {
+  async sendMakeFriendNotification({ senderName, friendEmail, receiverName }) {
     let html = readFileSync(
       './libs/mailer/src/templates/make-friend.html',
       'utf8',
     )
 
     html = html
-      .replace(/{{\s*senderName\s*}}/g, data.senderName)
-      .replace(/{{\s*receiverName\s*}}/g, data.receiverName)
+      .replace(/{{\s*senderName\s*}}/g, senderName)
+      .replace(/{{\s*receiverName\s*}}/g, receiverName)
       .replace(/{{\s*acceptUrl\s*}}/g, 'ok')
       .replace(/{{\s*rejectUrl\s*}}/g, 'ok')
       .replace(/{{\s*year\s*}}/g, String(new Date().getFullYear()))
-
-      //ở template này sẽ thiết kế lại để redirect người dùng về đúng trang web của mình 
+    console.log('mailer', { senderName, friendEmail, receiverName })
+    //ở template này sẽ thiết kế lại để redirect người dùng về đúng trang web của mình
     await this.mailer.sendMail({
-      to: data.friendEmail,
+      to: friendEmail,
       subject: 'Bạn có một lời mời kết bạn mới trên Chat App 🎉',
       html, // mail/templates/confirmation.hbs
     })
   }
-  
 }

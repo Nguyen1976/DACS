@@ -110,23 +110,8 @@ export class UserService {
         message: 'Friend not found',
       })
     }
-    //gui mail moi ban be
-    //username, email nhận
 
-    //check user onlien
-    const inviteeId = friend.id
-    const socketCount = await this.redis.scard(`user:${inviteeId}:sockets`)
-    let inviteeStatus = socketCount > 0
-    if (!inviteeStatus) {
-      //nếu offline thì gửi mail
-      this.amqpConnection.publish('user.events', 'user.makeFriend', {
-        inviterName: data.inviterName,
-        inviteeEmail: data.inviteeEmail,
-        receiverName: friend.username,
-      })
-    }
-
-    const res = await this.prisma.friendRequest.create({
+    await this.prisma.friendRequest.create({
       data: {
         fromUserId: data.inviterId,
         toUserId: friend.id,
@@ -134,10 +119,18 @@ export class UserService {
       },
     })
 
-    return {
-      inviteeStatus,
+    //vấn đề về việc notifi thì để bên notification service xử lý
+    this.amqpConnection.publish('user.events', 'user.makeFriend', {
+      inviterId: data.inviterId,
+      inviterName: data.inviterName,
+
+      inviteeEmail: data.inviteeEmail,
       inviteeName: friend.username,
       inviteeId: friend.id,
+    })
+
+    return {
+      status: 'SUCCESS',
     } as MakeFriendResponse
   }
 

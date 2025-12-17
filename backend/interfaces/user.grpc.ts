@@ -42,9 +42,7 @@ export interface MakeFriendRequest {
 }
 
 export interface MakeFriendResponse {
-  inviteeStatus: boolean;
-  inviteeName: string;
-  inviteeId: string;
+  status: string;
 }
 
 export interface UpdateStatusRequest {

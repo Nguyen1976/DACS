@@ -62,23 +62,7 @@ export class UserService implements OnModuleInit {
       inviteeEmail: dto.inviteeEmail,
     } as MakeFriendRequest)
 
-    const res: MakeFriendResponse = await firstValueFrom(observable)
-    //check online and create notification
-    if (res.inviteeStatus) {
-      let createdNotification =
-        await this.notificationService.createNotification({
-          inviterId: dto.inviterId,
-          inviteeName: res.inviteeName,
-          message: `You have a new friend request to ${res.inviteeName}.`,
-          type: NotificationType.FRIEND_REQUEST,
-        })
-      this.realtimeGateway.emitToUser(
-        [res.inviteeId],
-        SOCKET_EVENTS.USER.NEW_FRIEND_REQUEST,
-        createdNotification,
-      )
-    }
-    return { status: 'SUCCESS' }
+    return await firstValueFrom(observable)
   }
 
   async updateStatusMakeFriend(dto: any): Promise<UpdateStatusResponse> {
