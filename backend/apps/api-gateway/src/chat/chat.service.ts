@@ -4,21 +4,22 @@ import {
   CHAT_GRPC_SERVICE_NAME,
   CreateConversationRequest,
   CreateConversationResponse,
-  SendMessageRequest,
-  SendMessageResponse,
 } from 'interfaces/chat.grpc'
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { SOCKET_EVENTS } from 'libs/constant/socket.events'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { AddMemberToConversationDTO } from './dto/chat.dto'
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 
 @Injectable()
 export class ChatService implements OnModuleInit {
   private chatClientService: any
   constructor(
     @Inject(CHAT_GRPC_SERVICE_NAME) private readonly chatClient: ClientGrpc,
-    @Inject(forwardRef(() => RealtimeGateway)) private realtimeGateway: RealtimeGateway,
+    @Inject(forwardRef(() => RealtimeGateway))
+    private realtimeGateway: RealtimeGateway,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   onModuleInit() {
@@ -44,7 +45,7 @@ export class ChatService implements OnModuleInit {
     let observable = this.chatClientService.createConversation(dto)
     //bắn socket về các member trong conversation
     const res = await firstValueFrom(observable)
-    
+
     this.realtimeGateway.emitToUser(
       dto.memberIds.filter((id) => id !== dto.createrId),
       SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
@@ -53,10 +54,9 @@ export class ChatService implements OnModuleInit {
     return res as CreateConversationResponse
   }
 
-  async sendMessage(dto: SendMessageRequest): Promise<SendMessageResponse> {
-    let observable = this.chatClientService.sendMessage(dto)
-
-    return await firstValueFrom(observable)
+  //k cần grpc
+  sendMessage(dto) {
+    this.amqpConnection.publish('chat.events', 'message.send', dto)
   }
 
   async addMemberToConversation(dto: AddMemberToConversationDTO) {

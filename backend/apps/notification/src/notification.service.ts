@@ -30,7 +30,7 @@ export class NotificationService {
   @RabbitSubscribe({
     exchange: 'user.events',
     routingKey: 'user.created',
-    queue: 'notification_queue',
+    queue: 'notification_queue_user_created',
   })
   async handleUserRegistered(data: any) {
     await this.mailerService.sendUserConfirmation(data)
@@ -40,7 +40,7 @@ export class NotificationService {
   @RabbitSubscribe({
     exchange: 'user.events',
     routingKey: 'user.makeFriend',
-    queue: 'notification_queue',
+    queue: 'notification_queue_user_makeFriend',
   })
   async handleMakeFriend(data: any) {
     /**
@@ -82,7 +82,7 @@ export class NotificationService {
   @RabbitSubscribe({
     exchange: 'user.events',
     routingKey: 'user.updateStatusMakeFriend',
-    queue: 'notification_queue',
+    queue: 'notification_queue_user_updateStatusMakeFriend',
   })
   async handleUpdateStatusMakeFriend(data: any) {
     /**
