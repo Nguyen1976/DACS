@@ -18,6 +18,11 @@ import {
 } from 'interfaces/user.grpc'
 import { Redis as RedisClient } from 'ioredis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
+import {
+  UserCreatedPayload,
+  UserMakeFriendPayload,
+  UserUpdateStatusMakeFriendPayload,
+} from 'libs/constant/rmq/payload'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
 
 @Injectable()
@@ -65,16 +70,17 @@ export class UserService {
           username: data.username,
         },
       })
+    let payload: UserCreatedPayload = {
+      id: res.id,
+      email: res.email,
+      username: res.username,
+    }
 
     //test emit event to rabbitmq
     this.amqpConnection.publish(
       EXCHANGE_RMQ.USER_EVENTS,
       ROUTING_RMQ.USER_CREATED,
-      {
-        id: res.id,
-        email: res.email,
-        username: res.username,
-      },
+      payload,
     )
     return res
   }
@@ -125,16 +131,21 @@ export class UserService {
         status: Status.PENDING,
       },
     })
-
-    //vấn đề về việc notifi thì để bên notification service xử lý
-    this.amqpConnection.publish(EXCHANGE_RMQ.USER_EVENTS, ROUTING_RMQ.USER_MAKE_FRIEND, {
+    const payload: UserMakeFriendPayload = {
       inviterId: data.inviterId,
       inviterName: data.inviterName,
 
       inviteeEmail: data.inviteeEmail,
       inviteeName: friend.username,
       inviteeId: friend.id,
-    })
+    }
+
+    //vấn đề về việc notifi thì để bên notification service xử lý
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.USER_EVENTS,
+      ROUTING_RMQ.USER_MAKE_FRIEND,
+      payload,
+    )
 
     return {
       status: 'SUCCESS',
@@ -200,15 +211,17 @@ export class UserService {
       })
     }
 
+    const payload: UserUpdateStatusMakeFriendPayload = {
+      inviterId: data.inviterId, //ngươi nhận thông báo
+      inviteeId: data.inviteeId,
+      inviteeName: data.inviteeName,
+      status: data.status,
+    }
+
     this.amqpConnection.publish(
       EXCHANGE_RMQ.USER_EVENTS,
       ROUTING_RMQ.USER_UPDATE_STATUS_MAKE_FRIEND,
-      {
-        inviterId: data.inviterId, //ngươi nhận thông báo
-        inviteeId: data.inviteeId,
-        inviteeName: data.inviteeName,
-        status: data.status,
-      },
+      payload,
     )
 
     //thằng conversation cũng sẽ nhận và create conservation

@@ -1,4 +1,4 @@
-export interface SendMessagePayload {
+export interface SendMessagePayloadSocket {
   conversationId: string
   message: string
   replyToMessageId?: string

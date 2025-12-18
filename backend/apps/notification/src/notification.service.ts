@@ -6,9 +6,13 @@ import { Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Status } from '@prisma/client'
 import { Redis as RedisClient } from 'ioredis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
+import type {
+  UserCreatedPayload,
+  UserMakeFriendPayload,
+  UserUpdateStatusMakeFriendPayload,
+} from 'libs/constant/rmq/payload'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
-import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 
 @Injectable()
 export class NotificationService {
@@ -34,7 +38,7 @@ export class NotificationService {
     routingKey: ROUTING_RMQ.USER_CREATED,
     queue: QUEUE_RMQ.NOTIFICATION_USER_CREATED,
   })
-  async handleUserRegistered(data: any) {
+  async handleUserRegistered(data: UserCreatedPayload) {
     await this.mailerService.sendUserConfirmation(data)
     //tạo thông báo
   }
@@ -44,7 +48,7 @@ export class NotificationService {
     routingKey: ROUTING_RMQ.USER_MAKE_FRIEND,
     queue: QUEUE_RMQ.NOTIFICATION_USER_MAKE_FRIEND,
   })
-  async handleMakeFriend(data: any) {
+  async handleMakeFriend(data: UserMakeFriendPayload) {
     /**
      * 
      * inviterName: data.inviterName,
@@ -86,7 +90,7 @@ export class NotificationService {
     routingKey: ROUTING_RMQ.USER_UPDATE_STATUS_MAKE_FRIEND,
     queue: QUEUE_RMQ.NOTIFICATION_USER_UPDATE_STATUS_MAKE_FRIEND,
   })
-  async handleUpdateStatusMakeFriend(data: any) {
+  async handleUpdateStatusMakeFriend(data: UserUpdateStatusMakeFriendPayload) {
     /**
      * inviterId: data.inviterId,//ngươi nhận thông báo
       inviteeName: data.inviteeName,

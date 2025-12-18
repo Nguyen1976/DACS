@@ -13,6 +13,7 @@ import { AddMemberToConversationDTO } from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
+import { SendMessagePayload } from 'libs/constant/rmq/payload'
 
 @Injectable()
 export class ChatService implements OnModuleInit {
@@ -57,7 +58,7 @@ export class ChatService implements OnModuleInit {
   }
 
   //k cần grpc
-  sendMessage(dto) {
+  sendMessage(dto: SendMessagePayload) {
     this.amqpConnection.publish(
       EXCHANGE_RMQ.CHAT_EVENTS,
       ROUTING_RMQ.MESSAGE_SEND,

@@ -8,6 +8,10 @@ import {
   type CreateConversationResponse,
 } from 'interfaces/chat.grpc'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
+import type {
+  SendMessagePayload,
+  UserUpdateStatusMakeFriendPayload,
+} from 'libs/constant/rmq/payload'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
 
@@ -25,7 +29,9 @@ export class ChatService {
     routingKey: ROUTING_RMQ.USER_UPDATE_STATUS_MAKE_FRIEND,
     queue: QUEUE_RMQ.CHAT_USER_UPDATE_STATUS_MAKE_FRIEND,
   })
-  async createConversationWhenAcceptFriend(data: any) {
+  async createConversationWhenAcceptFriend(
+    data: UserUpdateStatusMakeFriendPayload,
+  ) {
     // inviterId: data.inviterId,//ngươi nhận thông báo
     // inviteeName: data.inviteeName,
     // status: data.status,
@@ -83,7 +89,7 @@ export class ChatService {
     routingKey: ROUTING_RMQ.MESSAGE_SEND,
     queue: QUEUE_RMQ.CHAT_MESSAGES_SEND,
   })
-  async sendMessage(data): Promise<void> {
+  async sendMessage(data: SendMessagePayload): Promise<void> {
     //get memberIds của conversation để emit socket (sau này tối ưu bằng redis)
     const conversationMembers = await this.prisma.conversationMember.findMany({
       where: {

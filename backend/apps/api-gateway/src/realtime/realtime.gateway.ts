@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt'
 import { Inject, Injectable } from '@nestjs/common'
 import { ChatService } from '../chat/chat.service'
 import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
-import type { SendMessagePayload } from 'libs/constant/websocket/socket.payload'
+import type { SendMessagePayloadSocket } from 'libs/constant/websocket/socket.payload'
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
@@ -127,9 +127,15 @@ export class RealtimeGateway
 
   @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
   handleSendMessage(
-    @MessageBody() data: SendMessagePayload,
+    @MessageBody() data: SendMessagePayloadSocket,
     @ConnectedSocket() client: Socket,
   ) {
+    /**
+     * {
+     *  "conversationId": "693befebbeed61ee46291bf3",
+     *  "message": "xin chào",
+     * }
+     */
     this.chatService.sendMessage({
       conversationId: data.conversationId,
       senderId: client.data.userId,
