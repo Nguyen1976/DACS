@@ -23,12 +23,14 @@ const OutMessage = ({
       ? 'bg-indigo-500/40 border-indigo-400/40'
       : 'bg-indigo-400/30 border-indigo-300/40'
   const timeColor = theme === 'dark' ? 'text-indigo-100' : 'text-indigo-100'
+  const statusColor = theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
   const moreColor =
     theme === 'dark'
       ? 'text-gray-500 hover:text-gray-300'
       : 'text-gray-400 hover:text-gray-600'
+
   return (
-    <div className='group flex justify-end items-end gap-2 mb-3'>
+    <div className='group flex justify-end gap-2 mb-3'>
       <button
         className={`opacity-0 group-hover:opacity-100 transition p-1 rounded order-1 ${moreColor}`}
         title='More'
@@ -42,12 +44,13 @@ const OutMessage = ({
           <path d='M6.75 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM13.5 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM21.75 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z' />
         </svg>
       </button>
-      <div className='order-2'>
+      <div className='order-2 '>
         <div
-          className={`relative max-w-[70%] rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm ${bubble}`}
+          className={`relative rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm ${bubble}`}
         >
           <p className='leading-relaxed'>{text}</p>
-          <div className='mt-1 flex items-center gap-2'>
+          {/* Meta row inside bubble: time + reactions; allow wrapping to avoid overflow */}
+          <div className='mt-1 flex flex-wrap items-center gap-2'>
             <span className={`text-[11px] ${timeColor}`}>{time}</span>
             {reactions.length ? (
               <div
@@ -61,19 +64,22 @@ const OutMessage = ({
                 ))}
               </div>
             ) : null}
-            <span className={`text-[11px] ${timeColor}`}>
-              {status === 'seen'
-                ? 'Đã xem'
-                : status === 'delivered'
-                ? 'Đã nhận'
-                : 'Đã gửi'}
-            </span>
           </div>
           <span
             className={`absolute -right-1 top-2 w-2 h-2 rotate-45 ${
               theme === 'dark' ? 'bg-indigo-600' : 'bg-indigo-500'
             }`}
           ></span>
+        </div>
+        {/* Status placed outside the bubble to avoid crowding */}
+        <div className='mt-1 flex justify-end'>
+          <span className={`text-[11px] ${statusColor}`}>
+            {status === 'seen'
+              ? 'Đã xem'
+              : status === 'delivered'
+              ? 'Đã nhận'
+              : 'Đã gửi'}
+          </span>
         </div>
       </div>
       <img

@@ -35,7 +35,11 @@ const ChatPage = ({ theme }: ChatPageProps) => {
   const surface = theme === 'dark' ? 'bg-[#0f1115]' : 'bg-gray-50'
 
   return (
-    <div className={`flex h-screen overflow-hidden flex-1 ${surface}`}>
+    <div
+      className={`flex h-screen overflow-auto flex-1 ${surface} nice-scrollbar ${
+        theme === 'dark' ? 'nice-scrollbar-dark' : 'nice-scrollbar-light'
+      }`}
+    >
       <ChatList items={chatItems} theme={theme} />
 
       <div className='flex-1 relative flex flex-col min-w-0'>
@@ -142,9 +146,9 @@ const ChatPage = ({ theme }: ChatPageProps) => {
         </header>
 
         <div
-          className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 ${
-            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}
+          className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 nice-scrollbar ${
+            theme === 'dark' ? 'nice-scrollbar-dark' : 'nice-scrollbar-light'
+          } ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}
         >
           <div
             className={`text-sm px-3 py-2 rounded-lg ${
@@ -185,6 +189,30 @@ const ChatPage = ({ theme }: ChatPageProps) => {
             theme={theme}
             text='Vậy mình online meeting lúc 8pm, ngày 17/12 nhé'
             time='11:22'
+          />
+          <OutMessage
+            theme={theme}
+            text='Dạ vâng ạ'
+            time='11:22'
+            reactions={[{ emoji: '👍', count: 1 }]}
+          />
+          <OutMessage
+            theme={theme}
+            text='Dạ vâng ạ'
+            time='11:22'
+            reactions={[{ emoji: '👍', count: 1 }]}
+          />
+          <OutMessage
+            theme={theme}
+            text='Dạ vâng ạ'
+            time='11:22'
+            reactions={[{ emoji: '👍', count: 1 }]}
+          />
+          <OutMessage
+            theme={theme}
+            text='Dạ vâng ạ'
+            time='11:22'
+            reactions={[{ emoji: '👍', count: 1 }]}
           />
           <OutMessage
             theme={theme}

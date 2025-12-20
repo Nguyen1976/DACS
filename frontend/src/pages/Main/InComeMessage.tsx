@@ -25,7 +25,7 @@ const InComeMessage = ({
       ? 'bg-[#11151c] border border-[#1f2633] text-gray-200'
       : 'bg-white border border-gray-200'
   return (
-    <div className='group flex items-end gap-2 mb-3'>
+    <div className='group flex gap-2 mb-3'>
       <img
         src={avatarUrl}
         alt='User Avatar'
@@ -42,7 +42,7 @@ const InComeMessage = ({
           </div>
         ) : null}
         <div
-          className={`relative max-w-[70%] rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm ${bubble} ${bubbleBorder}`}
+          className={`relative rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm ${bubble} ${bubbleBorder}`}
         >
           <p className='leading-relaxed'>{text}</p>
           <div className='mt-1 flex items-center gap-2'>

@@ -1,1 +1,41 @@
 @import 'tailwindcss';
+
+/* Pretty custom scrollbar (light + dark variants) */
+.nice-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+}
+.nice-scrollbar-light {
+  scrollbar-color: rgba(99, 102, 241, 0.6) rgba(243, 244, 246, 0.6);
+}
+.nice-scrollbar-dark {
+  scrollbar-color: rgba(99, 102, 241, 0.7) rgba(31, 41, 55, 0.6);
+}
+
+.nice-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.nice-scrollbar-light::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.6);
+  border-radius: 9999px;
+}
+.nice-scrollbar-dark::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.6);
+  border-radius: 9999px;
+}
+.nice-scrollbar-light::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+  border-radius: 9999px;
+  border: 2px solid rgba(243, 244, 246, 0.6);
+}
+.nice-scrollbar-dark::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 9999px;
+  border: 2px solid rgba(31, 41, 55, 0.6);
+}
+.nice-scrollbar-light:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6d76f7 0%, #4f52ee 100%);
+}
+.nice-scrollbar-dark:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5a60ef 0%, #3f3bd9 100%);
+}
