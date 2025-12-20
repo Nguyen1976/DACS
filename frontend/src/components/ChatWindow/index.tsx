@@ -177,7 +177,7 @@ export function ChatWindow({
         >
           <Paperclip className='w-5 h-5' />
         </Button>
-
+        
         <input
           type='text'
           placeholder='Write a message...'

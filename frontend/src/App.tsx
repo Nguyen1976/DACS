@@ -1,9 +1,10 @@
+import AuthPage from './pages/Auth'
 import ChatPage from './pages/Chat'
 
 function App() {
   return (
     <>
-      <ChatPage />
+      <AuthPage />
     </>
   )
 }
