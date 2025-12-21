@@ -14,7 +14,10 @@ async function bootstrap() {
   )
   app.useGlobalFilters(new GrpcToHttpExceptionFilter())
   app.useGlobalInterceptors(new ResponseInterceptor())
-
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  })
   await app.listen(process.env.PORT ?? 3000)
 }
 bootstrap()
