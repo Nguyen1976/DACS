@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt'
 import { RpcException } from '@nestjs/microservices'
 import { Status } from '@prisma/client'
 import {
+  ListFriendsResponse,
   MakeFriendRequest,
   MakeFriendResponse,
   UpdateStatusRequest,
@@ -227,5 +228,30 @@ export class UserService {
     //thằng conversation cũng sẽ nhận và create conservation
 
     return { status: 'SUCCESS' }
+  }
+
+  async listFriends(userId: string): Promise<ListFriendsResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    })
+    if (!user) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'User not found',
+      })
+    }
+    const friends = await this.prisma.user.findMany({
+      where: {
+        id: { in: user.friends || [] },
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+      },
+    })
+    return { friends } as ListFriendsResponse
   }
 }

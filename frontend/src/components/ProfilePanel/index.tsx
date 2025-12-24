@@ -18,7 +18,7 @@ interface ProfilePanelProps {
 
 export function ProfilePanel({ user, onClose }: ProfilePanelProps) {
   return (
-    <div className='w-[340px] bg-black-bland border-l border-bg-box-message-incoming flex flex-col custom-scrollbar'>
+    <div className='bg-black-bland border-l border-bg-box-message-incoming flex flex-col custom-scrollbar'>
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
         <h2 className='text-lg font-semibold text-text'>Profile</h2>
         <Button

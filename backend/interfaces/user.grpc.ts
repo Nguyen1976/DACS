@@ -56,6 +56,20 @@ export interface UpdateStatusResponse {
   status: string;
 }
 
+export interface Friend {
+  id: string;
+  email: string;
+  username: string;
+}
+
+export interface ListFriendsRequest {
+  userId: string;
+}
+
+export interface ListFriendsResponse {
+  friends: Friend[];
+}
+
 export const USER_PACKAGE_NAME = "user";
 
 export interface UserGrpcServiceClient {
@@ -66,6 +80,8 @@ export interface UserGrpcServiceClient {
   makeFriend(request: MakeFriendRequest, metadata?: Metadata): Observable<MakeFriendResponse>;
 
   updateStatusMakeFriend(request: UpdateStatusRequest, metadata?: Metadata): Observable<UpdateStatusResponse>;
+
+  listFriends(request: ListFriendsRequest, metadata?: Metadata): Observable<ListFriendsResponse>;
 }
 
 export interface UserGrpcServiceController {
@@ -88,11 +104,16 @@ export interface UserGrpcServiceController {
     request: UpdateStatusRequest,
     metadata?: Metadata,
   ): Promise<UpdateStatusResponse> | Observable<UpdateStatusResponse> | UpdateStatusResponse;
+
+  listFriends(
+    request: ListFriendsRequest,
+    metadata?: Metadata,
+  ): Promise<ListFriendsResponse> | Observable<ListFriendsResponse> | ListFriendsResponse;
 }
 
 export function UserGrpcServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["register", "login", "makeFriend", "updateStatusMakeFriend"];
+    const grpcMethods: string[] = ["register", "login", "makeFriend", "updateStatusMakeFriend", "listFriends"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserGrpcService", method)(constructor.prototype[method], method, descriptor);

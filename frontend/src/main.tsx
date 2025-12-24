@@ -4,11 +4,21 @@ import './index.css'
 import App from '@/App'
 import { store } from './redux/store'
 import { Provider } from 'react-redux'
+import { injectStore } from './utils/authorizeAxios'
+
+//Config redux persist
+import { PersistGate } from 'redux-persist/integration/react'
+import { persistStore } from 'redux-persist'
+const persistor = persistStore(store)
+
+injectStore(store)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
     </Provider>
   </StrictMode>
 )

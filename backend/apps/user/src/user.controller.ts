@@ -3,6 +3,7 @@ import { UserService } from './user.service'
 import { GrpcMethod } from '@nestjs/microservices'
 import type { Metadata } from '@grpc/grpc-js'
 import {
+  type ListFriendsRequest,
   USER_GRPC_SERVICE_NAME,
   type MakeFriendRequest,
   type MakeFriendResponse,
@@ -47,6 +48,15 @@ export class UserController implements UserGrpcServiceController {
     metadata: Metadata,
   ): Promise<UpdateStatusResponse> {
     const res = await this.userService.updateStatusMakeFriend(data)
+    return res
+  }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'listFriends')
+  async listFriends(
+    data: ListFriendsRequest,
+    metadata: Metadata,
+  ): Promise<any> {
+    const res = await this.userService.listFriends(data.userId)
     return res
   }
 }

@@ -2,32 +2,33 @@
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { X, Search } from 'lucide-react'
-import { useState } from 'react'
-
-interface User {
-  id: string
-  name: string
-  avatar: string
-  isOnline?: boolean
-}
+import { X, Search, Camera } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Checkbox } from '../ui/checkbox'
+import { Input } from '../ui/input'
+import { useDispatch } from 'react-redux'
+import { getFriends, type FriendState } from '@/redux/slices/friendSlice'
+import type { AppDispatch } from '@/redux/store'
 
 interface NewChatModalProps {
-  users: User[]
   onClose: () => void
-  onSelectUser: (userId: string) => void
 }
 
-export function NewChatModal({
-  users,
-  onClose,
-  onSelectUser,
-}: NewChatModalProps) {
+export function NewChatModal({ onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('')
+  const [preview, setPreview] = useState<string | null>(null)
+  const [friends, setFriends] = useState<FriendState['friends']>([])
+  
+  const dispatch = useDispatch<AppDispatch>()
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase())
-  )
+  useEffect(() => {
+    //fetch friends từ redux store hoặc API
+    dispatch(getFriends()).then((res) => {
+      setFriends(res.payload.friends)
+    })
+  }, [dispatch])
+
+  const inputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50'>
@@ -44,7 +45,34 @@ export function NewChatModal({
           </Button>
         </div>
 
-        <div className='p-6'>
+        <div className='p-6 pb-0'>
+          <Input
+            type='file'
+            accept='image/*'
+            ref={inputRef}
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) setPreview(URL.createObjectURL(file))
+            }}
+          />
+          <div className='flex items-center gap-2'>
+            <Avatar
+              className='w-12 h-12 mb-4 flex items-center justify-center bg-muted'
+              onClick={() => inputRef.current?.click()}
+            >
+              {!preview ? (
+                <Camera className='w-6 h-6 text-muted-foreground' />
+              ) : (
+                <AvatarImage src={preview} alt='Preview' />
+              )}
+            </Avatar>
+            <Input
+              className='border-none mb-4 focus:ring-bg-box-message-out! bg-button! text-text outline-none'
+              type='text'
+              placeholder='Group name'
+            />
+          </div>
           <div className='relative mb-4'>
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400' />
             <input
@@ -57,28 +85,28 @@ export function NewChatModal({
           </div>
 
           <div className='space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar'>
-            {filteredUsers.map((user) => (
+            {friends.map((user) => (
               <button
                 key={user.id}
-                onClick={() => onSelectUser(user.id)}
                 className='w-full flex items-center gap-3 p-3 hover:bg-button rounded-lg transition-colors'
               >
+                <Checkbox id={`user-${user.id}`} value={user.id} />
                 <div className='relative'>
                   <Avatar className='w-10 h-10'>
-                    <AvatarImage
-                      src={user.avatar || '/placeholder.svg'}
-                      alt={user.name}
-                    />
-                    <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    <AvatarImage src={'/placeholder.svg'} alt={user.username} />
+                    <AvatarFallback>{user.username[0]}</AvatarFallback>
                   </Avatar>
-                  {user.isOnline && (
+                  {/* {user.isOnline && (
                     <div className='absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-voice-call' />
-                  )}
+                  )} */}
                 </div>
-                <span className='text-text font-medium'>{user.name}</span>
+                <span className='text-text font-medium'>{user.username}</span>
               </button>
             ))}
           </div>
+        </div>
+        <div className='w-full flex justify-end'>
+          <Button className='m-4'>Start Chat</Button>
         </div>
       </div>
     </div>

@@ -73,4 +73,11 @@ export class UserService implements OnModuleInit {
     //bắn sự kiện sang notifications service để tạo thông báo hoặc gửi mail
     return await firstValueFrom(observable)
   }
+
+  async listFriends(userId: string): Promise<any> {
+    const observable = this.userClientService.listFriends({
+      userId,
+    })
+    return await firstValueFrom(observable)
+  }
 }

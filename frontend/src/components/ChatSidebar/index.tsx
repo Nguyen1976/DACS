@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModeToggle } from '../ModeToggle'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
 
 interface User {
   id: string
@@ -28,9 +35,24 @@ export function ChatSidebar({
   onNewChat,
 }: ChatSidebarProps) {
   return (
-    <div className='w-[340px] bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
+    <div className='bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
-        <h1 className='text-xl font-semibold text-text'>Chats</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar>
+              <AvatarImage src='https://github.com/shadcn.png' alt='@shadcn' />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='w-56' align='start'>
+            <DropdownMenuGroup>
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Billing</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <div className='flex gap-2'>
           {/* <Button
             variant='ghost'
@@ -94,7 +116,7 @@ export function ChatSidebar({
             </div>
 
             {user.unreadCount && user.unreadCount > 0 && (
-              <div className='flex-shrink-0 w-6 h-6 bg-bg-box-message-out rounded-full flex items-center justify-center'>
+              <div className='w-6 h-6 bg-bg-box-message-out rounded-full flex items-center justify-center'>
                 <span className='text-xs text-text font-medium'>
                   {user.unreadCount}
                 </span>

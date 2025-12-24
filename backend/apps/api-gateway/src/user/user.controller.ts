@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Body,
+  Get,
 } from '@nestjs/common'
 import { UserService } from './user.service'
 import {
@@ -47,5 +48,11 @@ export class UserController {
       inviteeId: user.userId,
       inviteeName: user.username,
     })
+  }
+
+  @Get('list-friends')
+  @RequireLogin()
+  async listFriends(@UserInfo() user: any) {
+    return await this.userService.listFriends(user.userId)
   }
 }
