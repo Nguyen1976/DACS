@@ -9,6 +9,8 @@ import type {
   UnknownAction,
 } from '@reduxjs/toolkit'
 import axios from 'axios'
+import { interceptorLoadingElements } from '.'
+import { toast } from 'sonner'
 
 /**
  * Không thẻ import {store} from '~/redux/store' theo cách thông thường ở đây
@@ -48,6 +50,8 @@ authorizeAxiosInstance.defaults.withCredentials = true
 //https://axios-http.com/docs/interceptors
 authorizeAxiosInstance.interceptors.request.use(
   (config) => {
+    interceptorLoadingElements(true)
+
     const accessToken = localStorage.getItem('token')
 
     if (accessToken) {
@@ -70,6 +74,7 @@ authorizeAxiosInstance.interceptors.request.use(
 authorizeAxiosInstance.interceptors.response.use(
   (response) => {
     //Kỹ thuật chặn spam click
+    interceptorLoadingElements(false)
 
     return response
   },
@@ -77,6 +82,8 @@ authorizeAxiosInstance.interceptors.response.use(
     //Kỹ thuật chặn spam click
     /**Xử lý refresh token tự động */
     //TH1: Nếu nhận mã 401 từ be thì call api đăng xuất
+    interceptorLoadingElements(false)
+
     if (error.response?.status === 401) {
       axiosReduxStore?.dispatch(logoutAPI())
     }
@@ -86,7 +93,7 @@ authorizeAxiosInstance.interceptors.response.use(
       errorMessage = error?.response?.data?.message
     }
 
-    console.log('API error:', errorMessage)
+    toast.error(`Error: ${errorMessage}`)
 
     return Promise.reject(error)
   }

@@ -12,14 +12,13 @@ import {
 } from '../ui/dropdown-menu'
 import type { AppDispatch } from '@/redux/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import {
   getConversations,
+  selectConversation,
   type Conversation,
-  type ConversationMember,
 } from '@/redux/slices/conversationSlice'
 import { formatDateTime } from '@/utils/formatDateTime'
-import { selectUser } from '@/redux/slices/userSlice'
 
 interface ChatSidebarProps {
   setSelectedChatId: (chatId: string) => void
@@ -33,32 +32,12 @@ export function ChatSidebar({
   selectedChatId,
 }: ChatSidebarProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const user = useSelector(selectUser)
+  const conversations = useSelector(selectConversation)
   useEffect(() => {
-    dispatch(getConversations({ limit: 10, page: 1 })).then((response) => {
-      setConversations(
-        response.payload.conversations.map((c: Conversation) => {
-          return {
-            ...c,
-            groupName:
-              c.type === 'DIRECT'
-                ? c.members.find(
-                    (p: ConversationMember) => p.userId !== user.id
-                  )?.username || ''
-                : c.groupName,
-            groupAvatar:
-              c.type === 'DIRECT'
-                ? c.members.find(
-                    (p: ConversationMember) => p.userId !== user.id
-                  )?.avatar || ''
-                : c.groupAvatar,
-            messages: c.messages !== undefined ? c.messages : [],
-          }
-        })
-      )
-    })
-  }, [dispatch, user.id])
+    if (conversations.length === 0) {
+      dispatch(getConversations({ limit: 10, page: 1 }))
+    }
+  }, [dispatch, conversations?.length])
 
   return (
     <div className='bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
@@ -129,7 +108,7 @@ export function ChatSidebar({
                 </span>
               </div>
               <p className='text-sm text-gray-400 truncate'>
-                {conversation.messages.length > 0
+                {conversation?.messages?.length > 0
                   ? conversation.messages[0].text
                   : 'No messages yet.'}
               </p>

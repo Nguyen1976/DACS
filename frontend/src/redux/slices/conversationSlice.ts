@@ -2,6 +2,7 @@ import authorizeAxiosInstance from '@/utils/authorizeAxios'
 import { API_ROOT } from '@/utils/constant'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import type { RootState } from '../store'
 
 export interface SenderMember {
   userId: string
@@ -41,21 +42,23 @@ export interface Conversation {
   messages: Message[]
 }
 
-export interface ConversationState {
-  conversations?: Array<Conversation>
-}
+export type ConversationState = Conversation[]
 
-const initialState: ConversationState = {
-  conversations: [],
-}
+const initialState: ConversationState = []
 
 export const getConversations = createAsyncThunk(
   `/chat/conversations`,
-  async ({ limit = 10, page = 1 }: { limit: number; page: number }) => {
+  async (
+    { limit = 10, page = 1 }: { limit: number; page: number },
+    { getState }
+  ) => {
+    const state = getState() as RootState
+    const userId = state.user.id
+
     const response = await authorizeAxiosInstance.get(
       `${API_ROOT}/chat/conversations?limit=${limit}&page=${page}`
     )
-    return response.data.data
+    return { userId, conversations: response.data.data.conversations }
   }
 )
 
@@ -77,6 +80,26 @@ export const getMessages = createAsyncThunk(
   }
 )
 
+export const createConversation = createAsyncThunk(
+  `/chat/create`,
+  async ({
+    memberIds,
+    groupName,
+  }: {
+    memberIds: string[]
+    groupName?: string
+  }) => {
+    const response = await authorizeAxiosInstance.post(
+      `${API_ROOT}/chat/create`,
+      {
+        memberIds,
+        groupName,
+      }
+    )
+    return response.data.data
+  }
+)
+
 export const conversationSlice = createSlice({
   name: 'conversations',
   initialState,
@@ -85,8 +108,29 @@ export const conversationSlice = createSlice({
     builder
       .addCase(
         getConversations.fulfilled,
-        (state, action: PayloadAction<ConversationState>) => {
-          state.conversations = action.payload.conversations
+        (
+          state: ConversationState,
+          action: PayloadAction<{
+            conversations: Conversation[]
+            userId: string
+          }>
+        ) => {
+          const { conversations, userId } = action.payload
+          state = conversations?.map((c) => ({
+            ...c,
+            groupName:
+              c.type === 'DIRECT'
+                ? c.members.find((p: ConversationMember) => p.userId !== userId)
+                    ?.username || ''
+                : c.groupName,
+            groupAvatar:
+              c.type === 'DIRECT'
+                ? c.members.find((p: ConversationMember) => p.userId !== userId)
+                    ?.avatar || ''
+                : c.groupAvatar,
+            messages: c.messages !== undefined ? c.messages : [],
+          })) as Conversation[]
+          return state
         }
       )
       .addCase(
@@ -96,12 +140,21 @@ export const conversationSlice = createSlice({
           action: PayloadAction<{ messages: Message[]; conversationId: string }>
         ) => {
           const { messages, conversationId } = action.payload
-          const conversation = state.conversations?.find(
-            (c) => c.id === conversationId
-          )
+          const conversation = state?.find((c) => c.id === conversationId)
           if (conversation) {
             conversation.messages = messages
           }
+        }
+      )
+      .addCase(
+        createConversation.fulfilled,
+        (state, action: PayloadAction<{ conversation: Conversation }>) => {
+          const c = action.payload.conversation
+
+          state.unshift({
+            ...c,
+            messages: Array.isArray(c.messages) ? c.messages : [],
+          })
         }
       )
   },
@@ -109,8 +162,8 @@ export const conversationSlice = createSlice({
 
 export const selectConversation = (state: {
   conversations: ConversationState
-}) => {
-  return state.conversations
+}): Conversation[] => {
+  return state.conversations ?? []
 }
 
 export const selectMessagesByConversationId = (
@@ -119,9 +172,7 @@ export const selectMessagesByConversationId = (
   },
   conversationId: string
 ) => {
-  const conversation = state.conversations.conversations?.find(
-    (c) => c.id === conversationId
-  )
+  const conversation = state.conversations?.find((c) => c.id === conversationId)
   return conversation ? conversation.messages : []
 }
 

@@ -9,6 +9,9 @@ import { Input } from '../ui/input'
 import { useDispatch } from 'react-redux'
 import { getFriends, type FriendState } from '@/redux/slices/friendSlice'
 import type { AppDispatch } from '@/redux/store'
+import { useForm } from 'react-hook-form'
+import { createConversation } from '@/redux/slices/conversationSlice'
+import { toast } from 'sonner'
 
 interface NewChatModalProps {
   onClose: () => void
@@ -18,7 +21,8 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
   const [friends, setFriends] = useState<FriendState['friends']>([])
-  
+  const [slectedFriends, setSelectedFriends] = useState<string[]>([])
+
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
@@ -30,9 +34,28 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
 
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const { register, handleSubmit } = useForm()
+
+  const onSubmit = (data) => {
+    dispatch(
+      createConversation({
+        groupName: data.groupName,
+        memberIds: slectedFriends,
+      })
+    )
+      .unwrap()
+      .finally(() => {
+        toast.success('Conversation created successfully')
+        onClose()
+      })
+  }
+
   return (
     <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50'>
-      <div className='bg-bg-voice-call rounded-2xl w-full max-w-md mx-4 overflow-hidden'>
+      <form
+        className='bg-bg-voice-call rounded-2xl w-full max-w-md mx-4 overflow-hidden'
+        onSubmit={handleSubmit(onSubmit)}
+      >
         <div className='flex items-center justify-between p-6 border-b border-button'>
           <h2 className='text-xl font-semibold text-text'>New Chat</h2>
           <Button
@@ -71,6 +94,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               className='border-none mb-4 focus:ring-bg-box-message-out! bg-button! text-text outline-none'
               type='text'
               placeholder='Group name'
+              {...register('groupName', { required: 'Group name is required' })}
             />
           </div>
           <div className='relative mb-4'>
@@ -86,11 +110,23 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
 
           <div className='space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar'>
             {friends.map((user) => (
-              <button
+              <div
                 key={user.id}
                 className='w-full flex items-center gap-3 p-3 hover:bg-button rounded-lg transition-colors'
               >
-                <Checkbox id={`user-${user.id}`} value={user.id} />
+                <Checkbox
+                  id={`${user.id}`}
+                  checked={slectedFriends.includes(user.id)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedFriends((state) => [...state, user.id])
+                    } else {
+                      setSelectedFriends((state) =>
+                        state.filter((id) => id !== user.id)
+                      )
+                    }
+                  }}
+                />
                 <div className='relative'>
                   <Avatar className='w-10 h-10'>
                     <AvatarImage src={'/placeholder.svg'} alt={user.username} />
@@ -101,14 +137,16 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                   )} */}
                 </div>
                 <span className='text-text font-medium'>{user.username}</span>
-              </button>
+              </div>
             ))}
           </div>
         </div>
         <div className='w-full flex justify-end'>
-          <Button className='m-4'>Start Chat</Button>
+          <Button type='submit' className='m-4 interceptor-loading'>
+            Start Chat
+          </Button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }

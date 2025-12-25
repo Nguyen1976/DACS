@@ -21,11 +21,17 @@ export default function ChatPage() {
           selectedChatId={selectedChatId}
         />
 
-        <ChatWindow
-          conversationId={selectedChatId || undefined}
-          onToggleProfile={() => setShowProfile(!showProfile)}
-          onVoiceCall={() => setShowVoiceCall(true)}
-        />
+        {selectedChatId ? (
+          <ChatWindow
+            conversationId={selectedChatId || undefined}
+            onToggleProfile={() => setShowProfile(!showProfile)}
+            onVoiceCall={() => setShowVoiceCall(true)}
+          />
+        ) : (
+          <div className='flex-1 flex items-center justify-center bg-bg-box-chat text-gray-500'>
+            Select a chat to start messaging
+          </div>
+        )}
 
         {/*
         {showProfile && selectedUser && (

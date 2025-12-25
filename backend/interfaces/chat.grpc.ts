@@ -20,12 +20,7 @@ export interface CreateConversationRequest {
 }
 
 export interface CreateConversationResponse {
-  id: string;
-  memberIds: string[];
-  type: string;
-  groupName?: string | undefined;
-  groupAvatar?: string | undefined;
-  adminId?: string | undefined;
+  conversation: Conversation | undefined;
 }
 
 export interface AddMemberToConversationRequest {

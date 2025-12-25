@@ -39,10 +39,6 @@ export class ChatService {
   async createConversationWhenAcceptFriend(
     data: UserUpdateStatusMakeFriendPayload,
   ) {
-    // inviterId: data.inviterId,//ngươi nhận thông báo
-    // inviteeName: data.inviteeName,
-    // status: data.status,
-
     if (!(data.status === Status.ACCEPTED)) return
     const conversation = await this.createConversation({
       type: conversationType.DIRECT,
@@ -81,13 +77,63 @@ export class ChatService {
       })),
     })
 
+    const res = await this.prisma.conversation.findUnique({
+      where: {
+        id: conversation.id,
+      },
+      include: {
+        members: {
+          select: {
+            userId: true,
+            username: true,
+            avatar: true,
+            lastReadAt: true,
+          },
+        },
+
+        // last message
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            text: true,
+            senderId: true,
+            createdAt: true,
+            conversationId: true,
+            replyToMessageId: true,
+            isDeleted: true,
+            deleteType: true,
+            senderMember: {
+              select: {
+                userId: true,
+                username: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
+    })
+    
     return {
-      id: conversation.id,
-      type: conversation.type,
-      groupName: conversation.groupName || '',
-      groupAvatar: conversation.groupAvatar || '',
-      memberIds: data.memberIds,
-      adminId: data.type === conversationType.GROUP ? data.createrId : '',
+      conversation: {
+        id: res?.id,
+        unreadCount: '0', //todo
+        type: res?.type,
+        groupName: res?.groupName,
+        groupAvatar: res?.groupAvatar,
+        createdAt: res?.createdAt.toString(),
+        updatedAt: res?.updatedAt.toString(),
+        members: res?.members.map((m) => ({
+          ...m,
+          lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : '',
+        })),
+        messages: res?.messages.map((msg) => ({
+          ...msg,
+          createdAt: msg.createdAt.toString(),
+        })),
+      },
     } as CreateConversationResponse
   }
 

@@ -35,9 +35,7 @@ export function ChatWindow({
 
   const conversation = useSelector(
     (state: { conversations: ConversationState }) => {
-      return state.conversations.conversations?.find(
-        (c) => c.id === conversationId
-      )
+      return state.conversations?.find((c) => c.id === conversationId)
     }
   )
 
@@ -65,15 +63,6 @@ export function ChatWindow({
         })
     }
   }, [conversation, conversationId, dispatch])
-
-  if (!conversationId) {
-    return (
-      <div className='flex-1 flex items-center justify-center bg-bg-box-chat text-gray-500'>
-        Select a chat to start messaging
-      </div>
-    )
-  }
-  //get messages from conversation
 
   return (
     <div className='flex-1 flex flex-col bg-bg-box-chat'>
