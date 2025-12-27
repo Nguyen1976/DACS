@@ -75,9 +75,16 @@ export interface DetailMakeFriendRequest {
   friendRequestId: string;
 }
 
+export interface FromUser {
+  email: string;
+  username: string;
+  avatar: string;
+  id: string;
+}
+
 export interface DetailMakeFriendResponse {
   id: string;
-  fromUserId: string;
+  fromUser: FromUser | undefined;
   toUserId: string;
   status: string;
   createdAt: string;

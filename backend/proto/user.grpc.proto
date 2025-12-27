@@ -75,9 +75,16 @@ message DetailMakeFriendRequest {
   string friendRequestId = 1;
 }
 
+message FromUser {
+  string email = 1;
+  string username = 2;
+  string avatar = 3;
+  string id = 4;
+}
+
 message DetailMakeFriendResponse {
   string id = 1;
-  string fromUserId = 2;
+  FromUser fromUser = 2;
   string toUserId = 3;
   string status = 4;
   string createdAt = 5;

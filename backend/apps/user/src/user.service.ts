@@ -157,14 +157,6 @@ export class UserService {
   async updateStatusMakeFriend(
     data: UpdateStatusRequest,
   ): Promise<UpdateStatusResponse> {
-    /**
-     * status: dto.status as FriendRequestStatus,
-      inviteeId: dto.inviteeId,
-      inviterId: dto.inviterId,
-      inviteeName: dto.inviteeName,
-     * 
-     */
-    //tìm bản ghi dựa vào inviterId và inviteeId
     const friendRequest = await this.prisma.friendRequest.findFirst({
       where: {
         fromUserId: data.inviterId,
@@ -223,13 +215,13 @@ export class UserService {
       members: [
         {
           userId: data.inviterId,
-          username: inviterUpdate.username,
-          avatar: inviterUpdate.avatar || '',
+          username: inviterUpdate?.username || '',
+          avatar: inviterUpdate?.avatar || '',
         },
         {
           userId: data.inviteeId,
-          username: inviteeUpdate.username,
-          avatar: inviteeUpdate.avatar || '',
+          username: inviteeUpdate?.username || '',
+          avatar: inviteeUpdate?.avatar || '',
         },
       ],
     }
@@ -271,7 +263,9 @@ export class UserService {
     return { friends } as ListFriendsResponse
   }
 
-  async detailMakeFriend(friendRequestId: string): Promise<DetailMakeFriendResponse> {
+  async detailMakeFriend(
+    friendRequestId: string,
+  ): Promise<DetailMakeFriendResponse> {
     const friendRequest = await this.prisma.friendRequest.findUnique({
       where: {
         id: friendRequestId,
@@ -283,8 +277,22 @@ export class UserService {
         message: 'Friend request not found',
       })
     }
+    //get user details
+    const fromUser = await this.prisma.user.findUnique({
+      where: {
+        id: friendRequest.fromUserId,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        avatar: true,
+      },
+    })
+
     return {
       ...friendRequest,
+      fromUser: fromUser,
       createdAt: friendRequest.createdAt.toString(),
       updatedAt: friendRequest.updatedAt.toString(),
     } as DetailMakeFriendResponse

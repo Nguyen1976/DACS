@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { Input } from '../ui/input'
 import { useForm } from 'react-hook-form'
+import { makeFriendRequest } from '@/apis'
+import { toast } from 'sonner'
 
 interface MakeFriendModalProps {
   onClose: () => void
@@ -10,8 +12,12 @@ interface MakeFriendModalProps {
 export function MakeFriendModal({ onClose }: MakeFriendModalProps) {
   const { register, handleSubmit } = useForm<{ email: string }>()
 
+
   const onSubmit = (data: { email: string }) => {
-    console.log('Send friend request to:', data.email)
+    makeFriendRequest(data.email).then(() => {
+      toast.success('Friend request sent successfully')
+      onClose()
+    })
   }
 
   return (
