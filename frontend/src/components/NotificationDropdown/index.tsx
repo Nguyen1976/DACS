@@ -1,6 +1,3 @@
-'use client'
-
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -11,36 +8,23 @@ import {
 import { Bell, MoreHorizontal, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch } from '@/redux/store'
-import { getNotifications } from '@/redux/slices/notificationSlice'
+import {
+  getNotifications,
+  selectNotification,
+} from '@/redux/slices/notificationSlice'
+import { formatDateTime } from '@/utils/formatDateTime'
 
-interface Notification {
-  id: string
-  user: {
-    name: string
-    avatar: string
-  }
-  content: string
-  timestamp: string
-  isRead: boolean
-  type: string
-}
-
-interface NotificationsDropdownProps {
-  notifications: Notification[]
-  unreadCount: number
-}
-
-export function NotificationsDropdown({
-  notifications,
-  unreadCount,
-}: NotificationsDropdownProps) {
+export function NotificationsDropdown() {
   const dispatch = useDispatch<AppDispatch>()
+  const notifications = useSelector(selectNotification)
 
   useEffect(() => {
-    dispatch(getNotifications({ limit: 10, page: 1 }))
-  }, [dispatch])
+    if (notifications.length === 0) {
+      dispatch(getNotifications({ limit: 10, page: 1 }))
+    }
+  }, [dispatch, notifications.length])
 
   return (
     <Popover>
@@ -51,7 +35,7 @@ export function NotificationsDropdown({
           className='relative text-muted-foreground hover:text-foreground'
         >
           <Bell className='w-5 h-5 text-text' />
-          {unreadCount > 0 && (
+          {notifications.filter((n) => !n.isRead).length > 0 && (
             <span className='absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-background' />
           )}
         </Button>
@@ -75,37 +59,25 @@ export function NotificationsDropdown({
         <ScrollArea className='h-fit max-h-96'>
           {notifications.length > 0 ? (
             <div className='flex flex-col'>
-              {notifications.map((notification) => (
+              {notifications.map((n) => (
                 <button
-                  key={notification.id}
+                  key={n.id}
                   className={cn(
                     'w-full px-4 py-3 flex items-start gap-3 hover:bg-accent transition-colors text-left border-b last:border-0',
-                    !notification.isRead && 'bg-primary/5'
+                    !n.isRead && 'bg-primary/5'
                   )}
                 >
-                  <Avatar className='w-9 h-9'>
-                    <AvatarImage
-                      src={notification.user.avatar || '/placeholder.svg'}
-                      alt={notification.user.name}
-                    />
-                    <AvatarFallback>{notification.user.name[0]}</AvatarFallback>
-                  </Avatar>
                   <div className='flex-1 min-w-0'>
-                    <p className='text-xs leading-relaxed'>
-                      <span className='font-semibold'>
-                        {notification.user.name}
-                      </span>{' '}
-                      {notification.content}
-                    </p>
+                    <p className='text-xs leading-relaxed'>{n.message}</p>
                     <span
                       className={cn(
                         'text-[10px] mt-1 block text-muted-foreground'
                       )}
                     >
-                      {notification.timestamp}
+                      {formatDateTime(n.createdAt)}
                     </span>
                   </div>
-                  {!notification.isRead && (
+                  {!n.isRead && (
                     <div className='w-2 h-2 bg-primary rounded-full mt-2' />
                   )}
                 </button>

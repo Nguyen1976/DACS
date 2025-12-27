@@ -23,42 +23,6 @@ import { socket } from '@/lib/socket'
 import { selectUser } from '@/redux/slices/userSlice'
 import MenuCustome from './Menu'
 import { NotificationsDropdown } from '../NotificationDropdown'
-import { mockUsers } from '@/lib/mock-data'
-
-const mockNotifications = [
-  {
-    id: '1',
-    user: mockUsers[1],
-    content: 'mentioned you in a comment',
-    timestamp: '2m ago',
-    isRead: false,
-    type: 'mention',
-  },
-  {
-    id: '2',
-    user: mockUsers[2],
-    content: 'sent you a friend request',
-    timestamp: '15m ago',
-    isRead: false,
-    type: 'friend_request',
-  },
-  {
-    id: '3',
-    user: mockUsers[3],
-    content: 'liked your photo',
-    timestamp: '1h ago',
-    isRead: true,
-    type: 'like',
-  },
-  {
-    id: '4',
-    user: mockUsers[4],
-    content: 'shared a new post',
-    timestamp: '3h ago',
-    isRead: true,
-    type: 'post',
-  },
-]
 
 interface ChatSidebarProps {
   setSelectedChatId: (chatId: string) => void
@@ -103,8 +67,6 @@ export function ChatSidebar({
     setPage(nextPage)
   }
 
-  const unreadNotifications = mockNotifications.filter((n) => !n.isRead).length
-
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
@@ -126,10 +88,7 @@ export function ChatSidebar({
         </DropdownMenu>
         <div className='flex gap-2 items-center'>
           <ModeToggle />
-          <NotificationsDropdown
-            notifications={mockNotifications}
-            unreadCount={unreadNotifications}
-          />
+          <NotificationsDropdown />
           <MenuCustome />
         </div>
       </div>
