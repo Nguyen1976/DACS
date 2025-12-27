@@ -46,13 +46,12 @@ export class ChatService {
       members: data.members,
       createrId: data.inviterId,
     })
+
     this.amqpConnection.publish(
       EXCHANGE_RMQ.CHAT_EVENTS,
       ROUTING_RMQ.CONVERSATION_CREATED,
       conversation,
     )
-
-    return
   }
 
   async createConversation(

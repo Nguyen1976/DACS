@@ -5,6 +5,8 @@ import {
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
+
+
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}

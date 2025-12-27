@@ -55,4 +55,10 @@ export class UserController {
   async listFriends(@UserInfo() user: any) {
     return await this.userService.listFriends(user.userId)
   }
+  
+  @Get('detail-friend-request')
+  @RequireLogin()
+  async detailMakeFriend(@UserInfo() user: any, @Body('friendRequestId') friendRequestId: string) {
+    return await this.userService.detailMakeFriend(friendRequestId)
+  }
 }

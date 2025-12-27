@@ -46,7 +46,7 @@ export class ChatService implements OnModuleInit {
         }
      */
     //nhận vào type, memberIds, groupName?, groupAvatar?
-    let observable = this.chatClientService.createConversation(dto)
+    let observable = this.chatClientService.createConversation(dto) //grpc qua chat service (microservice)
     //bắn socket về các member trong conversation
     const res = await firstValueFrom(observable)
 

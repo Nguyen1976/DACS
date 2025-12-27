@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { ChatSidebar } from '@/components/ChatSidebar'
 import { ChatWindow } from '@/components/ChatWindow'
-import { NewChatModal } from '@/components/NewChatModal'
 import { ProfilePanel } from '@/components/ProfilePanel'
 import { VoiceCallModal } from '@/components/VoiceCallModal'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
 export default function ChatPage() {
   const [showProfile, setShowProfile] = useState(false)
-  const [showNewChat, setShowNewChat] = useState(false)
   const [showVoiceCall, setShowVoiceCall] = useState(false)
+
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
 
   return (
@@ -17,7 +16,6 @@ export default function ChatPage() {
       <div className='flex h-screen bg-bg-box-chat text-text overflow-hidden'>
         <ChatSidebar
           setSelectedChatId={setSelectedChatId}
-          onNewChat={() => setShowNewChat(true)}
           selectedChatId={selectedChatId}
         />
 
@@ -39,8 +37,6 @@ export default function ChatPage() {
             onClose={() => setShowProfile(false)}
           />
         )}
-
-        {showNewChat && <NewChatModal onClose={() => setShowNewChat(false)} />}
 
         {showVoiceCall && selectedChatId && (
           <VoiceCallModal

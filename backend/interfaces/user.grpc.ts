@@ -71,6 +71,19 @@ export interface ListFriendsResponse {
   friends: Friend[];
 }
 
+export interface DetailMakeFriendRequest {
+  friendRequestId: string;
+}
+
+export interface DetailMakeFriendResponse {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const USER_PACKAGE_NAME = "user";
 
 export interface UserGrpcServiceClient {
@@ -83,6 +96,8 @@ export interface UserGrpcServiceClient {
   updateStatusMakeFriend(request: UpdateStatusRequest, metadata?: Metadata): Observable<UpdateStatusResponse>;
 
   listFriends(request: ListFriendsRequest, metadata?: Metadata): Observable<ListFriendsResponse>;
+
+  detailMakeFriend(request: DetailMakeFriendRequest, metadata?: Metadata): Observable<DetailMakeFriendResponse>;
 }
 
 export interface UserGrpcServiceController {
@@ -110,11 +125,23 @@ export interface UserGrpcServiceController {
     request: ListFriendsRequest,
     metadata?: Metadata,
   ): Promise<ListFriendsResponse> | Observable<ListFriendsResponse> | ListFriendsResponse;
+
+  detailMakeFriend(
+    request: DetailMakeFriendRequest,
+    metadata?: Metadata,
+  ): Promise<DetailMakeFriendResponse> | Observable<DetailMakeFriendResponse> | DetailMakeFriendResponse;
 }
 
 export function UserGrpcServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["register", "login", "makeFriend", "updateStatusMakeFriend", "listFriends"];
+    const grpcMethods: string[] = [
+      "register",
+      "login",
+      "makeFriend",
+      "updateStatusMakeFriend",
+      "listFriends",
+      "detailMakeFriend",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserGrpcService", method)(constructor.prototype[method], method, descriptor);

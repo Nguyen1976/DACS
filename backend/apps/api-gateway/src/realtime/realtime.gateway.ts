@@ -48,7 +48,7 @@ export class RealtimeGateway
   //default function
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.query.token
+      const token = client.handshake.auth?.token
       console.log(token)
       if (!token) {
         client.disconnect()
@@ -99,7 +99,7 @@ export class RealtimeGateway
   })
   async emitNewConversationToUser(data): Promise<void> {
     await this.emitToUser(
-      data.memberIds,
+      data.conversation.members.map((m) => m.userId),
       SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
       data,
     )

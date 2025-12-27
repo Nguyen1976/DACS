@@ -28,10 +28,32 @@ export interface createNotificationResponse {
   createdAt: Timestamp | undefined;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  message: string;
+  isRead: boolean;
+  type: string;
+  friendRequestId?: string | undefined;
+  createdAt: string;
+}
+
+export interface GetNotificationsRequest {
+  userId: string;
+  page: string;
+  limit: string;
+}
+
+export interface GetNotificationsResponse {
+  notifications: Notification[];
+}
+
 export const NOTIFICATION_PACKAGE_NAME = "notification";
 
 export interface NotificationGrpcServiceClient {
   createNotification(request: createNotificationRequest, metadata?: Metadata): Observable<createNotificationResponse>;
+
+  getNotifications(request: GetNotificationsRequest, metadata?: Metadata): Observable<GetNotificationsResponse>;
 }
 
 export interface NotificationGrpcServiceController {
@@ -39,11 +61,16 @@ export interface NotificationGrpcServiceController {
     request: createNotificationRequest,
     metadata?: Metadata,
   ): Promise<createNotificationResponse> | Observable<createNotificationResponse> | createNotificationResponse;
+
+  getNotifications(
+    request: GetNotificationsRequest,
+    metadata?: Metadata,
+  ): Promise<GetNotificationsResponse> | Observable<GetNotificationsResponse> | GetNotificationsResponse;
 }
 
 export function NotificationGrpcServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createNotification"];
+    const grpcMethods: string[] = ["createNotification", "getNotifications"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("NotificationGrpcService", method)(constructor.prototype[method], method, descriptor);

@@ -45,6 +45,7 @@ model notification {
   message String
   isRead Boolean @default(false)
   type String //friend_request, normal_notification
+  friendRequestId String? @db.ObjectId //nếu là thông báo kết bạn thì có id của friendRequest
   createdAt DateTime @default(now())
 }
 

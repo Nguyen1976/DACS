@@ -1,6 +1,5 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ModeToggle } from '../ModeToggle'
 import {
@@ -14,30 +13,87 @@ import type { AppDispatch } from '@/redux/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import {
+  addConversation,
   getConversations,
   selectConversation,
   type Conversation,
 } from '@/redux/slices/conversationSlice'
 import { formatDateTime } from '@/utils/formatDateTime'
+import { socket } from '@/lib/socket'
+import { selectUser } from '@/redux/slices/userSlice'
+import MenuCustome from './Menu'
+import { NotificationsDropdown } from '../NotificationDropdown'
+import { mockUsers } from '@/lib/mock-data'
+
+const mockNotifications = [
+  {
+    id: '1',
+    user: mockUsers[1],
+    content: 'mentioned you in a comment',
+    timestamp: '2m ago',
+    isRead: false,
+    type: 'mention',
+  },
+  {
+    id: '2',
+    user: mockUsers[2],
+    content: 'sent you a friend request',
+    timestamp: '15m ago',
+    isRead: false,
+    type: 'friend_request',
+  },
+  {
+    id: '3',
+    user: mockUsers[3],
+    content: 'liked your photo',
+    timestamp: '1h ago',
+    isRead: true,
+    type: 'like',
+  },
+  {
+    id: '4',
+    user: mockUsers[4],
+    content: 'shared a new post',
+    timestamp: '3h ago',
+    isRead: true,
+    type: 'post',
+  },
+]
 
 interface ChatSidebarProps {
   setSelectedChatId: (chatId: string) => void
-  onNewChat: () => void
   selectedChatId: string | null
 }
 
 export function ChatSidebar({
   setSelectedChatId,
-  onNewChat,
   selectedChatId,
 }: ChatSidebarProps) {
   const dispatch = useDispatch<AppDispatch>()
   const conversations = useSelector(selectConversation)
+  const user = useSelector(selectUser)
+
   useEffect(() => {
     if (conversations.length === 0) {
       dispatch(getConversations({ limit: 10, page: 1 }))
     }
   }, [dispatch, conversations?.length])
+
+  useEffect(() => {
+    const onNewConversation = ({
+      conversation,
+    }: {
+      conversation: Conversation
+    }) => {
+      dispatch(addConversation({ conversation, userId: user.id }))
+    }
+
+    socket.on('chat.new_conversation', onNewConversation)
+
+    return () => {
+      socket.off('chat.new_conversation', onNewConversation)
+    }
+  }, [user.id, dispatch])
 
   const [page, setPage] = useState(1)
 
@@ -46,6 +102,8 @@ export function ChatSidebar({
     dispatch(getConversations({ limit: 10, page: nextPage }))
     setPage(nextPage)
   }
+
+  const unreadNotifications = mockNotifications.filter((n) => !n.isRead).length
 
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
@@ -66,16 +124,13 @@ export function ChatSidebar({
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className='flex gap-2'>
+        <div className='flex gap-2 items-center'>
           <ModeToggle />
-          <Button
-            variant='ghost'
-            size='icon'
-            onClick={() => onNewChat()}
-            className='hover:bg-bg-box-message-incoming text-gray-400 hover:text-text'
-          >
-            <Plus className='w-5 h-5' />
-          </Button>
+          <NotificationsDropdown
+            notifications={mockNotifications}
+            unreadCount={unreadNotifications}
+          />
+          <MenuCustome />
         </div>
       </div>
 

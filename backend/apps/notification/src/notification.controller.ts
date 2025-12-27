@@ -1,9 +1,9 @@
 import { Controller } from '@nestjs/common'
 import { NotificationService } from './notification.service'
+import { GrpcMethod } from '@nestjs/microservices'
 import {
-  GrpcMethod,
-} from '@nestjs/microservices'
-import {
+  type GetNotificationsRequest,
+  type GetNotificationsResponse,
   NOTIFICATION_GRPC_SERVICE_NAME,
   type createNotificationRequest,
   type NotificationGrpcServiceController,
@@ -21,6 +21,15 @@ export class NotificationController implements NotificationGrpcServiceController
     metadata: Metadata,
   ): Promise<any> {
     const res = await this.notificationService.createNotification(data)
+    return res
+  }
+
+  @GrpcMethod(NOTIFICATION_GRPC_SERVICE_NAME, 'getNotifications')
+  async getNotifications(
+    data: GetNotificationsRequest,
+    metadata: Metadata,
+  ): Promise<GetNotificationsResponse> {
+    const res = await this.notificationService.getNotifications(data)
     return res
   }
 }

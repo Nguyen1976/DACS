@@ -6,20 +6,42 @@ import "google/protobuf/timestamp.proto";
 
 service NotificationGrpcService {
   rpc createNotification (createNotificationRequest) returns (createNotificationResponse) {}
+  rpc getNotifications (GetNotificationsRequest) returns (GetNotificationsResponse) {}
 }
 
 message createNotificationRequest {
-    string inviterId = 1;
-    string inviteeName = 2;
-    string message = 3;
-    string type = 4;
+  string inviterId = 1;
+  string inviteeName = 2;
+  string message = 3;
+  string type = 4;
 }
 
 message createNotificationResponse {
-    string id = 1;
-    string userId = 2;
-    string message = 3;
-    bool isRead = 4;
-    string type = 5;
-    google.protobuf.Timestamp createdAt = 6;
+  string id = 1;
+  string userId = 2;
+  string message = 3;
+  bool isRead = 4;
+  string type = 5;
+  google.protobuf.Timestamp createdAt = 6;
+}
+
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string message = 3;
+  bool is_read = 4;
+  string type = 5;
+  optional string friendRequestId = 6;
+  string createdAt = 7;
+}
+
+message GetNotificationsRequest {
+  string userId = 1;
+  string page = 2;
+  string limit = 3;
+}
+
+message GetNotificationsResponse {
+  repeated Notification notifications = 1;
 }

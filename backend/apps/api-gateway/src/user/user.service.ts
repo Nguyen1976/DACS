@@ -43,6 +43,7 @@ export class UserService implements OnModuleInit {
     } as UserRegisterRequest)
     return await firstValueFrom(observable)
   }
+  
   async login(dto: LoginUserDto): Promise<UserLoginResponse> {
     let observable = this.userClientService.login({
       email: dto.email,
@@ -77,6 +78,13 @@ export class UserService implements OnModuleInit {
   async listFriends(userId: string): Promise<any> {
     const observable = this.userClientService.listFriends({
       userId,
+    })
+    return await firstValueFrom(observable)
+  }
+
+  async detailMakeFriend(friendRequestId: string): Promise<any> {
+    const observable = this.userClientService.detailMakeFriend({
+      friendRequestId,
     })
     return await firstValueFrom(observable)
   }

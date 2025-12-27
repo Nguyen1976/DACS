@@ -11,6 +11,7 @@ export interface UserMakeFriendPayload {
   inviteeEmail: string
   inviteeName: string
   inviteeId: string
+  friendRequestId: string
 }
 
 export interface UserUpdateStatusMakeFriendPayload {

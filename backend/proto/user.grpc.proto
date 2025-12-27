@@ -8,6 +8,7 @@ service UserGrpcService {
   rpc makeFriend (MakeFriendRequest) returns (MakeFriendResponse) {}
   rpc updateStatusMakeFriend (UpdateStatusRequest) returns (UpdateStatusResponse) {}
   rpc listFriends (ListFriendsRequest) returns (ListFriendsResponse) {}
+  rpc detailMakeFriend (DetailMakeFriendRequest) returns (DetailMakeFriendResponse) {}
 }
 
 message UserRegisterRequest {
@@ -68,4 +69,17 @@ message ListFriendsRequest {
 
 message ListFriendsResponse {
   repeated Friend friends = 1;
+}
+
+message DetailMakeFriendRequest {
+  string friendRequestId = 1;
+}
+
+message DetailMakeFriendResponse {
+  string id = 1;
+  string fromUserId = 2;
+  string toUserId = 3;
+  string status = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
 }

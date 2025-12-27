@@ -2,11 +2,14 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import {
   createNotificationRequest,
   createNotificationResponse,
+  GetNotificationsRequest,
+  GetNotificationsResponse,
   NOTIFICATION_GRPC_SERVICE_NAME,
   NotificationGrpcServiceClient,
 } from 'interfaces/notification.grpc'
 import type { ClientGrpc } from '@nestjs/microservices'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
+import { GetNotificationsDto } from './dto'
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -28,6 +31,13 @@ export class NotificationService implements OnModuleInit {
   ): Promise<createNotificationResponse> {
     let observable = this.notificationClientService.createNotification(dto)
 
+    return await firstValueFrom(observable)
+  }
+
+  async getNotifications(
+    dto: GetNotificationsRequest,
+  ): Promise<GetNotificationsResponse> {
+    let observable = this.notificationClientService.getNotifications(dto)
     return await firstValueFrom(observable)
   }
 }

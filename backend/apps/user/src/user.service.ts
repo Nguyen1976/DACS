@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt'
 import { RpcException } from '@nestjs/microservices'
 import { Status } from '@prisma/client'
 import {
+  DetailMakeFriendResponse,
   ListFriendsResponse,
   MakeFriendRequest,
   MakeFriendResponse,
@@ -125,7 +126,7 @@ export class UserService {
     }
 
     //tạo bản ghi friend request
-    await this.prisma.friendRequest.create({
+    const friendRequest = await this.prisma.friendRequest.create({
       data: {
         fromUserId: data.inviterId,
         toUserId: friend.id,
@@ -133,6 +134,7 @@ export class UserService {
       },
     })
     const payload: UserMakeFriendPayload = {
+      friendRequestId: friendRequest.id,
       inviterId: data.inviterId,
       inviterName: data.inviterName,
 
@@ -141,7 +143,6 @@ export class UserService {
       inviteeId: friend.id,
     }
 
-    //vấn đề về việc notifi thì để bên notification service xử lý
     this.amqpConnection.publish(
       EXCHANGE_RMQ.USER_EVENTS,
       ROUTING_RMQ.USER_MAKE_FRIEND,
@@ -268,5 +269,24 @@ export class UserService {
       },
     })
     return { friends } as ListFriendsResponse
+  }
+
+  async detailMakeFriend(friendRequestId: string): Promise<DetailMakeFriendResponse> {
+    const friendRequest = await this.prisma.friendRequest.findUnique({
+      where: {
+        id: friendRequestId,
+      },
+    })
+    if (!friendRequest) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'Friend request not found',
+      })
+    }
+    return {
+      ...friendRequest,
+      createdAt: friendRequest.createdAt.toString(),
+      updatedAt: friendRequest.updatedAt.toString(),
+    } as DetailMakeFriendResponse
   }
 }

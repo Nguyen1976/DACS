@@ -4,6 +4,10 @@ import { UtilService } from '@app/util'
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Status } from '@prisma/client'
+import {
+  GetNotificationsRequest,
+  GetNotificationsResponse,
+} from 'interfaces/notification.grpc'
 import { Redis as RedisClient } from 'ioredis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import type {
@@ -56,6 +60,8 @@ export class NotificationService {
       inviteeName: friend.username,
       inviteeId: res.toUserId,
       inviterId: data.inviterId,
+
+      friendRequestId: data.friendRequestId,
      */
     //vấn đề gặp phải đó là phải có inviteeId
     let inviteeStatus = await this.checkUserOnline(data.inviteeId)
@@ -64,6 +70,7 @@ export class NotificationService {
       userId: data.inviteeId,
       message: `${data.inviterName} đã gửi lời mời kết bạn cho bạn.`,
       type: NotificationType.FRIEND_REQUEST,
+      friendRequestId: data.friendRequestId,
     })
 
     if (!inviteeStatus) {
@@ -81,8 +88,6 @@ export class NotificationService {
         notificationCreated,
       )
     }
-
-    return
   }
 
   @RabbitSubscribe({
@@ -127,6 +132,7 @@ export class NotificationService {
         userId: data.userId,
         message: data.message,
         type: data.type as NotificationType,
+        friendRequestId: data.friendRequestId || null,
       },
     })
     return {
@@ -135,7 +141,31 @@ export class NotificationService {
       message: res.message,
       isRead: res.isRead,
       type: res.type,
+      friendRequestId: res.friendRequestId,
       createdAt: this.utilService.dateToTimestamp(res.createdAt),
     } as unknown
+  }
+
+  async getNotifications(
+    data: GetNotificationsRequest,
+  ): Promise<GetNotificationsResponse> {
+    const { userId, page, limit } = data
+
+    const take = Number(limit) || 5
+    const skip = ((Number(page) || 1) - 1) * take
+
+    const notifications = await this.prisma.notification.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: 'desc' },
+      skip: skip,
+      take: take,
+    })
+
+    return {
+      notifications: notifications.map((n) => ({
+        ...n,
+        createdAt: n.createdAt.toString(),
+      })),
+    } as GetNotificationsResponse
   }
 }

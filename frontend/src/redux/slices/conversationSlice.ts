@@ -103,7 +103,31 @@ export const createConversation = createAsyncThunk(
 export const conversationSlice = createSlice({
   name: 'conversations',
   initialState,
-  reducers: {},
+  reducers: {
+    addConversation: (
+      state,
+      action: PayloadAction<{ conversation: Conversation; userId: string }>
+    ) => {
+      const { conversation, userId } = action.payload
+      state.unshift({
+        ...conversation,
+        groupName:
+          conversation.type === 'DIRECT'
+            ? conversation.members.find(
+                (p: ConversationMember) => p.userId !== userId
+              )?.username || ''
+            : conversation.groupName,
+        groupAvatar:
+          conversation.type === 'DIRECT'
+            ? conversation.members.find(
+                (p: ConversationMember) => p.userId !== userId
+              )?.avatar || ''
+            : conversation.groupAvatar,
+        messages:
+          conversation.messages !== undefined ? conversation.messages : [],
+      })
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(
@@ -182,5 +206,5 @@ export const selectMessagesByConversationId = (
   return conversation ? conversation.messages : []
 }
 
-// export const {} = friendSlice.actions
+export const { addConversation } = conversationSlice.actions
 export default conversationSlice.reducer

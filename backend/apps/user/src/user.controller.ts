@@ -59,4 +59,13 @@ export class UserController implements UserGrpcServiceController {
     const res = await this.userService.listFriends(data.userId)
     return res
   }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'detailMakeFriend')
+  async detailMakeFriend(
+    data: { friendRequestId: string },
+    metadata: Metadata,
+  ): Promise<any> {
+    const res = await this.userService.detailMakeFriend(data.friendRequestId)
+    return res
+  }
 }
