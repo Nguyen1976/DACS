@@ -27,6 +27,7 @@ export interface SendMessagePayload {
   senderId: string
   message: string
   replyToMessageId?: string
+  tempMessageId: string
 }
 
 export interface MemberAddedToConversationPayload {

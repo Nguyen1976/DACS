@@ -28,3 +28,11 @@ export class AddMemberToConversationDTO {
   })
   memberIds: string[]
 }
+
+export class SendMessageDTO {
+  @IsNotEmpty()
+  conversationId: string
+
+  @IsNotEmpty()
+  message: string
+}

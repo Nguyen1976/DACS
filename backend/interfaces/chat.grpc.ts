@@ -98,6 +98,17 @@ export interface GetMessagesResponse {
   messages: Message[];
 }
 
+export interface SendMessageRequest {
+  conversationId: string;
+  message: string;
+  senderId: string;
+  replyToMessageId?: string | undefined;
+}
+
+export interface SendMessageResponse {
+  message: Message | undefined;
+}
+
 export const CHAT_PACKAGE_NAME = "chat";
 
 export interface ChatGrpcServiceClient {
@@ -111,6 +122,8 @@ export interface ChatGrpcServiceClient {
   getConversations(request: GetConversationsRequest, metadata?: Metadata): Observable<GetConversationsResponse>;
 
   getMessagesByConversationId(request: GetMessagesRequest, metadata?: Metadata): Observable<GetMessagesResponse>;
+
+  sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
 }
 
 export interface ChatGrpcServiceController {
@@ -136,6 +149,11 @@ export interface ChatGrpcServiceController {
     request: GetMessagesRequest,
     metadata?: Metadata,
   ): Promise<GetMessagesResponse> | Observable<GetMessagesResponse> | GetMessagesResponse;
+
+  sendMessage(
+    request: SendMessageRequest,
+    metadata?: Metadata,
+  ): Promise<SendMessageResponse> | Observable<SendMessageResponse> | SendMessageResponse;
 }
 
 export function ChatGrpcServiceControllerMethods() {
@@ -145,6 +163,7 @@ export function ChatGrpcServiceControllerMethods() {
       "addMemberToConversation",
       "getConversations",
       "getMessagesByConversationId",
+      "sendMessage",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

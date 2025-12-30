@@ -7,13 +7,14 @@ import userReducer from './slices/userSlice'
 import friendReducer from './slices/friendSlice'
 import conversationReducer from './slices/conversationSlice'
 import notificationReducer from './slices/notificationSlice'
+import messageReducer from './slices/messageSlice'
 
 const rootPersistConfig = {
   key: 'root',
   storage: storage,
   whitelist: ['user'], //Mảng những slice được lưu trữ ở storage
   //blacklist ngược lại của whitelist
-  blacklist: ['friend', 'conversations', 'notification'], //những slice k lưu trữ ở storage
+  blacklist: ['friend', 'conversations', 'notification', 'message'], //những slice k lưu trữ ở storage
 }
 
 const reducers = combineReducers({
@@ -21,6 +22,7 @@ const reducers = combineReducers({
   friend: friendReducer,
   conversations: conversationReducer,
   notification: notificationReducer,
+  message: messageReducer
 })
 
 const persistedReducer = persistReducer(rootPersistConfig, reducers)

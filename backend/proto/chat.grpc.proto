@@ -2,13 +2,12 @@ syntax = "proto3";
 
 package chat;
 
-import "google/protobuf/timestamp.proto";
-
 service ChatGrpcService {
   rpc createConversation (CreateConversationRequest) returns (CreateConversationResponse) {}
   rpc addMemberToConversation (AddMemberToConversationRequest) returns (AddMemberToConversationResponse) {}
   rpc getConversations (GetConversationsRequest) returns (GetConversationsResponse) {}
   rpc getMessagesByConversationId (GetMessagesRequest) returns (GetMessagesResponse) {}
+  rpc sendMessage (SendMessageRequest) returns (SendMessageResponse) {}
 }
 
 message Member {
@@ -99,4 +98,15 @@ message SenderMember {
 
 message GetMessagesResponse {
   repeated Message messages = 1;
+}
+
+message SendMessageRequest {
+  string conversationId = 1;
+  string message = 2;
+  string senderId = 3;
+  optional string replyToMessageId = 4;
+}
+
+message SendMessageResponse {
+  Message message = 1; 
 }

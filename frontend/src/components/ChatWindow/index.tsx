@@ -12,13 +12,18 @@ import { cn } from '@/lib/utils'
 import {
   getMessages,
   type ConversationState,
-  type Message,
 } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { formatDateTime } from '@/utils/formatDateTime'
-import type { AppDispatch } from '@/redux/store'
+import type { AppDispatch, RootState } from '@/redux/store'
 import { selectUser } from '@/redux/slices/userSlice'
+import { socket } from '@/lib/socket'
+import {
+  addMessage,
+  selectMessage,
+  type Message,
+} from '@/redux/slices/messageSlice'
 
 interface ChatWindowProps {
   conversationId?: string
@@ -38,31 +43,30 @@ export function ChatWindow({
       return state.conversations?.find((c) => c.id === conversationId)
     }
   )
-
   const user = useSelector(selectUser)
 
-  const [messages, setMessages] = useState<Message[]>(
-    conversation?.messages || []
+  const messages = useSelector((state: RootState) =>
+    selectMessage(state, conversationId)
   )
+  const [msg, setMsg] = useState<string>('')
 
   useEffect(() => {
-    if (
-      conversation?.messages === undefined ||
-      conversation?.messages.length <= 1
-    ) {
-      dispatch(
-        getMessages({
-          conversationId: conversationId || '',
-          limit: 10,
-          page: 1,
-        })
-      )
-        .unwrap()
-        .then((res) => {
-          setMessages(res.messages)
-        })
+    dispatch(getMessages({ conversationId: conversationId || '' }))
+  }, [dispatch, conversationId])
+
+  useEffect(() => {
+    const handler = (data: Message) => {
+      if (data.conversationId === conversationId) {
+        dispatch(addMessage(data))
+      }
     }
-  }, [conversation, conversationId, dispatch])
+
+    socket.on('chat:new_message', handler)
+
+    return () => {
+      socket.off('chat:new_message', handler)
+    }
+  }, [conversationId, dispatch])
 
   return (
     <div className='flex-1 flex flex-col bg-bg-box-chat'>
@@ -217,6 +221,8 @@ export function ChatWindow({
           type='text'
           placeholder='Write a message...'
           className='flex-1 bg-transparent text-text placeholder:text-gray-500 outline-none text-sm'
+          onChange={(e) => setMsg(e.target.value)}
+          value={msg}
         />
 
         <Button

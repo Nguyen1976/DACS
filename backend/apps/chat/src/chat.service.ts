@@ -13,11 +13,12 @@ import {
   type GetConversationsResponse,
   GetMessagesResponse,
   Member,
+  SendMessageRequest,
+  SendMessageResponse,
 } from 'interfaces/chat.grpc'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import type {
   MemberAddedToConversationPayload,
-  SendMessagePayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
@@ -140,13 +141,13 @@ export class ChatService {
     } as CreateConversationResponse
   }
 
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.CHAT_EVENTS,
-    routingKey: ROUTING_RMQ.MESSAGE_SEND,
-    queue: QUEUE_RMQ.CHAT_MESSAGES_SEND,
-  })
-  async sendMessage(data: SendMessagePayload): Promise<void> {
-    //get memberIds của conversation để emit socket (sau này tối ưu bằng redis)
+  // @RabbitSubscribe({
+  //   exchange: EXCHANGE_RMQ.CHAT_EVENTS,
+  //   routingKey: ROUTING_RMQ.MESSAGE_SEND,
+  //   queue: QUEUE_RMQ.CHAT_MESSAGES_SEND,
+  // })
+  async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
+
     const conversationMembers = await this.prisma.conversationMember.findMany({
       where: {
         conversationId: data.conversationId,
@@ -169,7 +170,18 @@ export class ChatService {
         conversationId: data.conversationId,
         senderId: data.senderId,
         text: data.message,
-        replyToMessageId: data.replyToMessageId || null,
+        replyToMessageId: data?.replyToMessageId || null,
+      },
+      include: {
+        senderMember: {
+          select: {
+            userId: true,
+            username: true,
+            avatar: true,
+            role: true,
+            lastReadAt: true,
+          },
+        },
       },
     })
 
@@ -182,14 +194,12 @@ export class ChatService {
       },
     )
 
-    return
-    // return {
-    //   conversationId: message.conversationId,
-    //   senderId: message.senderId,
-    //   replyToMessageId: message.replyToMessageId || '',
-    //   message: message.text,
-    //   createdAt: this.utilService.dateToTimestamp(message.createdAt),
-    // } as SendMessageResponse
+    return {
+      message: {
+        ...message,
+        createdAt: message.createdAt.toString(),
+      },
+    } as SendMessageResponse
   }
 
   async addMemberToConversation(
@@ -304,7 +314,7 @@ export class ChatService {
         },
       },
     })
-    console.log('conversations', conversations[0].members)
+
     return {
       conversations: conversations.map((c) => ({
         id: c.id,

@@ -11,14 +11,14 @@ export interface SenderMember {
 }
 
 export interface Message {
-  id: string
+  id?: string
   conversationId: string
   senderId: string
   text: string
   replyToMessageId?: string | undefined
-  isDeleted: boolean
-  deleteType: string
-  createdAt: string
+  isDeleted?: boolean
+  deleteType?: string
+  createdAt?: string
   senderMember: SenderMember | undefined
 }
 
@@ -39,7 +39,7 @@ export interface Conversation {
   createdAt: string
   updatedAt?: string | undefined
   members: ConversationMember[]
-  messages: Message[]
+  lastMessage: Message | null
 }
 
 export type ConversationState = Conversation[]
@@ -76,6 +76,7 @@ export const getMessages = createAsyncThunk(
     const response = await authorizeAxiosInstance.get(
       `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`
     )
+    console.log('response messages', response.data.data)
     return response.data.data
   }
 )
@@ -123,8 +124,10 @@ export const conversationSlice = createSlice({
                 (p: ConversationMember) => p.userId !== userId
               )?.avatar || ''
             : conversation.groupAvatar,
-        messages:
-          conversation.messages !== undefined ? conversation.messages : [],
+        lastMessage:
+          conversation.lastMessage !== undefined
+            ? conversation.lastMessage
+            : null,
       })
     },
   },
@@ -157,7 +160,7 @@ export const conversationSlice = createSlice({
                       (p: ConversationMember) => p.userId !== userId
                     )?.avatar || ''
                   : c.groupAvatar,
-              messages: c.messages !== undefined ? c.messages : [],
+              lastMessage: c.lastMessage !== undefined ? c.lastMessage : null,
             })) as Conversation[]),
           ]
           return state
@@ -172,7 +175,8 @@ export const conversationSlice = createSlice({
           const { messages, conversationId } = action.payload
           const conversation = state?.find((c) => c.id === conversationId)
           if (conversation) {
-            conversation.messages = messages
+            conversation.lastMessage =
+              messages.length > 0 ? messages[messages.length - 1] : null
           }
         }
       )
@@ -183,7 +187,7 @@ export const conversationSlice = createSlice({
 
           state.unshift({
             ...c,
-            messages: Array.isArray(c.messages) ? c.messages : [],
+            lastMessage: c.lastMessage !== undefined ? c.lastMessage : null,
           })
         }
       )
@@ -203,7 +207,7 @@ export const selectMessagesByConversationId = (
   conversationId: string
 ) => {
   const conversation = state.conversations?.find((c) => c.id === conversationId)
-  return conversation ? conversation.messages : []
+  return conversation ? conversation.lastMessage : null
 }
 
 export const { addConversation } = conversationSlice.actions

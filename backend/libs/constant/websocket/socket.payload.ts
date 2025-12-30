@@ -3,4 +3,5 @@ export interface SendMessagePayloadSocket {
   message: string
   replyToMessageId?: string
   memberIds: string[]
+  tempMessageId: string
 }

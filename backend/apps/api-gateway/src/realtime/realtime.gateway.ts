@@ -126,25 +126,27 @@ export class RealtimeGateway
     return { event: 'pong', data: 'hello from gateway' }
   }
 
-  @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
-  handleSendMessage(
-    @MessageBody() data: SendMessagePayloadSocket,
-    @ConnectedSocket() client: Socket,
-  ) {
-    /**
-     * {
-     *  "conversationId": "693befebbeed61ee46291bf3",
-     *  "message": "xin chào",
-     * }
-     */
-    this.chatService.sendMessage({
-      conversationId: data.conversationId,
-      senderId: client.data.userId,
-      message: data.message,
-      replyToMessageId: data.replyToMessageId || '',
-    })
-    //trong tương lai trong redis có thể quản lý thêm các conversation map với user đang online để giảm số lần query xuoogns db
-  }
+  // @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
+  // handleSendMessage(
+  //   @MessageBody() data: SendMessagePayloadSocket,
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   /**
+  //    * {
+  //    *  "conversationId": "693befebbeed61ee46291bf3",
+  //    *  "message": "xin chào",
+  //    *   "tempMessageId": "uuid-123",
+  //    * }
+  //    */
+  //   this.chatService.sendMessage({
+  //     conversationId: data.conversationId,
+  //     senderId: client.data.userId,
+  //     message: data.message,
+  //     replyToMessageId: data.replyToMessageId || '',
+  //     tempMessageId: data.tempMessageId,
+  //   })
+  //   //trong tương lai trong redis có thể quản lý thêm các conversation map với user đang online để giảm số lần query xuoogns db
+  // }
 
   @RabbitSubscribe({
     exchange: EXCHANGE_RMQ.CHAT_EVENTS,
@@ -152,11 +154,16 @@ export class RealtimeGateway
     queue: QUEUE_RMQ.REALTIME_MESSAGES_SENT,
   })
   async handleNewMessageSent(data: any): Promise<void> {
+    //những thằng trừ senderId sẽ k nhận được tempMessageId
+    const { tempMessageId, ...rest } = data
+
     await this.emitToUser(
       data.memberIds.filter((id) => id !== data.senderId),
       SOCKET_EVENTS.CHAT.NEW_MESSAGE,
-      data,
+      rest,
     )
+
+    await this.emitToUser([data.senderId], SOCKET_EVENTS.CHAT.NEW_MESSAGE, data)
   }
 
   @RabbitSubscribe({
