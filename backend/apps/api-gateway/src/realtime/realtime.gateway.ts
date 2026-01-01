@@ -154,16 +154,11 @@ export class RealtimeGateway
     queue: QUEUE_RMQ.REALTIME_MESSAGES_SENT,
   })
   async handleNewMessageSent(data: any): Promise<void> {
-    //những thằng trừ senderId sẽ k nhận được tempMessageId
-    const { tempMessageId, ...rest } = data
-
     await this.emitToUser(
       data.memberIds.filter((id) => id !== data.senderId),
       SOCKET_EVENTS.CHAT.NEW_MESSAGE,
-      rest,
+      data,
     )
-
-    await this.emitToUser([data.senderId], SOCKET_EVENTS.CHAT.NEW_MESSAGE, data)
   }
 
   @RabbitSubscribe({

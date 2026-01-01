@@ -9,9 +9,7 @@ import {
   Send,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  type ConversationState,
-} from '@/redux/slices/conversationSlice'
+import { type ConversationState } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { formatDateTime } from '@/utils/formatDateTime'
@@ -22,8 +20,11 @@ import {
   addMessage,
   getMessages,
   selectMessage,
+  sendMessage,
   type Message,
 } from '@/redux/slices/messageSlice'
+import notificationSound from '@/assets/notification.mp3'
+import useSound from 'use-sound'
 
 interface ChatWindowProps {
   conversationId?: string
@@ -48,25 +49,37 @@ export function ChatWindow({
   const messages = useSelector((state: RootState) =>
     selectMessage(state, conversationId)
   )
+
+  const [play] = useSound(notificationSound, { volume: 0.5 })
   const [msg, setMsg] = useState<string>('')
 
   useEffect(() => {
-    dispatch(getMessages({ conversationId: conversationId || '' }))
-  }, [dispatch, conversationId])
+    if (messages.length === 0) {
+      dispatch(getMessages({ conversationId: conversationId || '' }))
+    }
+  }, [dispatch, messages.length, conversationId])
 
   useEffect(() => {
     const handler = (data: Message) => {
       if (data.conversationId === conversationId) {
         dispatch(addMessage(data))
+        //cap nhat last message trong notification
+        play()
       }
     }
 
-    socket.on('chat:new_message', handler)
+    socket.on('chat.new_message', handler)
 
     return () => {
-      socket.off('chat:new_message', handler)
+      socket.off('chat.new_message', handler)
     }
-  }, [conversationId, dispatch])
+  }, [conversationId, dispatch, play])
+
+  const handleSendMessage = () => {
+    if (msg.trim() === '' || !conversationId) return
+    dispatch(sendMessage({ conversationId, message: msg }))
+    setMsg('')
+  }
 
   return (
     <div className='flex-1 flex flex-col bg-bg-box-chat'>
@@ -236,6 +249,7 @@ export function ChatWindow({
         <Button
           size='icon'
           className='bg-bg-box-message-out hover:bg-purple-700 text-text rounded-full'
+          onClick={handleSendMessage}
         >
           <Send className='w-5 h-5' />
         </Button>

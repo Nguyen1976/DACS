@@ -2,9 +2,11 @@ import authorizeAxiosInstance from '@/utils/authorizeAxios'
 import { API_ROOT } from '@/utils/constant'
 import {
   createAsyncThunk,
+  createSelector,
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit'
+import type { RootState } from '../store'
 
 export interface SenderMember {
   userId: string
@@ -47,6 +49,25 @@ export const getMessages = createAsyncThunk(
     const response = await authorizeAxiosInstance.get(
       `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`
     )
+    console.log('Fetched messages:', response.data.data)
+    return response.data.data
+  }
+)
+
+export const sendMessage = createAsyncThunk(
+  `/chat/send-message`,
+  async ({
+    conversationId,
+    message,
+  }: {
+    conversationId: string
+    message: string
+    tempMessageId?: string
+  }) => {
+    const response = await authorizeAxiosInstance.post(
+      `${API_ROOT}/chat/send_message`,
+      { conversationId, message }
+    )
     return response.data.data
   }
 )
@@ -60,7 +81,7 @@ export const messageSlice = createSlice({
       if (!state.messages[message.conversationId]) {
         state.messages[message.conversationId] = []
       }
-      state.messages[message.conversationId].push(message)
+      state.messages[message.conversationId].unshift(message)
     },
   },
   extraReducers: (builder) => {
@@ -78,17 +99,35 @@ export const messageSlice = createSlice({
         ]
       }
     )
+    builder.addCase(
+      sendMessage.fulfilled,
+      (state, action: PayloadAction<{ message: Message }>) => {
+        const { message } = action.payload
+
+        if (!state.messages[message.conversationId]) {
+          state.messages[message.conversationId] = []
+        }
+        state.messages[message.conversationId].unshift(message)
+      }
+    )
   },
 })
 
-export const selectMessage = (
-  state: { message: MessageState },
-  conversationId?: string
-) => {
-  if (!conversationId) return []
-  const messageData = state.message.messages[conversationId]
-  return messageData || []
-}
+export const selectMessage = createSelector(
+  [
+    (state: RootState) => state.message.messages,
+    (_: RootState, conversationId?: string) => conversationId,
+  ],
+  (messagesMap, conversationId) => {
+    if (!conversationId) return []
+    const messages = messagesMap[conversationId]
+    if (!messages) return []
+    
+    return [...messages].reverse()
+  }
+)
+
+
 
 export const { addMessage } = messageSlice.actions
 export default messageSlice.reducer
