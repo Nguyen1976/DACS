@@ -17,6 +17,7 @@ import {
   getConversations,
   selectConversation,
   updateNewMessage,
+  upUnreadCount,
   type Conversation,
 } from '@/redux/slices/conversationSlice'
 import { formatDateTime } from '@/utils/formatDateTime'
@@ -72,6 +73,16 @@ export function ChatSidebar({
           lastMessage: { ...data },
         })
       )
+      console.log('id of message:', data.conversationId)
+      console.log('selectedChatId:', selectedChatId)
+      if (data.conversationId !== selectedChatId) {
+        
+        dispatch(
+          upUnreadCount({
+            conversationId: data.conversationId,
+          })
+        )
+      }
 
       //cap nhat last message trong notification
       //đưa notification lên đầu
@@ -82,7 +93,7 @@ export function ChatSidebar({
     return () => {
       socket.off('chat.new_message', handler)
     }
-  }, [dispatch])
+  }, [dispatch, selectedChatId])
 
   const loadMoreConversations = () => {
     const nextPage = page + 1
@@ -159,15 +170,15 @@ export function ChatSidebar({
               </p>
             </div>
 
-            {(conversation.unreadCount &&
-              Number(conversation.unreadCount) > 0) ||
-              (conversation.unreadCount === '5+' && (
+            {conversation.unreadCount &&
+              (Number(conversation.unreadCount) > 0 ||
+                conversation.unreadCount === '5+') && (
                 <div className='w-6 h-6 bg-bg-box-message-out rounded-full flex items-center justify-center'>
                   <span className='text-xs text-text font-medium'>
                     {conversation.unreadCount}
                   </span>
                 </div>
-              ))}
+              )}
           </button>
         ))}
         <div className='w-full flex items-center justify-center my-4'>

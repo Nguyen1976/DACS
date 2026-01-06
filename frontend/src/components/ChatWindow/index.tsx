@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
+  readMessage,
   updateNewMessage,
   type ConversationState,
 } from '@/redux/slices/conversationSlice'
@@ -44,7 +45,7 @@ export function ChatWindow({
   const [msg, setMsg] = useState<string>('')
 
   const dispatch = useDispatch<AppDispatch>()
-  
+
   const conversation = useSelector(
     (state: { conversations: ConversationState }) => {
       return state.conversations?.find((c) => c.id === conversationId)
@@ -76,17 +77,32 @@ export function ChatWindow({
     }
   }, [conversationId, dispatch, play])
 
+  useEffect(() => {
+    if (!conversationId) return
+    if (messages.length === 0) return
+
+    const lastMessage: Message = messages[messages.length - 1]
+
+    // Chỉ đánh dấu read nếu message KHÔNG phải của mình
+    if (lastMessage.senderMember?.userId === user.id) return
+
+    dispatch(
+      readMessage({
+        conversationId,
+        lastReadMessageId: lastMessage.id,
+      })
+    )
+  }, [messages, conversationId, dispatch, user.id])
+
   const handleSendMessage = () => {
     if (msg.trim() === '' || !conversationId) return
     dispatch(sendMessage({ conversationId, message: msg })).then((res) => {
-      // Message sent successfully
       dispatch(
         updateNewMessage({
           conversationId,
           lastMessage: res.payload.message as Message,
         })
       )
-      console.log(res.payload.message)
     })
     setMsg('')
   }

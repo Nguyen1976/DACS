@@ -15,7 +15,7 @@ export interface SenderMember {
 }
 
 export interface Message {
-  id?: string
+  id: string
   conversationId: string
   senderId: string
   text: string
@@ -120,12 +120,10 @@ export const selectMessage = createSelector(
     if (!conversationId) return []
     const messages = messagesMap[conversationId]
     if (!messages) return []
-    
+
     return [...messages].reverse()
   }
 )
-
-
 
 export const { addMessage } = messageSlice.actions
 export default messageSlice.reducer

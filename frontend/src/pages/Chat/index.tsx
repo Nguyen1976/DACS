@@ -10,7 +10,7 @@ export default function ChatPage() {
   const [showVoiceCall, setShowVoiceCall] = useState(false)
 
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
-
+  
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
       <div className='flex h-screen bg-bg-box-chat text-text overflow-hidden'>
