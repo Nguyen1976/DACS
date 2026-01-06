@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api-gateway",
+      "type": "shell",
+      "command": "cd ./backend; npm run start:dev api-gateway",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "new",
+        "focus": false
+      }
+    },
+    {
+      "label": "user",
+      "type": "shell",
+      "command": "cd ./backend; npm run start:dev user",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "new",
+        "focus": false
+      }
+    },
+    {
+      "label": "notification",
+      "type": "shell",
+      "command": "cd ./backend; npm run start:dev notification",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "new",
+        "focus": false
+      }
+    },
+    {
+      "label": "chat",
+      "type": "shell",
+      "command": "cd ./backend; npm run start:dev chat",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "new",
+        "focus": false
+      }
+    },
+    {
+      "label": "start-all",
+      "dependsOn": ["api-gateway", "user", "notification", "chat"],
+      "dependsOrder": "parallel"
+    }
+  ]
+}

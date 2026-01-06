@@ -35,9 +35,12 @@ export function ChatSidebar({
   setSelectedChatId,
   selectedChatId,
 }: ChatSidebarProps) {
-  const dispatch = useDispatch<AppDispatch>()
+  const [page, setPage] = useState(1)
+  
   const conversations = useSelector(selectConversation)
   const user = useSelector(selectUser)
+
+  const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
     if (conversations.length === 0) {
@@ -81,7 +84,6 @@ export function ChatSidebar({
     }
   }, [dispatch])
 
-  const [page, setPage] = useState(1)
 
   const loadMoreConversations = () => {
     const nextPage = page + 1

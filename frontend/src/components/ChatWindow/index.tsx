@@ -40,21 +40,20 @@ export function ChatWindow({
   onToggleProfile,
   onVoiceCall,
 }: ChatWindowProps) {
-  const dispatch = useDispatch<AppDispatch>()
+  const [play] = useSound(notificationSound, { volume: 0.5 })
+  const [msg, setMsg] = useState<string>('')
 
+  const dispatch = useDispatch<AppDispatch>()
+  
   const conversation = useSelector(
     (state: { conversations: ConversationState }) => {
       return state.conversations?.find((c) => c.id === conversationId)
     }
   )
   const user = useSelector(selectUser)
-
   const messages = useSelector((state: RootState) =>
     selectMessage(state, conversationId)
   )
-
-  const [play] = useSound(notificationSound, { volume: 0.5 })
-  const [msg, setMsg] = useState<string>('')
 
   useEffect(() => {
     if (messages.length === 0) {
