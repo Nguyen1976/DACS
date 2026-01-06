@@ -24,7 +24,6 @@ export interface Message {
   deleteType?: string
   createdAt?: string
   senderMember?: SenderMember | undefined
-  tempMessageId?: string | undefined
 }
 
 export interface MessageState {
@@ -49,7 +48,6 @@ export const getMessages = createAsyncThunk(
     const response = await authorizeAxiosInstance.get(
       `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`
     )
-    console.log('Fetched messages:', response.data.data)
     return response.data.data
   }
 )

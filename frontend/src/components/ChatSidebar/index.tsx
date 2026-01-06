@@ -16,7 +16,7 @@ import {
   addConversation,
   getConversations,
   selectConversation,
-  updateLastMessage,
+  updateNewMessage,
   type Conversation,
 } from '@/redux/slices/conversationSlice'
 import { formatDateTime } from '@/utils/formatDateTime'
@@ -64,7 +64,7 @@ export function ChatSidebar({
   useEffect(() => {
     const handler = (data: Message) => {
       dispatch(
-        updateLastMessage({
+        updateNewMessage({
           conversationId: data.conversationId,
           lastMessage: { ...data },
         })
@@ -152,8 +152,8 @@ export function ChatSidebar({
                 </span>
               </div>
               <p className='text-sm text-gray-400 truncate'>
-                {conversation?.messages?.length > 0
-                  ? conversation.messages[0].text
+                {conversation?.lastMessage
+                  ? conversation.lastMessage.text
                   : 'No messages yet.'}
               </p>
             </div>

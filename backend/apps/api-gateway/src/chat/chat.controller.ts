@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
 import {
   AddMemberToConversationDTO,
   CreateConversationDTO,
+  ReadMessageDto,
   SendMessageDTO,
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
@@ -94,6 +95,18 @@ export class ChatController {
     return await this.chatService.sendMessage({
       ...data,
       senderId: userInfo.userId,
+    })
+  }
+
+  @Post('read_message')
+  @RequireLogin()
+  async readMessage(
+    @Body() data: ReadMessageDto,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.readMessage({
+      ...data,
+      userId: userInfo.userId,
     })
   }
 }

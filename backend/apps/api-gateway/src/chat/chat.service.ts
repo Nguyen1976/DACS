@@ -11,7 +11,11 @@ import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
-import { AddMemberToConversationDTO, SendMessageDTO } from './dto/chat.dto'
+import {
+  AddMemberToConversationDTO,
+  ReadMessageDto,
+  SendMessageDTO,
+} from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
@@ -52,7 +56,9 @@ export class ChatService implements OnModuleInit {
     const res = await firstValueFrom(observable)
 
     await this.realtimeGateway.emitToUser(
-      dto.members.filter((member: Member) => member.userId !== dto.createrId).map((member: Member) => member.userId),
+      dto.members
+        .filter((member: Member) => member.userId !== dto.createrId)
+        .map((member: Member) => member.userId),
       SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
       res,
     )
@@ -101,10 +107,12 @@ export class ChatService implements OnModuleInit {
   }
 
   async sendMessage(dto: SendMessageRequest) {
-    console.log("🚀 ~ chat.service.ts:104 ~ dto:", dto)
-    
     const observable = this.chatClientService.sendMessage(dto)
     return await firstValueFrom(observable)
+  }
 
+  async readMessage(dto: ReadMessageDto & { userId: string }) {
+    const observable = this.chatClientService.readMessage(dto)
+    return await firstValueFrom(observable)
   }
 }

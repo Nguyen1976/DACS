@@ -8,6 +8,7 @@ service ChatGrpcService {
   rpc getConversations (GetConversationsRequest) returns (GetConversationsResponse) {}
   rpc getMessagesByConversationId (GetMessagesRequest) returns (GetMessagesResponse) {}
   rpc sendMessage (SendMessageRequest) returns (SendMessageResponse) {}
+  rpc readMessage (ReadMessageRequest) returns (ReadMessageResponse) {}
 }
 
 message Member {
@@ -61,6 +62,7 @@ message ConversationMember {
   optional string lastReadAt = 2; // timestamp (ms)
   optional string username = 3;
   optional string avatar = 4;
+  optional string lastReadMessageId = 5;
 }
 
 message Conversation {
@@ -75,7 +77,7 @@ message Conversation {
   optional string updatedAt = 7;
 
   repeated ConversationMember members = 8;
-  repeated Message messages = 9;
+  optional Message lastMessage = 9;
 }
 
 message GetConversationsResponse {
@@ -109,4 +111,14 @@ message SendMessageRequest {
 
 message SendMessageResponse {
   Message message = 1; 
+}
+
+message ReadMessageRequest {
+  string conversationId = 1;
+  string lastReadMessageId = 2;
+  string userId = 3;
+}
+
+message ReadMessageResponse {
+  string lastReadMessageId = 1;
 }

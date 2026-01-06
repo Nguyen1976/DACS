@@ -63,6 +63,7 @@ export interface ConversationMember {
   lastReadAt?: string | undefined;
   username?: string | undefined;
   avatar?: string | undefined;
+  lastReadMessageId?: string | undefined;
 }
 
 export interface Conversation {
@@ -74,7 +75,7 @@ export interface Conversation {
   createdAt: string;
   updatedAt?: string | undefined;
   members: ConversationMember[];
-  messages: Message[];
+  lastMessage?: Message | undefined;
 }
 
 export interface GetConversationsResponse {
@@ -109,6 +110,16 @@ export interface SendMessageResponse {
   message: Message | undefined;
 }
 
+export interface ReadMessageRequest {
+  conversationId: string;
+  lastReadMessageId: string;
+  userId: string;
+}
+
+export interface ReadMessageResponse {
+  lastReadMessageId: string;
+}
+
 export const CHAT_PACKAGE_NAME = "chat";
 
 export interface ChatGrpcServiceClient {
@@ -124,6 +135,8 @@ export interface ChatGrpcServiceClient {
   getMessagesByConversationId(request: GetMessagesRequest, metadata?: Metadata): Observable<GetMessagesResponse>;
 
   sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
+
+  readMessage(request: ReadMessageRequest, metadata?: Metadata): Observable<ReadMessageResponse>;
 }
 
 export interface ChatGrpcServiceController {
@@ -154,6 +167,11 @@ export interface ChatGrpcServiceController {
     request: SendMessageRequest,
     metadata?: Metadata,
   ): Promise<SendMessageResponse> | Observable<SendMessageResponse> | SendMessageResponse;
+
+  readMessage(
+    request: ReadMessageRequest,
+    metadata?: Metadata,
+  ): Promise<ReadMessageResponse> | Observable<ReadMessageResponse> | ReadMessageResponse;
 }
 
 export function ChatGrpcServiceControllerMethods() {
@@ -164,6 +182,7 @@ export function ChatGrpcServiceControllerMethods() {
       "getConversations",
       "getMessagesByConversationId",
       "sendMessage",
+      "readMessage",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

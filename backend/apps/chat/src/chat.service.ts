@@ -13,6 +13,8 @@ import {
   type GetConversationsResponse,
   GetMessagesResponse,
   Member,
+  ReadMessageRequest,
+  ReadMessageResponse,
   SendMessageRequest,
   SendMessageResponse,
 } from 'interfaces/chat.grpc'
@@ -77,6 +79,7 @@ export class ChatService {
           data.createrId === member.userId
             ? 'admin'
             : 'member',
+        lastReadMessageId: null,
       })),
     })
 
@@ -147,7 +150,6 @@ export class ChatService {
   //   queue: QUEUE_RMQ.CHAT_MESSAGES_SEND,
   // })
   async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
-
     const conversationMembers = await this.prisma.conversationMember.findMany({
       where: {
         conversationId: data.conversationId,
@@ -287,6 +289,7 @@ export class ChatService {
             username: true,
             avatar: true,
             lastReadAt: true,
+            lastReadMessageId: true,
           },
         },
 
@@ -328,10 +331,12 @@ export class ChatService {
           ...m,
           lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : '',
         })),
-        messages: c.messages.map((msg) => ({
-          ...msg,
-          createdAt: msg.createdAt.toString(),
-        })),
+        lastMessage: c.messages.length
+          ? {
+              ...c.messages[0],
+              createdAt: c.messages[0].createdAt.toString(),
+            }
+          : null,
       })),
     } as GetConversationsResponse
   }
@@ -381,5 +386,33 @@ export class ChatService {
         createdAt: m.createdAt.toString(),
       })),
     } as GetMessagesResponse
+  }
+
+  async readMessage(data: ReadMessageRequest): Promise<ReadMessageResponse> {
+    const message = await this.prisma.message.findFirst({
+      where: {
+        id: data.lastReadMessageId,
+        conversationId: data.conversationId,
+      },
+    })
+
+    if (!message) {
+      throw new RpcException({
+        code: status.FAILED_PRECONDITION,
+        message: 'lastReadMessageId does not belong to the conversation',
+      })
+    }
+    await this.prisma.conversationMember.updateMany({
+      where: {
+        conversationId: data.conversationId,
+        userId: data.userId,
+      },
+      data: {
+        lastReadAt: new Date(),
+        lastReadMessageId: data.lastReadMessageId,
+      },
+    })
+
+    return { lastReadMessageId: data.lastReadMessageId }
   }
 }

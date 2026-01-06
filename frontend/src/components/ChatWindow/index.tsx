@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  updateLastMessage,
+  updateNewMessage,
   type ConversationState,
 } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
@@ -66,15 +66,6 @@ export function ChatWindow({
     const handler = (data: Message) => {
       if (data.conversationId === conversationId) {
         dispatch(addMessage(data))
-        dispatch(
-          updateLastMessage({
-            conversationId: data.conversationId,
-            lastMessage: { ...data },
-          })
-        )
-
-        //cap nhat last message trong notification
-        //đưa notification lên đầu
         play()
       }
     }
@@ -88,7 +79,16 @@ export function ChatWindow({
 
   const handleSendMessage = () => {
     if (msg.trim() === '' || !conversationId) return
-    dispatch(sendMessage({ conversationId, message: msg }))
+    dispatch(sendMessage({ conversationId, message: msg })).then((res) => {
+      // Message sent successfully
+      dispatch(
+        updateNewMessage({
+          conversationId,
+          lastMessage: res.payload.message as Message,
+        })
+      )
+      console.log(res.payload.message)
+    })
     setMsg('')
   }
 
@@ -146,65 +146,6 @@ export function ChatWindow({
       <div className='flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar'>
         {messages?.map((message: Message) => (
           <div key={message.id}>
-            {/* {message.type === 'system' ? (
-              <div className='flex justify-center'>
-                <div className='bg-bg-box-message-incoming px-4 py-2 rounded-full text-xs text-gray-400'>
-                  {message.text}
-                </div>
-              </div>
-            ) : message.type === 'file' ? (
-              <div
-                className={cn(
-                  'flex',
-                  message.isMine ? 'justify-end' : 'justify-start'
-                )}
-              >
-                <div
-                  className={cn(
-                    'max-w-md p-4 rounded-2xl flex items-center gap-3',
-                    message.isMine
-                      ? 'bg-bg-box-message-out text-text'
-                      : 'bg-bg-box-message-incoming text-text'
-                  )}
-                >
-                  <div className='w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center'>
-                    <FileText className='w-5 h-5' />
-                  </div>
-                  <div className='flex-1'>
-                    <div className='font-medium text-sm'>
-                      {message.fileData?.name}
-                    </div>
-                    <div className='text-xs opacity-70'>
-                      {message.fileData?.size}
-                    </div>
-                  </div>
-                  <div className='text-xs opacity-70 ml-2'>
-                    {message.timestamp}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  'flex',
-                  message.isMine ? 'justify-end' : 'justify-start'
-                )}
-              >
-                <div
-                  className={cn(
-                    'max-w-md px-4 py-3 rounded-2xl',
-                    message.isMine
-                      ? 'bg-bg-box-message-out text-text rounded-br-md'
-                      : 'bg-bg-box-message-incoming text-text rounded-bl-md'
-                  )}
-                >
-                  <p className='text-sm break-words'>{message.content}</p>
-                  <span className='text-xs opacity-70 mt-1 block'>
-                    {message.timestamp}
-                  </span>
-                </div>
-              </div>
-            )} */}
             <div
               className={cn(
                 'flex',

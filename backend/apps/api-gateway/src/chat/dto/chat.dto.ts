@@ -36,3 +36,11 @@ export class SendMessageDTO {
   @IsNotEmpty()
   message: string
 }
+
+export class ReadMessageDto {
+  @IsNotEmpty()
+  conversationId: string
+
+  @IsNotEmpty()
+  lastReadMessageId: string
+}

@@ -8,6 +8,7 @@ import type { Message } from './messageSlice'
 export interface ConversationMember {
   userId: string
   /** timestamp (ms) */
+  lastReadMessageId?: string
   lastReadAt?: string
   username?: string
   avatar?: string
@@ -94,21 +95,21 @@ export const conversationSlice = createSlice({
             : null,
       })
     },
-    updateLastMessage: (
+    updateNewMessage: (
       state,
       action: PayloadAction<{ conversationId: string; lastMessage: Message }>
     ) => {
       const { conversationId, lastMessage } = action.payload
-      const conversation = state.find((c) => c.id === conversationId)
-      if (conversation) {
-        conversation.lastMessage = { ...lastMessage }
+
+      const updatedConversation = state.find((c) => c.id === conversationId)
+      if (!updatedConversation) return state
+
+      const newConversation = {
+        ...updatedConversation,
+        lastMessage,
       }
-      //đưa conversation lên đầu
-      const index = state.findIndex((c) => c.id === conversationId)
-      if (index > -1) {
-        const [conv] = state.splice(index, 1)
-        state.unshift(conv)
-      }
+
+      return [newConversation, ...state.filter((c) => c.id !== conversationId)]
     },
   },
   extraReducers: (builder) => {
@@ -146,20 +147,6 @@ export const conversationSlice = createSlice({
           return state
         }
       )
-      // .addCase(
-      //   getMessages.fulfilled,
-      //   (
-      //     state,
-      //     action: PayloadAction<{ messages: Message[]; conversationId: string }>
-      //   ) => {
-      //     const { messages, conversationId } = action.payload
-      //     const conversation = state?.find((c) => c.id === conversationId)
-      //     if (conversation) {
-      //       conversation.lastMessage =
-      //         messages.length > 0 ? messages[messages.length - 1] : null
-      //     }
-      //   }
-      // )
       .addCase(
         createConversation.fulfilled,
         (state, action: PayloadAction<{ conversation: Conversation }>) => {
@@ -174,19 +161,8 @@ export const conversationSlice = createSlice({
 })
 
 export const selectConversation = createSelector(
-  [(state: RootState) => state.conversations],
-  (conversations) => {
-    return conversations
-      .map((c) => ({
-        ...c,
-        lastMessage: c.lastMessage,
-      }))
-      .sort((a, b) => {
-        const t1 = a.lastMessage?.createdAt ?? ''
-        const t2 = b.lastMessage?.createdAt ?? ''
-        return t2.localeCompare(t1)
-      })
-  }
+  (state: RootState) => state.conversations,
+  (conversations) => conversations
 )
 
 export const selectMessagesByConversationId = (
@@ -199,5 +175,5 @@ export const selectMessagesByConversationId = (
   return conversation ? conversation.lastMessage : null
 }
 
-export const { addConversation, updateLastMessage } = conversationSlice.actions
+export const { addConversation, updateNewMessage } = conversationSlice.actions
 export default conversationSlice.reducer

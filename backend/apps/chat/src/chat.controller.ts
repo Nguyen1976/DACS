@@ -11,6 +11,8 @@ import {
   type GetMessagesRequest,
   type SendMessageRequest,
   type SendMessageResponse,
+  ReadMessageResponse,
+  type ReadMessageRequest,
 } from 'interfaces/chat.grpc'
 import { Metadata, status } from '@grpc/grpc-js'
 
@@ -70,8 +72,16 @@ export class ChatController {
     data: SendMessageRequest,
     metadata: Metadata,
   ): Promise<SendMessageResponse> {
-    console.log(data)
     const message = await this.chatService.sendMessage(data)
     return message
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'readMessage')
+  async readMessage(
+    data: ReadMessageRequest,
+    metadata: Metadata,
+  ): Promise<ReadMessageResponse> {
+    const res = await this.chatService.readMessage(data)
+    return res
   }
 }

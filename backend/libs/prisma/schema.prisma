@@ -87,8 +87,9 @@ model conversationMember {
   joinedAt DateTime @default(now())
 
   conversation conversation @relation(fields: [conversationId], references: [id])
-
+  
   messages message[]
+
 
   @@unique([conversationId, userId])
 }
