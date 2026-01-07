@@ -11,7 +11,7 @@ import {
 } from '../ui/dropdown-menu'
 import type { AppDispatch } from '@/redux/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   addConversation,
   getConversations,
@@ -37,6 +37,12 @@ export function ChatSidebar({
   selectedChatId,
 }: ChatSidebarProps) {
   const [page, setPage] = useState(1)
+
+  const selectedChatIdRef = useRef<string | null>(null) //fix lỗi về stale closure
+
+  useEffect(() => {
+    selectedChatIdRef.current = selectedChatId
+  }, [selectedChatId])
 
   const conversations = useSelector(selectConversation)
   const user = useSelector(selectUser)
@@ -73,10 +79,7 @@ export function ChatSidebar({
           lastMessage: { ...data },
         })
       )
-      console.log('id of message:', data.conversationId)
-      console.log('selectedChatId:', selectedChatId)
-      if (data.conversationId !== selectedChatId) {
-        
+      if (data.conversationId !== selectedChatIdRef.current) {
         dispatch(
           upUnreadCount({
             conversationId: data.conversationId,
@@ -94,6 +97,8 @@ export function ChatSidebar({
       socket.off('chat.new_message', handler)
     }
   }, [dispatch, selectedChatId])
+
+
 
   const loadMoreConversations = () => {
     const nextPage = page + 1

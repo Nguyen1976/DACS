@@ -64,10 +64,8 @@ export function ChatWindow({
 
   useEffect(() => {
     const handler = (data: Message) => {
-      if (data.conversationId === conversationId) {
-        dispatch(addMessage(data))
-        play()
-      }
+      dispatch(addMessage(data))
+      play()
     }
 
     socket.on('chat.new_message', handler)
@@ -75,7 +73,7 @@ export function ChatWindow({
     return () => {
       socket.off('chat.new_message', handler)
     }
-  }, [conversationId, dispatch, play])
+  }, [dispatch, play])
 
   useEffect(() => {
     if (!conversationId) return
@@ -217,6 +215,12 @@ export function ChatWindow({
           size='icon'
           className='bg-bg-box-message-out hover:bg-purple-700 text-text rounded-full'
           onClick={handleSendMessage}
+          //enter to send message
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSendMessage()
+            }
+          }}
         >
           <Send className='w-5 h-5' />
         </Button>

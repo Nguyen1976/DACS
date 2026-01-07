@@ -136,6 +136,7 @@ export const conversationSlice = createSlice({
       const { conversationId } = action.payload
       const conversation = state.find((c) => c.id === conversationId)
       if (!conversation) return state
+      if(conversation.unreadCount === '5+') return state
       const newUnreadCount = Number(conversation.unreadCount) + 1
       conversation.unreadCount = String(
         newUnreadCount > 5 ? '5+' : newUnreadCount

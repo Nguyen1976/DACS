@@ -343,6 +343,7 @@ export class ChatService {
               createdAt: { gt: lastReadAt },
             }),
             isDeleted: false,
+            NOT: { senderId: userId },
           },
           orderBy: { createdAt: 'desc' },
           take: 6,
