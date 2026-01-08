@@ -15,7 +15,7 @@ import {
   type ConversationState,
 } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { formatDateTime } from '@/utils/formatDateTime'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { selectUser } from '@/redux/slices/userSlice'
@@ -92,7 +92,7 @@ export default function ChatWindow({
     )
   }, [messages, conversationId, dispatch, user.id])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (msg.trim() === '' || !conversationId) return
     dispatch(sendMessage({ conversationId, message: msg })).then((res) => {
       dispatch(
@@ -103,7 +103,18 @@ export default function ChatWindow({
       )
     })
     setMsg('')
-  }
+  }, [msg, dispatch, conversationId])
+
+  useEffect(() => {
+    window.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage()
+      }
+    }
+    return () => {
+      window.onkeydown = null
+    }
+  }, [handleSendMessage])
 
   return (
     <div className='flex-1 flex flex-col bg-bg-box-chat'>
@@ -216,11 +227,6 @@ export default function ChatWindow({
           className='bg-bg-box-message-out hover:bg-purple-700 text-text rounded-full'
           onClick={handleSendMessage}
           //enter to send message
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSendMessage()
-            }
-          }}
         >
           <Send className='w-5 h-5' />
         </Button>
