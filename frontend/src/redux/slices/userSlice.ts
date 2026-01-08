@@ -45,6 +45,11 @@ export const userSlice = createSlice({
         Object.assign(state, user)
       }
     )
+    builder.addCase(logoutAPI.fulfilled, (state) => {
+      state = initialState
+      localStorage.removeItem('token')
+      return state
+    })
   },
 })
 

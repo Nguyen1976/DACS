@@ -1,7 +1,6 @@
 import { Environment } from '@react-three/drei'
 import FloatingCube from './FloatingCube'
 
-//lazy thằng này
 export default function Scene() {
   return (
     <>

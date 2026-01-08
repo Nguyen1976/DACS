@@ -49,7 +49,6 @@ export class RealtimeGateway
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth?.token
-      console.log(token)
       if (!token) {
         client.disconnect()
         return
@@ -74,7 +73,6 @@ export class RealtimeGateway
     if (!userId) return
     this.userStatusStore.removeConnection(userId, client.id)
     if (!this.userStatusStore.isOnline(userId)) {
-      console.log(`❌ User ${userId} offline`)
       this.server.emit(SOCKET_EVENTS.DISCONNECTION, { userId })
     }
   }
@@ -122,7 +120,6 @@ export class RealtimeGateway
 
   @SubscribeMessage('ping')
   handlePing(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    console.log('Received:', data)
     return { event: 'pong', data: 'hello from gateway' }
   }
 
@@ -169,7 +166,6 @@ export class RealtimeGateway
   async handleNewMemberAddedToConversation(
     data: MemberAddedToConversationPayload,
   ): Promise<void> {
-    console.log(data)
     await this.emitToUser(
       data.newMemberIds,
       SOCKET_EVENTS.CHAT.NEW_MEMBER_ADDED,

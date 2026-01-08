@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import AnimatedBackground from '@/components/AnimatedBg'
-// const AnimatedBackground = lazy(() => import('@/components/AnimatedBg'))
 import { AuthForm } from '@/components/AuthForm'
 
 export default function AuthPage() {

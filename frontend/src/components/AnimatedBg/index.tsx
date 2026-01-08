@@ -1,6 +1,4 @@
 import { Canvas } from '@react-three/fiber'
-// import { lazy } from 'react'
-// const Scene = lazy(() => import('./Scene'))
 import Scene from './Scene'
 
 export default function AnimatedBackground() {

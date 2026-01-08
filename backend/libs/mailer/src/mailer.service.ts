@@ -33,7 +33,6 @@ export class MailerService {
       .replace(/{{\s*acceptUrl\s*}}/g, 'ok')
       .replace(/{{\s*rejectUrl\s*}}/g, 'ok')
       .replace(/{{\s*year\s*}}/g, String(new Date().getFullYear()))
-    console.log('mailer', { senderName, friendEmail, receiverName })
     //ở template này sẽ thiết kế lại để redirect người dùng về đúng trang web của mình
     await this.mailer.sendMail({
       to: friendEmail,

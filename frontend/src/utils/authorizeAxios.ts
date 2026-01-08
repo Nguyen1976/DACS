@@ -8,7 +8,7 @@ import type {
   Tuple,
   UnknownAction,
 } from '@reduxjs/toolkit'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { interceptorLoadingElements } from '.'
 import { toast } from 'sonner'
 
@@ -78,19 +78,19 @@ authorizeAxiosInstance.interceptors.response.use(
 
     return response
   },
-  (error) => {
+  (error: AxiosError) => {
     //Kỹ thuật chặn spam click
     /**Xử lý refresh token tự động */
     //TH1: Nếu nhận mã 401 từ be thì call api đăng xuất
     interceptorLoadingElements(false)
-
+    console.log(error)
     if (error.response?.status === 401) {
       axiosReduxStore?.dispatch(logoutAPI())
     }
 
     let errorMessage = error?.message
-    if (error.response?.data?.message) {
-      errorMessage = error?.response?.data?.message
+    if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+      errorMessage = (error.response.data as { message: string }).message
     }
 
     toast.error(`Error: ${errorMessage}`)
