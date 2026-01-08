@@ -27,7 +27,7 @@ import {
 } from '@/redux/slices/messageSlice'
 import notificationSound from '@/assets/notification.mp3'
 import useSound from 'use-sound'
-import MessageComponent from './Message'
+import MessageComponent from './Messages'
 import EmojiPicker from 'emoji-picker-react'
 import {
   Popover,
@@ -173,9 +173,7 @@ export default function ChatWindow({
 
       {/* Messages */}
       <div className='flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar'>
-        {messages?.map((message: Message) => (
-          <MessageComponent key={message.id} message={message} />
-        ))}
+          <MessageComponent messages={messages} />
       </div>
 
       {/* Input */}
@@ -235,7 +233,6 @@ export default function ChatWindow({
           size='icon'
           className='bg-bg-box-message-out hover:bg-purple-700 text-text rounded-full'
           onClick={handleSendMessage}
-          //enter to send message
         >
           <Send className='w-5 h-5' />
         </Button>
