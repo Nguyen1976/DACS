@@ -8,7 +8,6 @@ import {
   Smile,
   Send,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import {
   readMessage,
   updateNewMessage,
@@ -16,7 +15,6 @@ import {
 } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useCallback, useEffect, useState } from 'react'
-import { formatDateTime } from '@/utils/formatDateTime'
 import type { AppDispatch, RootState } from '@/redux/store'
 import { selectUser } from '@/redux/slices/userSlice'
 import { socket } from '@/lib/socket'
@@ -29,6 +27,13 @@ import {
 } from '@/redux/slices/messageSlice'
 import notificationSound from '@/assets/notification.mp3'
 import useSound from 'use-sound'
+import MessageComponent from './Message'
+import EmojiPicker from 'emoji-picker-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface ChatWindowProps {
   conversationId?: string
@@ -169,30 +174,7 @@ export default function ChatWindow({
       {/* Messages */}
       <div className='flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar'>
         {messages?.map((message: Message) => (
-          <div key={message.id}>
-            <div
-              className={cn(
-                'flex',
-                message.senderMember?.userId === user.id
-                  ? 'justify-end'
-                  : 'justify-start'
-              )}
-            >
-              <div
-                className={cn(
-                  'max-w-md px-4 py-3 rounded-2xl',
-                  message.senderMember?.userId === user.id
-                    ? 'bg-bg-box-message-out text-text rounded-br-md'
-                    : 'bg-bg-box-message-incoming text-text rounded-bl-md'
-                )}
-              >
-                <p className='text-sm break-words'>{message.text}</p>
-                <span className='text-xs opacity-70 mt-1 block'>
-                  {formatDateTime(message.createdAt)}
-                </span>
-              </div>
-            </div>
-          </div>
+          <MessageComponent key={message.id} message={message} />
         ))}
       </div>
 
@@ -214,13 +196,40 @@ export default function ChatWindow({
           value={msg}
         />
 
-        <Button
-          variant='ghost'
-          size='icon'
-          className='hover:bg-bg-box-message-incoming text-gray-400 hover:text-text'
-        >
-          <Smile className='w-5 h-5' />
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='
+        text-gray-400 
+        hover:text-text 
+        hover:bg-bg-box-message-incoming
+      '
+            >
+              <Smile className='w-5 h-5' />
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            side='top'
+            align='end'
+            className='p-0 border-none shadow-none bg-transparent'
+          >
+            <EmojiPicker
+              height={360}
+              width={300}
+              searchDisabled={false}
+              skinTonesDisabled
+              previewConfig={{ showPreview: false }}
+              onEmojiClick={(emoji) => {
+                // TODO: insert emoji vào input
+                setMsg((prev) => prev + emoji.emoji)
+                //đóng popover sau khi chọn
+              }}
+            />
+          </PopoverContent>
+        </Popover>
 
         <Button
           size='icon'
