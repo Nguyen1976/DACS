@@ -109,15 +109,16 @@ export function ChatSidebar({
 
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
-      {showSetting && (
-        <ProfileSettings onClose={() => setShowSetting(false)} />
-      )}
+      {showSetting && <ProfileSettings onClose={() => setShowSetting(false)} />}
 
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar>
-              <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.username} />
+              <AvatarImage
+                src={user.avatar || '/placeholder.svg'}
+                alt={user.username}
+              />
               <AvatarFallback>{user.username[0]}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>

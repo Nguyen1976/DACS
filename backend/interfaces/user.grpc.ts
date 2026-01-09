@@ -34,6 +34,7 @@ export interface UserLoginResponse {
   username: string;
   avatar?: string | undefined;
   bio?: string | undefined;
+  fullName: string;
   token: string;
 }
 

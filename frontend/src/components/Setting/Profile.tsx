@@ -10,7 +10,7 @@ import { selectUser } from '@/redux/slices/userSlice'
 import { useSelector } from 'react-redux'
 
 const formProfileScheme = z.object({
-  username: z.string(),
+  fullName: z.string(),
   email: z.string(),
   bio: z.string(),
   avatar: z.string(),
@@ -22,7 +22,7 @@ const Profile = () => {
   const formProfile = useForm<z.infer<typeof formProfileScheme>>({
     resolver: zodResolver(formProfileScheme),
     defaultValues: {
-      username: user.username,
+      fullName: user.fullName || '',
       email: user.email || '',
       avatar: user.avatar || '',
       bio: user.bio || '',
@@ -62,7 +62,7 @@ const Profile = () => {
             <Input
               placeholder='Enter your full name'
               className='bg-input border-border'
-              {...formProfile.register('username')}
+              {...formProfile.register('fullName')}
             />
           </div>
 

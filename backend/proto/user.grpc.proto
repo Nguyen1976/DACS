@@ -34,7 +34,8 @@ message UserLoginResponse {
   string username = 3;
   optional string avatar = 4;
   optional string bio = 5;
-  string token = 6;
+  string fullName = 6;
+  string token = 7;
 }
 
 message MakeFriendRequest {
