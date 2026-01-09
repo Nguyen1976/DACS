@@ -26,6 +26,7 @@ import { selectUser } from '@/redux/slices/userSlice'
 import MenuCustome from './Menu'
 import { NotificationsDropdown } from '../NotificationDropdown'
 import type { Message } from '@/redux/slices/messageSlice'
+import { ProfileSettings } from '../Setting'
 
 interface ChatSidebarProps {
   setSelectedChatId: (chatId: string) => void
@@ -36,6 +37,8 @@ export function ChatSidebar({
   setSelectedChatId,
   selectedChatId,
 }: ChatSidebarProps) {
+  const [showSetting, setShowSetting] = useState(false)
+
   const [page, setPage] = useState(1)
 
   const selectedChatIdRef = useRef<string | null>(null) //fix lỗi về stale closure
@@ -98,8 +101,6 @@ export function ChatSidebar({
     }
   }, [dispatch, selectedChatId])
 
-
-
   const loadMoreConversations = () => {
     const nextPage = page + 1
     dispatch(getConversations({ limit: 10, page: nextPage }))
@@ -108,6 +109,10 @@ export function ChatSidebar({
 
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
+      {showSetting && (
+        <ProfileSettings user={user} onClose={() => setShowSetting(false)} />
+      )}
+
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -120,7 +125,9 @@ export function ChatSidebar({
             <DropdownMenuGroup>
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Billing</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowSetting(true)}>
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
