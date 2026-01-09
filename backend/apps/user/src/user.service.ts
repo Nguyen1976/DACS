@@ -107,8 +107,10 @@ export class UserService {
 
     return {
       ...user,
+      avatar: user.avatar || '',
+      bio: user.bio || '',
       token,
-    }
+    } as UserLoginResponse
   }
 
   async makeFriend(data: MakeFriendRequest): Promise<MakeFriendResponse> {

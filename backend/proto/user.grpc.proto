@@ -32,7 +32,9 @@ message UserLoginResponse {
   string id = 1;
   string email = 2;
   string username = 3;
-  string token = 4;
+  optional string avatar = 4;
+  optional string bio = 5;
+  string token = 6;
 }
 
 message MakeFriendRequest {

@@ -110,15 +110,15 @@ export function ChatSidebar({
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
       {showSetting && (
-        <ProfileSettings user={user} onClose={() => setShowSetting(false)} />
+        <ProfileSettings onClose={() => setShowSetting(false)} />
       )}
 
       <div className='flex items-center justify-between p-4 border-b border-bg-box-message-incoming'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar>
-              <AvatarImage src='https://github.com/shadcn.png' alt='@shadcn' />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.username} />
+              <AvatarFallback>{user.username[0]}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className='w-56' align='start'>

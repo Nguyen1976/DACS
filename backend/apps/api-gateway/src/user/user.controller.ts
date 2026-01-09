@@ -19,7 +19,9 @@ export class UserController {
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
-    return await this.userService.login(loginUserDto)
+    const res = await this.userService.login(loginUserDto)
+    console.log("🚀 ~ user.controller.ts:23 ~ res:", res)
+    return res
   }
 
   @Post('make-friend')

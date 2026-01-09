@@ -7,6 +7,8 @@ export interface UserState {
   id: string
   email: string
   username: string
+  avatar?: string
+  bio?: string
   token?: string
 }
 
@@ -14,6 +16,8 @@ const initialState: UserState = {
   id: '',
   email: '',
   username: '',
+  bio: '',
+  avatar: '',
 }
 
 export const loginAPI = createAsyncThunk(

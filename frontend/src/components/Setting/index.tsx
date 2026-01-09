@@ -8,16 +8,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Bell, Lock, Shield, X } from 'lucide-react'
+import Profile from './Profile'
 
 interface ProfileSettingsProps {
   onClose: () => void
 }
 
-
-
 export function ProfileSettings({ onClose }: ProfileSettingsProps) {
-  
-
   return (
     <div className='w-full h-full max-w-3xl mx-auto bg-[rgba(0,0,0,0.3)] text-foreground  fixed z-50 '>
       <div className='w-2/3 mx-auto py-6 bg-card rounded-lg border border-border shadow-lg'>
@@ -66,7 +63,7 @@ export function ProfileSettings({ onClose }: ProfileSettingsProps) {
 
             {/* Profile Tab */}
             <TabsContent value='profile' className='p-6 space-y-6'>
-              
+              <Profile />
             </TabsContent>
 
             {/* Account Tab */}

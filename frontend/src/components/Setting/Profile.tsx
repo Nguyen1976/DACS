@@ -12,18 +12,20 @@ import { useSelector } from 'react-redux'
 const formProfileScheme = z.object({
   username: z.string(),
   email: z.string(),
-  phone: z.string(),
   bio: z.string(),
+  avatar: z.string(),
 })
 
 const Profile = () => {
-    const user = useSelector(selectUser)
+  const user = useSelector(selectUser)
 
   const formProfile = useForm<z.infer<typeof formProfileScheme>>({
     resolver: zodResolver(formProfileScheme),
     defaultValues: {
       username: user.username,
-      email: user.email || ''
+      email: user.email || '',
+      avatar: user.avatar || '',
+      bio: user.bio || '',
     },
   })
   return (
@@ -71,17 +73,6 @@ const Profile = () => {
               placeholder='Enter your email'
               className='bg-input border-border'
               {...formProfile.register('email')}
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium mb-2'>
-              Phone Number
-            </label>
-            <Input
-              placeholder='Enter your phone number'
-              className='bg-input border-border'
-              {...formProfile.register('phone')}
             />
           </div>
 

@@ -32,6 +32,8 @@ export interface UserLoginResponse {
   id: string;
   email: string;
   username: string;
+  avatar?: string | undefined;
+  bio?: string | undefined;
   token: string;
 }
 
