@@ -13,7 +13,9 @@ import {
   type UserRegisterRequest,
   type UserRegisterResponse,
   type UpdateProfileRequest,
-  UpdateProfileResponse,
+  type UpdateProfileResponse,
+  type GetUserByIdResponse,
+  type GetUserByIdRequest,
 } from 'interfaces/user.grpc'
 
 @Controller()
@@ -77,6 +79,15 @@ export class UserController implements UserGrpcServiceController {
     metadata: Metadata,
   ): Promise<UpdateProfileResponse> {
     const res = await this.userService.updateProfile(data)
+    return res
+  }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'getUserById')
+  async getUserById(
+    data: GetUserByIdRequest,
+    metadata: Metadata,
+  ): Promise<GetUserByIdResponse> {
+    const res = await this.userService.getUserById(data.userId)
     return res
   }
 }

@@ -10,7 +10,9 @@ service UserGrpcService {
   rpc listFriends (ListFriendsRequest) returns (ListFriendsResponse) {}
   rpc detailMakeFriend (DetailMakeFriendRequest) returns (DetailMakeFriendResponse) {}
   rpc updateProfile (UpdateProfileRequest) returns (UpdateProfileResponse) {}
+  rpc getUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
 }
+
 
 message UpdateProfileRequest {
   optional string fullName = 1;
@@ -29,7 +31,7 @@ message UpdateProfileResponse {
   optional string bio = 2;
 
   // Trả về URL avatar mới
-  optional string avatarUrl = 3;
+  optional string avatar = 3;
 }
 
 message UserRegisterRequest {
@@ -113,4 +115,16 @@ message DetailMakeFriendResponse {
   string status = 4;
   string createdAt = 5;
   string updatedAt = 6;
+}
+
+message GetUserByIdRequest {
+  string userId = 1;
+}
+
+message GetUserByIdResponse {
+  string fullName = 1;
+  string username = 2;
+  string email = 3;
+  string bio = 4;
+  string avatar = 5;
 }

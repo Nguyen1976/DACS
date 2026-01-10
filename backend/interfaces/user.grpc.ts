@@ -25,7 +25,7 @@ export interface UpdateProfileResponse {
     | string
     | undefined;
   /** Trả về URL avatar mới */
-  avatarUrl?: string | undefined;
+  avatar?: string | undefined;
 }
 
 export interface UserRegisterRequest {
@@ -111,6 +111,18 @@ export interface DetailMakeFriendResponse {
   updatedAt: string;
 }
 
+export interface GetUserByIdRequest {
+  userId: string;
+}
+
+export interface GetUserByIdResponse {
+  fullName: string;
+  username: string;
+  email: string;
+  bio: string;
+  avatar: string;
+}
+
 export const USER_PACKAGE_NAME = "user";
 
 export interface UserGrpcServiceClient {
@@ -127,6 +139,8 @@ export interface UserGrpcServiceClient {
   detailMakeFriend(request: DetailMakeFriendRequest, metadata?: Metadata): Observable<DetailMakeFriendResponse>;
 
   updateProfile(request: UpdateProfileRequest, metadata?: Metadata): Observable<UpdateProfileResponse>;
+
+  getUserById(request: GetUserByIdRequest, metadata?: Metadata): Observable<GetUserByIdResponse>;
 }
 
 export interface UserGrpcServiceController {
@@ -164,6 +178,11 @@ export interface UserGrpcServiceController {
     request: UpdateProfileRequest,
     metadata?: Metadata,
   ): Promise<UpdateProfileResponse> | Observable<UpdateProfileResponse> | UpdateProfileResponse;
+
+  getUserById(
+    request: GetUserByIdRequest,
+    metadata?: Metadata,
+  ): Promise<GetUserByIdResponse> | Observable<GetUserByIdResponse> | GetUserByIdResponse;
 }
 
 export function UserGrpcServiceControllerMethods() {
@@ -176,6 +195,7 @@ export function UserGrpcServiceControllerMethods() {
       "listFriends",
       "detailMakeFriend",
       "updateProfile",
+      "getUserById",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

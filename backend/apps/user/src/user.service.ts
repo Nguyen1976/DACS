@@ -9,6 +9,7 @@ import { RpcException } from '@nestjs/microservices'
 import { Status } from '@prisma/client'
 import {
   DetailMakeFriendResponse,
+  GetUserByIdResponse,
   ListFriendsResponse,
   MakeFriendRequest,
   MakeFriendResponse,
@@ -117,6 +118,28 @@ export class UserService {
       bio: user.bio || '',
       token,
     } as UserLoginResponse
+  }
+
+  async getUserById(userId: string): Promise<GetUserByIdResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        fullName: true,
+        username: true,
+        email: true,
+        bio: true,
+        avatar: true,
+      },
+    })
+    if (!user) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'User not found',
+      })
+    }
+    return user as GetUserByIdResponse
   }
 
   async makeFriend(data: MakeFriendRequest): Promise<MakeFriendResponse> {
@@ -340,7 +363,7 @@ export class UserService {
     return {
       fullName: user.fullName || '',
       bio: user.bio || '',
-      avatar: user.avatar || '',
+      avatar: avatarUrl,
     }
   }
 }

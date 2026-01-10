@@ -56,6 +56,11 @@ export class UserService implements OnModuleInit {
     return await firstValueFrom(observable)
   }
 
+  async getUserById(userId: string): Promise<any> {
+    const observable = this.userClientService.getUserById({ userId })
+    return await firstValueFrom(observable)
+  }
+
   async makeFriend(dto: any): Promise<any> {
     //tạo bạn ghi trong user service
     const observable = this.userClientService.makeFriend({

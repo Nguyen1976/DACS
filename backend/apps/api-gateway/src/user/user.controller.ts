@@ -40,6 +40,12 @@ export class UserController {
     return res
   }
 
+  @Get('')
+  @RequireLogin()
+  async getUserById(@Query('userId') userId: string) {
+    return await this.userService.getUserById(userId)
+  }
+
   @Post('make-friend')
   @RequireLogin()
   async makeFriend(@Body() body: MakeFriendDto, @UserInfo() user: any) {
@@ -92,17 +98,6 @@ export class UserController {
     @UserInfo() user: any,
     @UploadedFile() avatar?: Multer.File,
   ) {
-    // if (avatar) {
-    //   if (
-    //     !['image/png', 'image/jpeg', 'image/webp'].includes(avatar.mimetype)
-    //   ) {
-    //     throw new BadRequestException('Invalid image type')
-    //   }
-
-    //   if (avatar.size > 2 * 1024 * 1024) {
-    //     throw new BadRequestException('File too large')
-    //   }
-    // }
     return await this.userService.updateProfile({
       ...dto,
       userId: user?.userId,
