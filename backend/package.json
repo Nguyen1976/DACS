@@ -21,6 +21,8 @@
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.966.0",
+    "@aws-sdk/s3-request-presigner": "^3.966.0",
     "@golevelup/nestjs-rabbitmq": "^6.1.0",
     "@grpc/grpc-js": "^1.14.2",
     "@grpc/proto-loader": "^0.8.0",
@@ -43,6 +45,7 @@
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
     "ioredis": "^5.8.2",
+    "mime-types": "^3.0.2",
     "nodemailer": "^7.0.11",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -102,6 +105,7 @@
       "^@app/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1",
       "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
       "^@app/redis(|/.*)$": "<rootDir>/libs/redis/src/$1",
+      "^@app/storage-r2(|/.*)$": "<rootDir>/libs/storage-r2/src/$1",
       "^@app/util(|/.*)$": "<rootDir>/libs/util/src/$1"
     }
   }

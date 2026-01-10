@@ -8,12 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '../ui/form'
 import { selectUser } from '@/redux/slices/userSlice'
 import { useSelector } from 'react-redux'
+import { useState } from 'react'
 
 const formProfileScheme = z.object({
-  fullName: z.string(),
-  email: z.string(),
+  fullName: z.string().min(1),
+  email: z.string().email(),
   bio: z.string(),
-  avatar: z.string(),
+  avatar: z.instanceof(File).optional(), // cho phép không đổi ảnh
 })
 
 const Profile = () => {
@@ -24,78 +25,123 @@ const Profile = () => {
     defaultValues: {
       fullName: user.fullName || '',
       email: user.email || '',
-      avatar: user.avatar || '',
       bio: user.bio || '',
+      avatar: undefined,
     },
   })
+
+  const [preview, setPreview] = useState<string>(
+    user.avatar || '/placeholder.svg'
+  )
+
+  const onSubmit = async (data: z.infer<typeof formProfileScheme>) => {
+    console.log('FORM DATA:', data)
+
+    // data.avatar là File | undefined
+    if (data.avatar) {
+      const formData = new FormData()
+      formData.append('avatar', data.avatar)
+      formData.append('fullName', data.fullName)
+      formData.append('email', data.email)
+      formData.append('bio', data.bio)
+    }
+  }
   return (
     <Form {...formProfile}>
-      <div>
-        <h3 className='text-lg font-semibold mb-4'>Profile Information</h3>
+      <form onSubmit={formProfile.handleSubmit(onSubmit)}>
+        <div>
+          <h3 className='text-lg font-semibold mb-4'>Profile Information</h3>
+          {/* Avatar Section */}
+          <div className='flex items-center gap-6 mb-8 p-4 bg-muted rounded-lg'>
+            <Avatar className='w-24 h-24'>
+              <AvatarImage src={preview} alt={user.username} />
+              <AvatarFallback className='text-2xl'>
+                {user.username?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className='flex-1'>
+              <h4 className='font-medium mb-2'>{user.username}</h4>
+              <p className='text-sm text-muted-foreground mb-3'>
+                Your profile photo
+              </p>
+              <input
+                type='file'
+                accept='image/*'
+                hidden
+                id='avatar-upload'
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
 
-        {/* Avatar Section */}
-        <div className='flex items-center gap-6 mb-8 p-4 bg-muted rounded-lg'>
-          <Avatar className='w-24 h-24'>
-            <AvatarImage
-              src={user.avatar || '/placeholder.svg'}
-              alt={user.username}
-            />
-            <AvatarFallback className='text-2xl'>
-              {user.username[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className='flex-1'>
-            <h4 className='font-medium mb-2'>{user.username}</h4>
-            <p className='text-sm text-muted-foreground mb-3'>
-              Your profile photo
-            </p>
-            <Button variant='outline' size='sm'>
-              Change Photo
-            </Button>
+                  // set vào react-hook-form
+                  formProfile.setValue('avatar', file)
+
+                  // preview ảnh
+                  const url = URL.createObjectURL(file)
+                  setPreview(url)
+                }}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  document.getElementById('avatar-upload')?.click()
+                }
+              >
+                Change Photo
+              </Button>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className='space-y-4'>
+            <div>
+              <label className='block text-sm font-medium mb-2'>
+                Full Name
+              </label>
+              <Input
+                placeholder='Enter your full name'
+                className='bg-input border-border'
+                {...formProfile.register('fullName')}
+              />
+            </div>
+
+            <div>
+              <label className='block text-sm font-medium mb-2'>Email</label>
+              <Input
+                type='email'
+                placeholder='Enter your email'
+                className='bg-input border-border'
+                {...formProfile.register('email')}
+              />
+            </div>
+
+            <div>
+              <label className='block text-sm font-medium mb-2'>Bio</label>
+              <textarea
+                placeholder='Tell us about yourself'
+                className='w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none'
+                rows={4}
+                {...formProfile.register('bio')}
+              />
+            </div>
           </div>
         </div>
-
-        {/* Form Fields */}
-        <div className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium mb-2'>Full Name</label>
-            <Input
-              placeholder='Enter your full name'
-              className='bg-input border-border'
-              {...formProfile.register('fullName')}
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium mb-2'>Email</label>
-            <Input
-              type='email'
-              placeholder='Enter your email'
-              className='bg-input border-border'
-              {...formProfile.register('email')}
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium mb-2'>Bio</label>
-            <textarea
-              placeholder='Tell us about yourself'
-              className='w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none'
-              rows={4}
-              {...formProfile.register('bio')}
-            />
-          </div>
+        <div className='border-t border-border p-6 flex items-center justify-between gap-4'>
+          <Button variant='destructive' className='gap-2'>
+            <LogOut className='w-4 h-4' />
+            Log Out
+          </Button>
+          <Button
+            className='gap-2 bg-primary hover:bg-primary/90'
+            type='submit'
+          >
+            <Save className='w-4 h-4' />
+            Save Changes
+          </Button>
         </div>
-      </div>
-      <div className='border-t border-border p-6 flex items-center justify-between gap-4'>
-        <Button variant='destructive' className='gap-2'>
-          <LogOut className='w-4 h-4' />
-          Log Out
-        </Button>
-        <Button className='gap-2 bg-primary hover:bg-primary/90'>
-          <Save className='w-4 h-4' />
-        </Button>
-      </div>
+      </form>
     </Form>
   )
 }

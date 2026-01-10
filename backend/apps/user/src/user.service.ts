@@ -1,4 +1,5 @@
 import { PrismaService } from '@app/prisma'
+import { StorageR2Service } from '@app/storage-r2'
 import { UtilService } from '@app/util/util.service'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { status } from '@grpc/grpc-js'
@@ -11,6 +12,7 @@ import {
   ListFriendsResponse,
   MakeFriendRequest,
   MakeFriendResponse,
+  UpdateProfileRequest,
   UpdateStatusRequest,
   UpdateStatusResponse,
   UserLoginRequest,
@@ -26,6 +28,7 @@ import {
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
+import { lookup } from 'mime-types'
 
 @Injectable()
 export class UserService {
@@ -36,6 +39,8 @@ export class UserService {
     @Inject(UtilService) private readonly utilService: UtilService,
     // @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
     private readonly amqpConnection: AmqpConnection,
+    @Inject(StorageR2Service)
+    private readonly storageR2Service: StorageR2Service,
   ) {}
 
   async register(data: UserRegisterRequest): Promise<UserRegisterResponse> {
@@ -68,6 +73,7 @@ export class UserService {
       await this.prisma.user.create({
         data: {
           email: data.email,
+          fullName: '', //bổ sung sau
           password: await this.utilService.hashPassword(data.password),
           username: data.username,
         },
@@ -172,7 +178,7 @@ export class UserService {
       })
     }
 
-    if(friendRequest.status !== Status.PENDING){
+    if (friendRequest.status !== Status.PENDING) {
       throw new RpcException({
         code: status.FAILED_PRECONDITION,
         message: 'Friend request already responded',
@@ -305,5 +311,36 @@ export class UserService {
       createdAt: friendRequest.createdAt.toString(),
       updatedAt: friendRequest.updatedAt.toString(),
     } as DetailMakeFriendResponse
+  }
+
+  async updateProfile(data: UpdateProfileRequest): Promise<any> {
+    let avatarUrl = ''
+    if (data.avatar && data.avatarFilename) {
+      const mime =
+        lookup(data.avatarFilename || '') || 'application/octet-stream'
+
+      avatarUrl = await this.storageR2Service.upload({
+        buffer: data.avatar as Buffer,
+        mime: mime,
+        folder: 'avatars',
+        ext: data.avatarFilename?.split('.').pop() || 'bin',
+      })
+    }
+
+    const user = await this.prisma.user.update({
+      where: {
+        id: data.userId,
+      },
+      data: {
+        fullName: data?.fullName,
+        bio: data?.bio,
+        avatar: avatarUrl || undefined,
+      },
+    })
+    return {
+      fullName: user.fullName || '',
+      bio: user.bio || '',
+      avatar: user.avatar || '',
+    }
   }
 }

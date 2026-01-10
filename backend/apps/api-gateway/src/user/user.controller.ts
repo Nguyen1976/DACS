@@ -1,12 +1,28 @@
-import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  BadRequestException,
+} from '@nestjs/common'
+import type { Multer } from 'multer'
 import { UserService } from './user.service'
 import {
   LoginUserDto,
   MakeFriendDto,
   RegisterUserDto,
+  UpdateProfileDto,
   UpdateStatusMakeFriendDto,
 } from './dto/user.dto'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @Controller('user')
 export class UserController {
@@ -20,7 +36,7 @@ export class UserController {
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     const res = await this.userService.login(loginUserDto)
-    console.log("🚀 ~ user.controller.ts:23 ~ res:", res)
+    console.log('🚀 ~ user.controller.ts:23 ~ res:', res)
     return res
   }
 
@@ -60,5 +76,37 @@ export class UserController {
     @Query('friendRequestId') friendRequestId: string,
   ) {
     return await this.userService.detailMakeFriend(friendRequestId)
+  }
+
+  @Post('update-profile')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: {
+        fileSize: 2 * 1024 * 1024,
+      },
+    }),
+  )
+  @RequireLogin()
+  async updateProfile(
+    @Body() dto: UpdateProfileDto,
+    @UserInfo() user: any,
+    @UploadedFile() avatar?: Multer.File,
+  ) {
+    // if (avatar) {
+    //   if (
+    //     !['image/png', 'image/jpeg', 'image/webp'].includes(avatar.mimetype)
+    //   ) {
+    //     throw new BadRequestException('Invalid image type')
+    //   }
+
+    //   if (avatar.size > 2 * 1024 * 1024) {
+    //     throw new BadRequestException('File too large')
+    //   }
+    // }
+    return await this.userService.updateProfile({
+      ...dto,
+      userId: user?.userId,
+      avatar,
+    })
   }
 }

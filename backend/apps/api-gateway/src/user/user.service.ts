@@ -1,8 +1,10 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
-import { LoginUserDto, RegisterUserDto } from './dto/user.dto'
+import { LoginUserDto, RegisterUserDto, UpdateProfileDto } from './dto/user.dto'
 import {
   MakeFriendRequest,
   MakeFriendResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
   UpdateStatusResponse,
   USER_GRPC_SERVICE_NAME,
   UserGrpcServiceClient,
@@ -17,6 +19,7 @@ import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { NotificationService } from '../notification/notification.service'
 import { ChatService } from '../chat/chat.service'
 import { Status } from '@prisma/client'
+import type { Multer } from 'multer'
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -43,7 +46,7 @@ export class UserService implements OnModuleInit {
     } as UserRegisterRequest)
     return await firstValueFrom(observable)
   }
-  
+
   async login(dto: LoginUserDto): Promise<UserLoginResponse> {
     let observable = this.userClientService.login({
       email: dto.email,
@@ -86,6 +89,19 @@ export class UserService implements OnModuleInit {
     const observable = this.userClientService.detailMakeFriend({
       friendRequestId,
     })
+    return await firstValueFrom(observable)
+  }
+
+  async updateProfile(
+    dto: UpdateProfileDto & { userId: string; avatar?: Multer.File },
+  ): Promise<UpdateProfileResponse> {
+    const observable = this.userClientService.updateProfile({
+      userId: dto.userId,
+      fullName: dto?.fullName,
+      bio: dto?.bio,
+      avatar: dto.avatar ? dto.avatar.buffer : undefined,
+      avatarFilename: dto.avatar ? dto.avatar.originalname : undefined,
+    } as UpdateProfileRequest)
     return await firstValueFrom(observable)
   }
 }

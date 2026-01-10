@@ -3,6 +3,8 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
+  IsString,
   MaxLength,
   MinLength,
 } from 'class-validator'
@@ -58,4 +60,17 @@ export class UpdateStatusMakeFriendDto {
 
   @IsNotEmpty()
   inviteeName: string
+}
+
+//dto nhận vào formData từ frontend
+export class UpdateProfileDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  fullName?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string
 }

@@ -11,6 +11,23 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "user";
 
+export interface UpdateProfileRequest {
+  fullName?: string | undefined;
+  bio?: string | undefined;
+  avatar?: Uint8Array | undefined;
+  avatarFilename?: string | undefined;
+  userId: string;
+}
+
+export interface UpdateProfileResponse {
+  fullName?: string | undefined;
+  bio?:
+    | string
+    | undefined;
+  /** Trả về URL avatar mới */
+  avatarUrl?: string | undefined;
+}
+
 export interface UserRegisterRequest {
   email: string;
   password: string;
@@ -108,6 +125,8 @@ export interface UserGrpcServiceClient {
   listFriends(request: ListFriendsRequest, metadata?: Metadata): Observable<ListFriendsResponse>;
 
   detailMakeFriend(request: DetailMakeFriendRequest, metadata?: Metadata): Observable<DetailMakeFriendResponse>;
+
+  updateProfile(request: UpdateProfileRequest, metadata?: Metadata): Observable<UpdateProfileResponse>;
 }
 
 export interface UserGrpcServiceController {
@@ -140,6 +159,11 @@ export interface UserGrpcServiceController {
     request: DetailMakeFriendRequest,
     metadata?: Metadata,
   ): Promise<DetailMakeFriendResponse> | Observable<DetailMakeFriendResponse> | DetailMakeFriendResponse;
+
+  updateProfile(
+    request: UpdateProfileRequest,
+    metadata?: Metadata,
+  ): Promise<UpdateProfileResponse> | Observable<UpdateProfileResponse> | UpdateProfileResponse;
 }
 
 export function UserGrpcServiceControllerMethods() {
@@ -151,6 +175,7 @@ export function UserGrpcServiceControllerMethods() {
       "updateStatusMakeFriend",
       "listFriends",
       "detailMakeFriend",
+      "updateProfile",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

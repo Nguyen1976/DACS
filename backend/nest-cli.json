@@ -82,6 +82,15 @@
         "tsConfigPath": "libs/redis/tsconfig.lib.json"
       }
     },
+    "storage-r2": {
+      "type": "library",
+      "root": "libs/storage-r2",
+      "entryFile": "index",
+      "sourceRoot": "libs/storage-r2/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/storage-r2/tsconfig.lib.json"
+      }
+    },
     "user": {
       "type": "application",
       "root": "apps/user",

@@ -12,6 +12,8 @@ import {
   type UserGrpcServiceController,
   type UserRegisterRequest,
   type UserRegisterResponse,
+  type UpdateProfileRequest,
+  UpdateProfileResponse,
 } from 'interfaces/user.grpc'
 
 @Controller()
@@ -66,6 +68,15 @@ export class UserController implements UserGrpcServiceController {
     metadata: Metadata,
   ): Promise<any> {
     const res = await this.userService.detailMakeFriend(data.friendRequestId)
+    return res
+  }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'updateProfile')
+  async updateProfile(
+    data: UpdateProfileRequest,
+    metadata: Metadata,
+  ): Promise<UpdateProfileResponse> {
+    const res = await this.userService.updateProfile(data)
     return res
   }
 }
