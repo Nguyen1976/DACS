@@ -15,6 +15,7 @@ interface ProfileSettingsProps {
 }
 
 export function ProfileSettings({ onClose }: ProfileSettingsProps) {
+  
   return (
     <div className='w-full h-full max-w-3xl mx-auto bg-[rgba(0,0,0,0.3)] text-foreground  fixed z-50 '>
       <div className='w-2/3 mx-auto py-6 bg-card rounded-lg border border-border shadow-lg'>

@@ -6,9 +6,11 @@ import { useForm } from 'react-hook-form'
 import z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form } from '../ui/form'
-import { selectUser } from '@/redux/slices/userSlice'
-import { useSelector } from 'react-redux'
+import { selectUser, updateProfileAPI } from '@/redux/slices/userSlice'
+import { useDispatch, useSelector } from 'react-redux'
 import { useState } from 'react'
+import type { AppDispatch } from '@/redux/store'
+import { toast } from 'sonner'
 
 const formProfileScheme = z.object({
   fullName: z.string().min(1),
@@ -19,6 +21,8 @@ const formProfileScheme = z.object({
 
 const Profile = () => {
   const user = useSelector(selectUser)
+
+  const dispatch = useDispatch<AppDispatch>()
 
   const formProfile = useForm<z.infer<typeof formProfileScheme>>({
     resolver: zodResolver(formProfileScheme),
@@ -37,14 +41,20 @@ const Profile = () => {
   const onSubmit = async (data: z.infer<typeof formProfileScheme>) => {
     console.log('FORM DATA:', data)
 
-    // data.avatar là File | undefined
-    if (data.avatar) {
-      const formData = new FormData()
-      formData.append('avatar', data.avatar)
-      formData.append('fullName', data.fullName)
-      formData.append('email', data.email)
-      formData.append('bio', data.bio)
-    }
+    const formData = new FormData()
+    if (data.avatar) formData.append('avatar', data.avatar)
+    formData.append('fullName', data.fullName)
+    formData.append('email', data.email)
+    formData.append('bio', data.bio)
+
+    dispatch(updateProfileAPI(formData))
+      .unwrap()
+      .then(() => {
+        toast.success('Profile updated successfully')
+      })
+      .catch(() => {
+        toast.error('Failed to update profile')
+      })
   }
   return (
     <Form {...formProfile}>

@@ -38,6 +38,22 @@ export const logoutAPI = createAsyncThunk(`/user/logout`, () => {
   // localStorage.delete('token')
 })
 
+export const updateProfileAPI = createAsyncThunk(
+  `/user/update-profile`,
+  async (formData: FormData) => {
+    const response = await authorizeAxiosInstance.post(
+      `${API_ROOT}/user/update-profile`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+    return response.data.data
+  }
+)
+
 export const userSlice = createSlice({
   name: 'user',
   initialState,
@@ -56,6 +72,12 @@ export const userSlice = createSlice({
       localStorage.removeItem('token')
       return state
     })
+    builder.addCase(
+      updateProfileAPI.fulfilled,
+      (state, action: PayloadAction<UserState>) => {
+        Object.assign(state, action.payload)
+      }
+    )
   },
 })
 
