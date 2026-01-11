@@ -21,6 +21,7 @@ import {
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import type {
   MemberAddedToConversationPayload,
+  UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
@@ -94,6 +95,7 @@ export class ChatService {
             username: true,
             avatar: true,
             lastReadAt: true,
+            fullName: true,
           },
         },
 
@@ -115,6 +117,7 @@ export class ChatService {
                 userId: true,
                 username: true,
                 avatar: true,
+                fullName: true,
               },
             },
           },
@@ -182,6 +185,7 @@ export class ChatService {
             avatar: true,
             role: true,
             lastReadAt: true,
+            fullName: true,
           },
         },
       },
@@ -294,6 +298,7 @@ export class ChatService {
             userId: true,
             username: true,
             avatar: true,
+            fullName: true,
             lastReadAt: true,
             lastReadMessageId: true,
           },
@@ -314,6 +319,7 @@ export class ChatService {
               select: {
                 userId: true,
                 username: true,
+                fullName: true,
                 avatar: true,
               },
             },
@@ -376,6 +382,7 @@ export class ChatService {
             userId: m.userId,
             username: m.username,
             avatar: m.avatar,
+            fullName: m.fullName,
             lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : null,
           })),
           lastMessage: c.messages.length
@@ -422,6 +429,7 @@ export class ChatService {
           select: {
             userId: true,
             username: true,
+            fullName: true,
             avatar: true,
           },
         },
@@ -462,5 +470,22 @@ export class ChatService {
     })
 
     return { lastReadMessageId: data.lastReadMessageId }
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.USER_EVENTS,
+    routingKey: ROUTING_RMQ.USER_UPDATED,
+    queue: QUEUE_RMQ.CHAT_USER_UPDATED,
+  })
+  async handleUserUpdated(data: UserUpdatedPayload) {
+    await this.prisma.conversationMember.updateMany({
+      where: {
+        userId: data.userId,
+      },
+      data: {
+        ...(data.avatar !== undefined ? { avatar: data.avatar } : {}),
+        ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
+      },
+    })
   }
 }

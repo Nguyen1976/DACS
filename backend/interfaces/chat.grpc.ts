@@ -16,6 +16,7 @@ export interface Member {
   avatar?: string | undefined;
   userId: string;
   lastReadAt?: string | undefined;
+  fullName?: string | undefined;
 }
 
 export interface CreateConversationRequest {
@@ -64,6 +65,7 @@ export interface ConversationMember {
   username?: string | undefined;
   avatar?: string | undefined;
   lastReadMessageId?: string | undefined;
+  fullName?: string | undefined;
 }
 
 export interface Conversation {
@@ -93,6 +95,7 @@ export interface SenderMember {
   userId: string;
   username: string;
   avatar: string;
+  fullName?: string | undefined;
 }
 
 export interface GetMessagesResponse {

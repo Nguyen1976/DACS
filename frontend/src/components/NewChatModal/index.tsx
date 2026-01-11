@@ -52,6 +52,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
             userId: friend.id,
             username: friend.username,
             avatar: friend.avatar,
+            fullName: friend.fullName,
           })),
       })
     )

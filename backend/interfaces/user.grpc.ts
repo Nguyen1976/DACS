@@ -81,6 +81,7 @@ export interface Friend {
   email: string;
   username: string;
   avatar: string;
+  fullName?: string | undefined;
 }
 
 export interface ListFriendsRequest {

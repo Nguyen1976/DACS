@@ -16,6 +16,7 @@ message Member {
   optional string avatar = 2;
   string userId = 3;
   optional string lastReadAt = 4;
+  optional string fullName = 5;
 }
 
 message CreateConversationRequest {
@@ -63,6 +64,7 @@ message ConversationMember {
   optional string username = 3;
   optional string avatar = 4;
   optional string lastReadMessageId = 5;
+  optional string fullName = 6;
 }
 
 message Conversation {
@@ -95,6 +97,7 @@ message SenderMember {
   string userId = 1;
   string username = 2;
   string avatar = 3;
+  optional string fullName = 4;
 }
 
 

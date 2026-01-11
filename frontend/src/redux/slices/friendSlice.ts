@@ -9,6 +9,7 @@ export interface FriendState {
     email: string
     username: string
     avatar?: string
+    fullName?: string
   }>
 }
 

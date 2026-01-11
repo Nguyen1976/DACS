@@ -12,6 +12,7 @@ export interface ConversationMember {
   lastReadAt?: string
   username?: string
   avatar?: string
+  fullName?: string
 }
 
 export interface Conversation {

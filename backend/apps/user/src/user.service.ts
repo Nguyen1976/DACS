@@ -26,6 +26,7 @@ import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import {
   UserCreatedPayload,
   UserMakeFriendPayload,
+  UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
@@ -255,11 +256,13 @@ export class UserService {
           userId: data.inviterId,
           username: inviterUpdate?.username || '',
           avatar: inviterUpdate?.avatar || '',
+          fullName: inviterUpdate?.fullName || '',
         },
         {
           userId: data.inviteeId,
           username: inviteeUpdate?.username || '',
           avatar: inviteeUpdate?.avatar || '',
+          fullName: inviteeUpdate?.fullName || '',
         },
       ],
     }
@@ -296,6 +299,7 @@ export class UserService {
         email: true,
         username: true,
         avatar: true,
+        fullName: true,
       },
     })
     return { friends } as ListFriendsResponse
@@ -324,6 +328,7 @@ export class UserService {
         id: true,
         email: true,
         username: true,
+        fullName: true,
         avatar: true,
       },
     })
@@ -360,10 +365,24 @@ export class UserService {
         avatar: avatarUrl || undefined,
       },
     })
+
+    const payload: UserUpdatedPayload = {
+      userId: user.id,
+      fullName: data.fullName || undefined,
+      avatar: avatarUrl || undefined,
+    }
+
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.USER_EVENTS,
+      ROUTING_RMQ.USER_UPDATED,
+      payload,
+    )
+
     return {
       fullName: user.fullName || '',
       bio: user.bio || '',
-      avatar: avatarUrl,
+      //nếu có cập nhật avatar thì trả về avatar mới
+      ...(avatarUrl ? { avatar: avatarUrl } : {}),
     }
   }
 }

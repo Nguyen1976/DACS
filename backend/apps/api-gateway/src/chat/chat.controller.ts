@@ -28,6 +28,7 @@ export class ChatController {
           userId: userInfo.userId,
           username: userInfo.username,
           avatar: userInfo.avatar,
+          fullName: userInfo.fullName,
         },
       ],
       createrId: userInfo.userId,

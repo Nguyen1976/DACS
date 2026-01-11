@@ -7,4 +7,5 @@ export const ROUTING_RMQ = {
   MESSAGE_SENT: 'message.sent',
   MESSAGE_SEND: 'message.send',
   MEMBER_ADDED_TO_CONVERSATION: 'member.addedToConversation',
+  USER_UPDATED: 'user.updated',
 }

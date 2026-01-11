@@ -11,6 +11,7 @@ import type { RootState } from '../store'
 export interface SenderMember {
   userId: string
   username: string
+  fullName: string
   avatar: string
 }
 

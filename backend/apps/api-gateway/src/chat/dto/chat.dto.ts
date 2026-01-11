@@ -5,6 +5,7 @@ export interface Member {
   avatar?: string | undefined
   userId: string
   lastReadAt?: string | undefined
+  fullName?: string | undefined
 }
 
 export class CreateConversationDTO {

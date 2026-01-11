@@ -19,7 +19,7 @@ export interface UserUpdateStatusMakeFriendPayload {
   inviteeId: string
   inviteeName: string
   status: string
-  members: { userId: string; username: string; avatar: string }[]
+  members: { userId: string; username: string; avatar: string, fullName: string }[]
 }
 
 export interface SendMessagePayload {
@@ -33,4 +33,10 @@ export interface SendMessagePayload {
 export interface MemberAddedToConversationPayload {
   conversationId: string
   newMemberIds: string[]
+}
+
+export interface UserUpdatedPayload {
+  userId: string
+  avatar?: string
+  fullName?: string
 }

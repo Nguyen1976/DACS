@@ -79,6 +79,7 @@ model conversationMember {
   userId String? @db.ObjectId
 
   username String?
+  fullName String?
   avatar String? 
 
   role String? //nếu là nhóm thì có vai trò như admin hay member

@@ -87,6 +87,7 @@ message Friend {
   string email = 2;
   string username = 3;
   string avatar = 4;
+  optional string fullName = 5;
 }
 
 message ListFriendsRequest {
