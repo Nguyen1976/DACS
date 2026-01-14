@@ -10,8 +10,13 @@ import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { StorageR2Module } from '@app/storage-r2'
 import { ConfigModule } from '@nestjs/config'
 import { r2Config } from './storage-r2.config'
-import { UserRepository, FriendRequestRepository, FriendShipRepository } from './repositories'
+import {
+  UserRepository,
+  FriendRequestRepository,
+  FriendShipRepository,
+} from './repositories'
 import { UserEventsPublisher } from './publishers/user-events.publisher'
+import { LoggerModule } from '@app/logger/logger.module'
 
 @Module({
   imports: [
@@ -49,6 +54,7 @@ import { UserEventsPublisher } from './publishers/user-events.publisher'
       bucket: process.env.R2_BUCKET!,
       publicUrl: process.env.R2_PUBLIC_URL!,
     }),
+    LoggerModule.forService('Api-Gateway'),
   ],
   controllers: [UserController],
   providers: [
@@ -56,7 +62,7 @@ import { UserEventsPublisher } from './publishers/user-events.publisher'
     UserRepository,
     FriendRequestRepository,
     UserEventsPublisher,
-    FriendShipRepository
+    FriendShipRepository,
   ],
 })
 export class UserModule {}

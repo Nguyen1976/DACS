@@ -8,8 +8,8 @@ export class LoggerService {
     private readonly logger,
   ) {}
 
-  info(msg: string) {
-    this.logger.info(msg)
+  info(msg: string, meta?: Record<string, any>) {
+    this.logger.info(msg, meta)
   }
 
   error(msg: string, trace?: string) {

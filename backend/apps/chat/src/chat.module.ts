@@ -13,12 +13,14 @@ import {
 import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
 import { MessageSubscriber } from './rmq/subcribers/chat-subcribers'
 import { RmqModule } from './rmq.module'
+import { LoggerModule } from '@app/logger'
 
 @Module({
   imports: [
     PrismaModule,
     RmqModule,
     UtilModule,
+    LoggerModule.forService('Chat-Service'),
   ],
   controllers: [ChatController],
   providers: [

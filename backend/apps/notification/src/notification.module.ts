@@ -8,6 +8,7 @@ import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 import { UtilModule } from '@app/util'
 import { RedisModule } from '@app/redis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
+import { LoggerModule } from '@app/logger'
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
       connectionInitOptions: { wait: true },
     }),
     UtilModule,
+    LoggerModule.forService('Notification-Service'),
   ],
   controllers: [NotificationController],
   providers: [NotificationService],

@@ -20,6 +20,7 @@ export function createLogger(serviceName: string) {
       winston.format.timestamp({
         format: 'MM/DD/YYYY, HH:mm:ss',
       }),
+      winston.format.json(),
       winston.format.printf(({ timestamp, level, message }) => {
         const pid = process.pid
         const upper = level.toUpperCase().padEnd(5)
