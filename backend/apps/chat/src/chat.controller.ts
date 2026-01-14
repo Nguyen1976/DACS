@@ -14,7 +14,7 @@ import {
   ReadMessageResponse,
   type ReadMessageRequest,
 } from 'interfaces/chat.grpc'
-import { Metadata, status } from '@grpc/grpc-js'
+import { Metadata } from '@grpc/grpc-js'
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
@@ -97,27 +97,5 @@ export class ChatController {
   ): Promise<ReadMessageResponse> {
     const res = await safeExecute(() => this.chatService.readMessage(data))
     return res
-  }
-
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.USER_EVENTS,
-    routingKey: ROUTING_RMQ.USER_UPDATE_STATUS_MAKE_FRIEND,
-    queue: QUEUE_RMQ.CHAT_USER_UPDATE_STATUS_MAKE_FRIEND,
-  })
-  async createConversationWhenAcceptFriend(
-    data: UserUpdateStatusMakeFriendPayload,
-  ) {
-    await safeExecute(() =>
-      this.chatService.createConversationWhenAcceptFriend(data),
-    )
-  }
-
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.USER_EVENTS,
-    routingKey: ROUTING_RMQ.USER_UPDATED,
-    queue: QUEUE_RMQ.CHAT_USER_UPDATED,
-  })
-  async handleUserUpdated(data: UserUpdatedPayload) {
-    await safeExecute(() => this.chatService.handleUserUpdated(data))
   }
 }

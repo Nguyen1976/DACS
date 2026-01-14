@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt'
 import { Status } from '@prisma/client'
 import { Redis as RedisClient } from 'ioredis'
 import { lookup } from 'mime-types'
-import { UserRepository, FriendRequestRepository } from './repositories'
+import { UserRepository, FriendRequestRepository, FriendShipRepository } from './repositories'
 import { UserErrors } from './errors/user.errors'
 import { UserEventsPublisher } from './publishers/user-events.publisher'
 import {
@@ -29,6 +29,7 @@ export class UserService {
     @Inject('USER_REDIS') private readonly redis: RedisClient,
     private readonly userRepo: UserRepository,
     private readonly friendRequestRepo: FriendRequestRepository,
+    private readonly friendShipRepo: FriendShipRepository,
     @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject(UtilService) private readonly utilService: UtilService,
     private readonly eventsPublisher: UserEventsPublisher,
@@ -98,9 +99,20 @@ export class UserService {
   }
 
   async makeFriend(data: MakeFriendRequest): Promise<Friendship> {
+    
     const friend = await this.userRepo.findByEmail(data.inviteeEmail)
     if (!friend) {
       UserErrors.friendNotFound()
+    }
+    
+    //check xem đã là bạn bè chưa
+    const existingFriendship = await this.friendShipRepo.findFriendshipBetweenUsers(
+      data.inviterId,
+      friend.id,
+    )
+    
+    if (existingFriendship) {
+      UserErrors.alreadyFriends()
     }
 
     const friendRequest = await this.friendRequestRepo.create({
@@ -149,8 +161,8 @@ export class UserService {
     let inviteeUpdate
 
     if (data.status === Status.ACCEPTED) {
-      await this.userRepo.updateFriends(data.inviterId, data.inviteeId)
-      await this.userRepo.updateFriends(data.inviteeId, data.inviterId)
+      await this.friendShipRepo.create({ userId: data.inviterId, friendId: data.inviteeId })
+      await this.friendShipRepo.create({ userId: data.inviteeId, friendId: data.inviterId })
       inviterUpdate = await this.userRepo.findById(data.inviterId)
       inviteeUpdate = await this.userRepo.findById(data.inviteeId)
     }
@@ -180,12 +192,12 @@ export class UserService {
   }
 
   async listFriends(userId: string): Promise<UserEntity[]> {
-    const user = await this.userRepo.findById(userId)
-    if (!user) {
+    const friendships = await this.friendShipRepo.findFriendsByUserId(userId)
+    if (!friendships) {
       UserErrors.userNotFound()
     }
 
-    const friends = await this.userRepo.findManyByIds(user.friends || [])
+    const friends = await this.userRepo.findManyByIds(friendships.map(f => f.friendId) || [])
     return friends as UserEntity[]
   }
 

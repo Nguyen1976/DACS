@@ -10,21 +10,14 @@ import {
   MessageRepository,
   ConversationMemberRepository,
 } from './repositories'
-import { ChatEventsPublisher } from './publishers/chat-events.publisher'
+import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
+import { MessageSubscriber } from './rmq/subcribers/chat-subcribers'
+import { RmqModule } from './rmq.module'
 
 @Module({
   imports: [
     PrismaModule,
-    RabbitMQModule.forRoot({
-      exchanges: [
-        {
-          name: EXCHANGE_RMQ.CHAT_EVENTS,
-          type: 'topic',
-        },
-      ],
-      uri: 'amqp://localhost:5672',
-      connectionInitOptions: { wait: true },
-    }),
+    RmqModule,
     UtilModule,
   ],
   controllers: [ChatController],
@@ -34,6 +27,7 @@ import { ChatEventsPublisher } from './publishers/chat-events.publisher'
     MessageRepository,
     ConversationMemberRepository,
     ChatEventsPublisher,
+    MessageSubscriber,
   ],
 })
 export class ChatModule {}

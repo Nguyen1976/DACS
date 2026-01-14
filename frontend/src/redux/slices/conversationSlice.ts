@@ -94,6 +94,8 @@ export const conversationSlice = createSlice({
       action: PayloadAction<{ conversation: Conversation; userId: string }>
     ) => {
       const { conversation, userId } = action.payload
+      console.log("🚀 ~ conversationSlice.ts:97 ~ conversation, userId:", conversation, userId)
+      
       state.unshift({
         ...conversation,
         groupName:

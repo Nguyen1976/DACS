@@ -16,9 +16,15 @@ model User {
   password String
   avatar String?
   bio String?
-  friends String[] @db.ObjectId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Friendship {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  friendId String @db.ObjectId
+  createdAt DateTime @default(now())
 }
 
 enum Status {

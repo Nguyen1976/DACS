@@ -41,6 +41,10 @@ export class CustomRateLimitGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
+      if (context.getType() !== 'http') {
+        return true // bỏ qua ws, rpc, kafka
+      }
+
       const decoratorOptions = this.reflector.get<{
         limit?: number
         ttl?: number

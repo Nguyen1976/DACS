@@ -49,17 +49,6 @@ export class UserRepository {
     })
   }
 
-  async updateFriends(userId: string, friendId: string) {
-    return await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        friends: {
-          push: friendId,
-        },
-      },
-    })
-  }
-
   async findManyByIds(userIds: string[]) {
     return await this.prisma.user.findMany({
       where: {

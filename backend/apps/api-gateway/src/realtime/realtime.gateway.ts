@@ -95,11 +95,11 @@ export class RealtimeGateway
     routingKey: ROUTING_RMQ.CONVERSATION_CREATED,
     queue: QUEUE_RMQ.REALTIME_CONVERSATIONS_CREATED,
   })
-  async emitNewConversationToUser(data): Promise<void> {
+  async emitNewConversationToUser(conversation): Promise<void> {
     await this.emitToUser(
-      data.conversation.members.map((m) => m.userId),
+      conversation.members.map((m) => m.userId) as string[],
       SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
-      data,
+      { conversation },
     )
   }
 

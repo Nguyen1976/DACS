@@ -10,7 +10,7 @@ import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { StorageR2Module } from '@app/storage-r2'
 import { ConfigModule } from '@nestjs/config'
 import { r2Config } from './storage-r2.config'
-import { UserRepository, FriendRequestRepository } from './repositories'
+import { UserRepository, FriendRequestRepository, FriendShipRepository } from './repositories'
 import { UserEventsPublisher } from './publishers/user-events.publisher'
 
 @Module({
@@ -56,6 +56,7 @@ import { UserEventsPublisher } from './publishers/user-events.publisher'
     UserRepository,
     FriendRequestRepository,
     UserEventsPublisher,
+    FriendShipRepository
   ],
 })
 export class UserModule {}

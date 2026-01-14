@@ -21,7 +21,7 @@ import {
   ConversationMemberRepository,
 } from './repositories'
 import { ChatErrors } from './errors/chat.errors'
-import { ChatEventsPublisher } from './publishers/chat-events.publisher'
+import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
 
 @Injectable()
 export class ChatService {
@@ -29,8 +29,6 @@ export class ChatService {
     private readonly conversationRepo: ConversationRepository,
     private readonly messageRepo: MessageRepository,
     private readonly memberRepo: ConversationMemberRepository,
-    @Inject(UtilService)
-    private readonly utilService: UtilService,
     private readonly eventsPublisher: ChatEventsPublisher,
   ) {}
 

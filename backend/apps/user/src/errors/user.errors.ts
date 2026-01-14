@@ -2,6 +2,14 @@ import { status } from '@grpc/grpc-js'
 import { RpcException } from '@nestjs/microservices'
 
 export class UserErrors {
+
+  static alreadyFriends(): never {
+    throw new RpcException({
+      code: status.ALREADY_EXISTS,
+      message: 'Users are already friends',
+    })
+  }
+
   static emailAlreadyExists(): never {
     throw new RpcException({
       code: status.ALREADY_EXISTS,

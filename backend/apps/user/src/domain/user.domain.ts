@@ -11,7 +11,6 @@ export interface UserEntity {
   fullName: string | null
   bio: string | null
   avatar: string | null
-  friends: string[]
   createdAt: Date
   updatedAt: Date
 }
