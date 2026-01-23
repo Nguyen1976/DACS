@@ -106,6 +106,8 @@ function App() {
     }: {
       conversation: Conversation
     }) => {
+      console.log("🚀 ~ App.tsx:109 ~ conversation:", conversation)
+      
       dispatch(addConversation({ conversation, userId: user.id }))
     }
 

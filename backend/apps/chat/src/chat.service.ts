@@ -36,18 +36,13 @@ export class ChatService {
     data: UserUpdateStatusMakeFriendPayload,
   ) {
     if (!(data.status === Status.ACCEPTED)) return
-    const conversation = await this.createConversation({
+    await this.createConversation({
       type: conversationType.DIRECT,
       members: data.members,
-      createrId: data.inviterId,
     })
-
-    this.eventsPublisher.publishConversationCreated(conversation)
   }
 
-  async createConversation(
-    data: CreateConversationRequest,
-  ) {
+  async createConversation(data: CreateConversationRequest) {
     const conversation = await this.conversationRepo.create({
       type: data.type as conversationType,
       groupName: data.groupName,
@@ -62,6 +57,13 @@ export class ChatService {
     )
 
     const res = await this.conversationRepo.findByIdWithMembers(conversation.id)
+    const memberIds = data.members
+      .map((m) => m.userId)
+      .filter((id) => id !== data.createrId)
+    this.eventsPublisher.publishConversationCreated({
+      ...res,
+      memberIds,
+    })
 
     return res
   }

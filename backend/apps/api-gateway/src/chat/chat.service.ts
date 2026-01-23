@@ -49,26 +49,9 @@ export class ChatService implements OnModuleInit {
     const res = await firstValueFrom(observable)
 
 
-    //đoạn nãy sẽ update thành phát hành sự kiện qua rabbitmq
-    // await this.realtimeGateway.emitToUser(
-    //   dto.members
-    //     .filter((member: Member) => member.userId !== dto.createrId)
-    //     .map((member: Member) => member.userId),
-    //   SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
-    //   res,
-    // )
-
     return res as CreateConversationResponse
   }
 
-  //k cần grpc
-  // sendMessage(dto: SendMessagePayload) {
-  //   this.amqpConnection.publish(
-  //     EXCHANGE_RMQ.CHAT_EVENTS,
-  //     ROUTING_RMQ.MESSAGE_SEND,
-  //     dto,
-  //   )
-  // }
 
   async addMemberToConversation(dto: AddMemberToConversationDTO) {
     //nhận vào conversationId, memberIds[]

@@ -93,8 +93,9 @@ export class RealtimeGateway
     queue: QUEUE_RMQ.REALTIME_CONVERSATIONS_CREATED,
   })
   async emitNewConversationToUser(conversation): Promise<void> {
+    console.log("🚀 ~ realtime.gateway.ts:96 ~ conversation:", conversation)
     await this.emitToUser(
-      conversation.members.map((m) => m.userId) as string[],
+      conversation.memberIds as string[],
       SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
       { conversation },
     )
