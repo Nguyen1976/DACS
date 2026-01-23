@@ -3,7 +3,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AuthPage from './pages/Auth'
 import ChatPage from './pages/Chat'
 
-import { createBrowserRouter, RouterProvider, useParams } from 'react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router'
 import { socket } from './lib/socket'
 import { FriendsPage } from './pages/Friend/FriendPage'
 import ListFriend from './pages/Friend/ListFriend'
@@ -74,83 +74,33 @@ const router = createBrowserRouter([
 ])
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>()
   const user = useSelector(selectUser)
+  const [play] = useSound(notificationSound, { volume: 0.5 })
 
+  const selectedChatIdRef = useRef<string | null>(null)
+
+  // ✅ connect socket khi có user
   useEffect(() => {
+    if (!user?.id) return
+
     socket.connect()
 
     return () => {
       socket.disconnect()
     }
-  }, [])
-
-  const dispatch = useDispatch<AppDispatch>()
-  const [play] = useSound(notificationSound, { volume: 0.5 })
-
+  }, [user?.id])
   useEffect(() => {
     const handler = (data: Message) => {
       dispatch(addMessage(data))
-      play()
-    }
 
-    socket.on('chat.new_message', handler)
-
-    return () => {
-      socket.off('chat.new_message', handler)
-    }
-  }, [dispatch, play])
-
-  useEffect(() => {
-    const onNewConversation = ({
-      conversation,
-    }: {
-      conversation: Conversation
-    }) => {
-      console.log("🚀 ~ App.tsx:109 ~ conversation:", conversation)
-      
-      dispatch(addConversation({ conversation, userId: user.id }))
-    }
-
-    socket.on('chat.new_conversation', onNewConversation)
-
-    return () => {
-      socket.off('chat.new_conversation', onNewConversation)
-    }
-  }, [user.id, dispatch])
-
-  useEffect(() => {
-    const onNewNotification = (data: Notification) => {
-      dispatch(addNotification(data))
-      play()
-    }
-    socket.on('notification.new_notification', onNewNotification)
-
-    return () => {
-      socket.off('notification.new_notification', onNewNotification)
-    }
-  }, [dispatch, play])
-
-  const selectedChatId = useParams().conversationId || ''
-  const selectedChatIdRef = useRef<string | null>(null) //fix lỗi về stale closure
-
-  useEffect(() => {
-    selectedChatIdRef.current = selectedChatId
-  }, [selectedChatId])
-  //liên quan đến việc state closure
-  //tức 1 handler nó chỉ đăng ký state 1 lần khi component mount
-  //nên khi state thay đổi thì handler ko nhận đc giá trị mới
-  //giải pháp là dùng useRef để lưu trữ giá trị mới nhất
-  //bản chất biến sẽ k sống qua re-render nhưng ref thì luôn tồn tại và k bị ảnh hưởng bởi lifecycle
-
-
-  useEffect(() => {
-    const handler = (data: Message) => {
       dispatch(
         updateNewMessage({
           conversationId: data.conversationId,
           lastMessage: { ...data },
         }),
       )
+
       if (data.conversationId !== selectedChatIdRef.current) {
         dispatch(
           upUnreadCount({
@@ -158,9 +108,7 @@ function App() {
           }),
         )
       }
-
-      //cap nhat last message trong notification
-      //đưa notification lên đầu
+      play()
     }
 
     socket.on('chat.new_message', handler)
@@ -168,7 +116,32 @@ function App() {
     return () => {
       socket.off('chat.new_message', handler)
     }
-  }, [dispatch])
+  }, [dispatch, play])
+
+  useEffect(() => {
+    const handler = ({ conversation }: { conversation: Conversation }) => {
+      dispatch(addConversation({ conversation, userId: user.id }))
+    }
+
+    socket.on('chat.new_conversation', handler)
+
+    return () => {
+      socket.off('chat.new_conversation', handler)
+    }
+  }, [dispatch, user.id])
+
+  useEffect(() => {
+    const handler = (data: Notification) => {
+      dispatch(addNotification(data))
+      play()
+    }
+
+    socket.on('notification.new_notification', handler)
+
+    return () => {
+      socket.off('notification.new_notification', handler)
+    }
+  }, [dispatch, play])
 
   return <RouterProvider router={router} />
 }
