@@ -6,6 +6,7 @@ import type {
 } from '@/redux/slices/conversationSlice'
 import { X } from 'lucide-react'
 import { useSelector } from 'react-redux'
+import { GroupMemberManager } from './GroupMemberManager'
 
 interface ProfilePanelProps {
   conversationId: string
@@ -84,6 +85,8 @@ export default function ProfilePanel({ conversationId, onClose }: ProfilePanelPr
               </button>
             </div>
           </div>
+
+         <GroupMemberManager />
 
           {/* Media */}
           <div>

@@ -227,6 +227,15 @@ export const selectConversation = createSelector(
   (conversations) => conversations,
 )
 
+export const selectConversationById = (
+  state: {
+    conversations: ConversationState
+  },
+  conversationId: string,
+) => {
+  return state.conversations?.find((c) => c.id === conversationId)
+}
+
 export const selectMessagesByConversationId = (
   state: {
     conversations: ConversationState
@@ -236,6 +245,8 @@ export const selectMessagesByConversationId = (
   const conversation = state.conversations?.find((c) => c.id === conversationId)
   return conversation ? conversation.lastMessage : null
 }
+
+
 
 export const { addConversation, updateNewMessage, upUnreadCount } =
   conversationSlice.actions

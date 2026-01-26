@@ -29,7 +29,7 @@ import { Request } from 'express'
 
 @Injectable()
 export class CustomRateLimitGuard implements CanActivate {
-  private readonly defaultLimit: number = 200
+  private readonly defaultLimit: number = 10000000
   private readonly defaultTtl: number = 60 // seconds
 
   constructor(

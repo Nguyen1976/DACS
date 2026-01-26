@@ -37,7 +37,7 @@ export class RealtimeGateway
   constructor(
     private jwtService: JwtService,
     @Inject('REDIS_CLIENT')
-    private redisClient: any
+    private redisClient: any,
   ) {
     this.userStatusStore = new UserStatusStore(this.redisClient)
   }
