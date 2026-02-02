@@ -17,6 +17,7 @@ import type { ClientGrpc } from '@nestjs/microservices'
 import { firstValueFrom } from 'rxjs'
 import { Status } from '@prisma/client'
 import type { Multer } from 'multer'
+import { LoggerService } from '@app/logger'
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -26,6 +27,7 @@ export class UserService implements OnModuleInit {
     // @Inject(NotificationService)
     // private notificationService: NotificationService,
     // @Inject(ChatService) private chatService: ChatService,
+    private readonly logger: LoggerService,
   ) {}
 
   onModuleInit() {
@@ -59,6 +61,15 @@ export class UserService implements OnModuleInit {
 
   async makeFriend(dto: any): Promise<any> {
     //tạo bạn ghi trong user service
+    //logger
+    this.logger.info(
+      `User ${dto.inviterName} is making friend with ${dto.inviteeEmail}`,
+    )
+    /**
+     * info(msg: string, meta?: Record<string, any>) {
+    this.logger.info(msg, meta)
+  }
+     */
     const observable = this.userClientService.makeFriend({
       inviterId: dto.inviterId,
       inviterName: dto.inviterName,

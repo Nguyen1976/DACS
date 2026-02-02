@@ -92,6 +92,8 @@ export class ChatService {
 
     await this.conversationRepo.updateUpdatedAt(data.conversationId)
 
+    await this.memberRepo.updateLastMessageAt(data.conversationId)
+
     this.eventsPublisher.publishMessageSent(message, memberIds as string[])
 
     return {

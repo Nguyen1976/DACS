@@ -75,11 +75,11 @@ export class NotificationService {
 
     if (!inviteeStatus) {
       //nếu offline thì gửi mail
-      await this.mailerService.sendMakeFriendNotification({
-        senderName: data.inviterName,
-        friendEmail: data.inviteeEmail,
-        receiverName: data.inviteeName,
-      })
+      // await this.mailerService.sendMakeFriendNotification({
+      //   senderName: data.inviterName,
+      //   friendEmail: data.inviteeEmail,
+      //   receiverName: data.inviteeName,
+      // })
     } else {
       //bắn socket
       this.amqpConnection.publish(

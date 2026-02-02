@@ -9,7 +9,8 @@ const BASE_URL = 'http://localhost:3000'
 const PASSWORD = 'heheheee'
 const TOTAL_USERS = 10000
 const CONCURRENCY = 100
-const INVITER_ID = '693befebbeed61ee46291bf3'
+// const INVITER_ID = '693befebbeed61ee46291bf3'
+const INVITER_ID = '693cdc3e23c5f1c06a8f5d5b'//id của 23010310
 
 // ==========================
 // STATS
@@ -106,11 +107,7 @@ async function run() {
   for (let i = 1; i <= TOTAL_USERS; i += CONCURRENCY) {
     const batch = []
 
-    for (
-      let j = i;
-      j < i + CONCURRENCY && j <= TOTAL_USERS;
-      j++
-    ) {
+    for (let j = i; j < i + CONCURRENCY && j <= TOTAL_USERS; j++) {
       batch.push(
         (async () => {
           const email = `user${j}@test.com`
@@ -130,11 +127,7 @@ async function run() {
 
   console.log('\n========== DONE ==========')
   console.log('Total time:', duration.toFixed(2), 'seconds')
-  console.log(
-    'Throughput:',
-    (TOTAL_USERS / duration).toFixed(2),
-    'req/sec',
-  )
+  console.log('Throughput:', (TOTAL_USERS / duration).toFixed(2), 'req/sec')
 }
 
 run()

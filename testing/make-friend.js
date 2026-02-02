@@ -6,7 +6,8 @@ const { monitorEventLoopDelay } = require('perf_hooks')
 // CONFIG
 // ==========================
 const BASE_URL = 'http://localhost:3000'
-const LOGIN_EMAIL = 'nguyen2202794@gmail.com'
+// const LOGIN_EMAIL = 'nguyen2202794@gmail.com'
+const LOGIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
 const PASSWORD = 'heheheee'
 
 const TOTAL_USERS = 10000
@@ -100,11 +101,7 @@ async function run() {
   for (let i = 1; i <= TOTAL_USERS; i += CONCURRENCY) {
     const batch = []
 
-    for (
-      let j = i;
-      j < i + CONCURRENCY && j <= TOTAL_USERS;
-      j++
-    ) {
+    for (let j = i; j < i + CONCURRENCY && j <= TOTAL_USERS; j++) {
       const email = `user${j}@test.com`
       batch.push(makeFriend(token, email))
     }
@@ -117,11 +114,7 @@ async function run() {
 
   console.log('\n========== DONE ==========')
   console.log('Total time:', duration.toFixed(2), 'seconds')
-  console.log(
-    'Throughput:',
-    (TOTAL_USERS / duration).toFixed(2),
-    'req/sec',
-  )
+  console.log('Throughput:', (TOTAL_USERS / duration).toFixed(2), 'req/sec')
 }
 
 run()

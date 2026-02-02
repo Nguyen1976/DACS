@@ -6,11 +6,7 @@ import {
   Query,
   Param,
   UseInterceptors,
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
-  BadRequestException,
+  UploadedFile
 } from '@nestjs/common'
 import type { Multer } from 'multer'
 import { UserService } from './user.service'

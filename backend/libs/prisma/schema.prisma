@@ -73,9 +73,10 @@ model conversation {
   members     conversationMember[]
   messages    message[]
 
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([updatedAt])
 }
 
 model conversationMember {
@@ -99,7 +100,9 @@ model conversationMember {
   
   messages message[]
 
+  lastMessageAt DateTime?
 
+  @@index([userId])
   @@unique([conversationId, userId])
 }
 
@@ -120,4 +123,6 @@ model message {
   conversation conversation @relation(fields: [conversationId], references: [id])
   
   senderMember conversationMember @relation(fields: [conversationId, senderId], references: [conversationId, userId])
+
+  @@index([conversationId, createdAt])
 }

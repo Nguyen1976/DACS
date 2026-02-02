@@ -15,14 +15,6 @@ import {
   type ReadMessageRequest,
 } from 'interfaces/chat.grpc'
 import { Metadata } from '@grpc/grpc-js'
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
-import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
-import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
-import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
-import type {
-  UserUpdatedPayload,
-  UserUpdateStatusMakeFriendPayload,
-} from 'libs/constant/rmq/payload'
 import { ConversationMapper } from './domain/conversation.mapper'
 import { safeExecute } from '@app/common/rpc/safe-execute'
 

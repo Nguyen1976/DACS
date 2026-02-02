@@ -13,16 +13,11 @@ service UserGrpcService {
   rpc getUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
 }
 
-
 message UpdateProfileRequest {
   optional string fullName = 1;
   optional string bio = 2;
-  
-
   optional bytes avatar = 3;
-
   optional string avatarFilename = 4;
-
   string userId = 5;
 }
 
