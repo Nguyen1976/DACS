@@ -82,6 +82,7 @@ export class ConversationRepository {
       where: {
         id: { in: memberships.map((m) => m.conversationId) },
       },
+      orderBy: { updatedAt: 'desc' },
       include: {
         members: {
           select: {

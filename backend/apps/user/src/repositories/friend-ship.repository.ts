@@ -13,9 +13,11 @@ export class FriendShipRepository {
     })
   }
 
-  async findFriendsByUserId(userId: string) {
+  async findFriendsByUserId(userId: string, limit: number, page: number) {
     return await this.prisma.friendship.findMany({
       where: { userId },
+      take: limit,
+      skip: (page - 1) * limit,
       select: { friendId: true },
     })
   }

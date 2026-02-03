@@ -87,6 +87,8 @@ message Friend {
 
 message ListFriendsRequest {
   string userId = 1;
+  string limit = 2;
+  string page = 3;
 }
 
 message ListFriendsResponse {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthPage from './pages/Auth'
 import ChatPage from './pages/Chat'
@@ -9,13 +9,10 @@ import { FriendsPage } from './pages/Friend/FriendPage'
 import ListFriend from './pages/Friend/ListFriend'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch } from './redux/store'
-import { addMessage, type Message } from './redux/slices/messageSlice'
 import { useSound } from 'use-sound'
 import notificationSound from './assets/notification.mp3'
 import {
   addConversation,
-  updateNewMessage,
-  upUnreadCount,
   type Conversation,
 } from './redux/slices/conversationSlice'
 import { selectUser } from './redux/slices/userSlice'
@@ -78,7 +75,7 @@ function App() {
   const user = useSelector(selectUser)
   const [play] = useSound(notificationSound, { volume: 0.5 })
 
-  const selectedChatIdRef = useRef<string | null>(null)
+
 
   // ✅ connect socket khi có user
   useEffect(() => {
@@ -90,33 +87,6 @@ function App() {
       socket.disconnect()
     }
   }, [user?.id])
-  useEffect(() => {
-    const handler = (data: Message) => {
-      dispatch(addMessage(data))
-
-      dispatch(
-        updateNewMessage({
-          conversationId: data.conversationId,
-          lastMessage: { ...data },
-        }),
-      )
-
-      if (data.conversationId !== selectedChatIdRef.current) {
-        dispatch(
-          upUnreadCount({
-            conversationId: data.conversationId,
-          }),
-        )
-      }
-      play()
-    }
-
-    socket.on('chat.new_message', handler)
-
-    return () => {
-      socket.off('chat.new_message', handler)
-    }
-  }, [dispatch, play])
 
   useEffect(() => {
     const handler = ({ conversation }: { conversation: Conversation }) => {

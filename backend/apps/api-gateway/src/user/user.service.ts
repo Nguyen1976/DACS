@@ -90,9 +90,11 @@ export class UserService implements OnModuleInit {
     return await firstValueFrom(observable)
   }
 
-  async listFriends(userId: string): Promise<any> {
+  async listFriends(userId: string, limit = 10, page = 1): Promise<any> {
     const observable = this.userClientService.listFriends({
       userId,
+      limit: String(limit),
+      page: String(page),
     })
     return await firstValueFrom(observable)
   }

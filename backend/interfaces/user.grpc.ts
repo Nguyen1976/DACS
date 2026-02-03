@@ -86,6 +86,8 @@ export interface Friend {
 
 export interface ListFriendsRequest {
   userId: string;
+  limit: string;
+  page: string;
 }
 
 export interface ListFriendsResponse {

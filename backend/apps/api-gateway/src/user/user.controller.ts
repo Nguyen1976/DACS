@@ -6,7 +6,7 @@ import {
   Query,
   Param,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
 } from '@nestjs/common'
 import type { Multer } from 'multer'
 import { UserService } from './user.service'
@@ -66,8 +66,8 @@ export class UserController {
 
   @Get('list-friends')
   @RequireLogin()
-  async listFriends(@UserInfo() user: any) {
-    return await this.userService.listFriends(user.userId)
+  async listFriends(@UserInfo() user: any, @Query('limit') limit = 10, @Query('page') page = 1) {
+    return await this.userService.listFriends(user.userId, limit, page)
   }
 
   @Get('detail-friend-request')

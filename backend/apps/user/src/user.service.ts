@@ -201,8 +201,8 @@ export class UserService {
     return updatedRequest as Friendship
   }
 
-  async listFriends(userId: string): Promise<UserEntity[]> {
-    const friendships = await this.friendShipRepo.findFriendsByUserId(userId)
+  async listFriends(userId: string, limit = 10, page = 1): Promise<UserEntity[]> {
+    const friendships = await this.friendShipRepo.findFriendsByUserId(userId, limit, page)
     if (!friendships) {
       UserErrors.userNotFound()
     }

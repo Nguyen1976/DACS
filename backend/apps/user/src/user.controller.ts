@@ -73,7 +73,11 @@ export class UserController implements UserGrpcServiceController {
     metadata: Metadata,
   ): Promise<any> {
     const friends = await safeExecute(() =>
-      this.userService.listFriends(data.userId),
+      this.userService.listFriends(
+        data.userId,
+        Number(data.limit),
+        Number(data.page),
+      ),
     )
     return UserMapper.toListFriendsResponse(friends)
   }
