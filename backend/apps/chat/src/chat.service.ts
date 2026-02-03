@@ -92,7 +92,10 @@ export class ChatService {
 
     await this.conversationRepo.updateUpdatedAt(data.conversationId)
 
-    await this.memberRepo.updateLastMessageAt(data.conversationId)
+    await this.memberRepo.updateLastMessageAt(
+      data.conversationId,
+      message.createdAt,
+    )
 
     this.eventsPublisher.publishMessageSent(message, memberIds as string[])
 
@@ -146,11 +149,10 @@ export class ChatService {
 
   async getConversations(userId: string, params: any) {
     const take = Number(params.limit) || 20
-    const page = Number(params.page) || 1
-    const skip = (page - 1) * take
+    const cursor = params.cursor ? new Date(params.cursor) : null
     const conversations = await this.conversationRepo.findByUserIdPaginated(
       userId,
-      skip,
+      cursor,
       take,
     )
     const unreadMap = await this.calculateUnreadCounts(conversations, userId)

@@ -10,10 +10,7 @@ import {
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
-import {
-  AddMemberToConversationDTO,
-  ReadMessageDto,
-} from './dto/chat.dto'
+import { AddMemberToConversationDTO, ReadMessageDto } from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 
 @Injectable()
@@ -48,10 +45,8 @@ export class ChatService implements OnModuleInit {
     //bắn socket về các member trong conversation
     const res = await firstValueFrom(observable)
 
-
     return res as CreateConversationResponse
   }
-
 
   async addMemberToConversation(dto: AddMemberToConversationDTO) {
     //nhận vào conversationId, memberIds[]
@@ -63,7 +58,7 @@ export class ChatService implements OnModuleInit {
     const observable = this.chatClientService.getConversations({
       userId,
       limit: params.limit,
-      page: params.page,
+      cursor: params.cursor,
     })
     const res = await firstValueFrom(observable)
     return res

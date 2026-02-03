@@ -43,7 +43,7 @@ message AddMemberToConversationResponse {
 message GetConversationsRequest {
   string userId = 1;
   string limit = 2;
-  string page = 3;
+  string cursor = 3;
 }
 
 message Message {
@@ -65,6 +65,7 @@ message ConversationMember {
   optional string avatar = 4;
   optional string lastReadMessageId = 5;
   optional string fullName = 6;
+  string lastMessageAt = 7;
 }
 
 message Conversation {

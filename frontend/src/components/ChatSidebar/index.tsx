@@ -14,11 +14,12 @@ import { formatDateTime } from '@/utils/formatDateTime'
 import MenuCustome from './Menu'
 import { NotificationsDropdown } from '../NotificationDropdown'
 import { useNavigate, useParams } from 'react-router'
-
-
+import { selectUser } from '@/redux/slices/userSlice'
 
 export function ChatSidebar() {
   const [page, setPage] = useState(1)
+
+  const user = useSelector(selectUser)
 
   const selectedChatId = useParams().conversationId || ''
 
@@ -30,23 +31,27 @@ export function ChatSidebar() {
 
   useEffect(() => {
     if (conversations.length === 0) {
-      dispatch(getConversations({ limit: 10, page: 1 }))
+      dispatch(getConversations({ limit: 10, cursor: null }))
     }
   }, [dispatch, conversations?.length])
 
-
-  
-
   const loadMoreConversations = () => {
     const nextPage = page + 1
-    dispatch(getConversations({ limit: 10, page: nextPage }))
+    dispatch(
+      getConversations({
+        limit: 10,
+        cursor:
+          conversations[conversations.length - 1]?.members.find(
+            (m) => m.userId === user?.id,
+          )?.lastMessageAt || null,
+      }),
+    )
     setPage(nextPage)
   }
 
   return (
     <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
       <div className='flex items-center justify-end p-4 border-b border-bg-box-message-incoming'>
-
         <div className='flex gap-2 items-center'>
           <ModeToggle />
           <NotificationsDropdown />
@@ -63,7 +68,8 @@ export function ChatSidebar() {
             }}
             className={cn(
               'w-full p-4 flex items-start gap-3 hover:bg-bg-box-message-incoming/50 transition-colors border-b border-bg-box-message-incoming/30',
-              selectedChatId === conversation.id && 'bg-bg-box-message-incoming'
+              selectedChatId === conversation.id &&
+                'bg-bg-box-message-incoming',
             )}
           >
             <div className='relative'>

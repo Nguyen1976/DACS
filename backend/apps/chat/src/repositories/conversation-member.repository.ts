@@ -23,7 +23,7 @@ export class ConversationMemberRepository {
             ? 'admin'
             : 'member',
         lastReadMessageId: null,
-        lastMessageAt: null,
+        lastMessageAt: new Date(),
       })),
     })
   }
@@ -39,13 +39,13 @@ export class ConversationMemberRepository {
     })
   }
 
-  async updateLastMessageAt(conversationId: string) {
+  async updateLastMessageAt(conversationId: string, lastMessageAt: Date) {
     return await this.prisma.conversationMember.updateMany({
       where: {
         conversationId,
       },
       data: {
-        lastMessageAt: new Date(),
+        lastMessageAt: lastMessageAt,
       },
     })
   }

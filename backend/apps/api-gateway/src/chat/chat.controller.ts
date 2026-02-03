@@ -8,7 +8,6 @@ import {
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
 
-
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
@@ -58,11 +57,11 @@ export class ChatController {
   async getConversations(
     @UserInfo() userInfo: any,
     @Query('limit') limit?: string,
-    @Query('page') page?: string,
+    @Query('cursor') cursor?: string,
   ) {
     const params = {
       limit: limit ? parseInt(limit, 10) : 20,
-      page: page ? parseInt(page, 10) : 1,
+      cursor: cursor || null,
     }
 
     const res = await this.chatService.getConversations(userInfo.userId, params)
@@ -101,10 +100,7 @@ export class ChatController {
 
   @Post('read_message')
   @RequireLogin()
-  async readMessage(
-    @Body() data: ReadMessageDto,
-    @UserInfo() userInfo: any,
-  ) {
+  async readMessage(@Body() data: ReadMessageDto, @UserInfo() userInfo: any) {
     return await this.chatService.readMessage({
       ...data,
       userId: userInfo.userId,

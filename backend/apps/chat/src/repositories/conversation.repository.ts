@@ -65,15 +65,19 @@ export class ConversationRepository {
     })
   }
 
-  async findByUserIdPaginated(userId: string, skip: number, take: number) {
-    //phân tích cách cũ khi findMany và some trong members k tận dụng được index ở userId
-    //và việc join xong mới where nên rất chậm khi data lớn
-    //cách mới: tận dụng index ở userId để lọc trước rồi mới join
-    //khi conversation lớn thì nó vẫn nhanh vì chạy trên membership có sẵn
+  async findByUserIdPaginated(
+    userId: string,
+    cursor: Date | null,
+    take: number,
+  ) {
     const memberships = await this.prisma.conversationMember.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(cursor && {
+          lastMessageAt: { lt: cursor },
+        }),
+      },
       orderBy: { lastMessageAt: 'desc' },
-      skip,
       take,
       select: { conversationId: true },
     })
@@ -82,7 +86,6 @@ export class ConversationRepository {
       where: {
         id: { in: memberships.map((m) => m.conversationId) },
       },
-      orderBy: { updatedAt: 'desc' },
       include: {
         members: {
           select: {
@@ -91,6 +94,7 @@ export class ConversationRepository {
             avatar: true,
             lastReadAt: true,
             fullName: true,
+            lastMessageAt: true,
           },
         },
         messages: {
@@ -118,7 +122,12 @@ export class ConversationRepository {
       },
     })
 
-    return conversations
+    //sort lại conver theo thứ tự member vì conver không có order by
+    const map = new Map(conversations.map((c) => [c.id, c]))
+
+    const ordered = memberships.map((m) => map.get(m.conversationId))
+
+    return ordered
   }
 
   async updateUpdatedAt(conversationId: string) {

@@ -43,7 +43,7 @@ export interface AddMemberToConversationResponse {
 export interface GetConversationsRequest {
   userId: string;
   limit: string;
-  page: string;
+  cursor: string;
 }
 
 export interface Message {
@@ -66,6 +66,7 @@ export interface ConversationMember {
   avatar?: string | undefined;
   lastReadMessageId?: string | undefined;
   fullName?: string | undefined;
+  lastMessageAt: string;
 }
 
 export interface Conversation {

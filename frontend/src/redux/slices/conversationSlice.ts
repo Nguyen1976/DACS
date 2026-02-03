@@ -14,6 +14,7 @@ export interface ConversationMember {
   username?: string
   avatar?: string
   fullName?: string
+  lastMessageAt?: string
 }
 
 export interface Conversation {
@@ -35,14 +36,17 @@ const initialState: ConversationState = []
 export const getConversations = createAsyncThunk(
   `/chat/conversations`,
   async (
-    { limit = 10, page = 1 }: { limit: number; page: number },
+    { limit = 10, cursor }: { limit: number; cursor: string | null },
     { getState },
   ) => {
     const state = getState() as RootState
     const userId = state.user.id
 
     const response = await authorizeAxiosInstance.get(
-      `${API_ROOT}/chat/conversations?limit=${limit}&page=${page}`,
+      `${API_ROOT}/chat/conversations?limit=${limit}`,
+      {
+        cursor,
+      },
     )
     return { userId, conversations: response.data.data.conversations }
   },
@@ -245,8 +249,6 @@ export const selectMessagesByConversationId = (
   const conversation = state.conversations?.find((c) => c.id === conversationId)
   return conversation ? conversation.lastMessage : null
 }
-
-
 
 export const { addConversation, updateNewMessage, upUnreadCount } =
   conversationSlice.actions
