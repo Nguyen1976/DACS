@@ -9,8 +9,8 @@ const BASE_URL = 'http://localhost:3000'
 const PASSWORD = 'heheheee'
 const TOTAL_USERS = 10000
 const CONCURRENCY = 100
-// const INVITER_ID = '693befebbeed61ee46291bf3'
-const INVITER_ID = '693cdc3e23c5f1c06a8f5d5b'//id của 23010310
+const INVITER_ID = '693befebbeed61ee46291bf3'
+// const INVITER_ID = '693cdc3e23c5f1c06a8f5d5b'//id của 23010310
 
 // ==========================
 // STATS

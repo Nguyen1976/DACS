@@ -41,12 +41,10 @@ export const getConversations = createAsyncThunk(
   ) => {
     const state = getState() as RootState
     const userId = state.user.id
-
+    cursor = cursor?.replaceAll('+', '%2B') || null
     const response = await authorizeAxiosInstance.get(
-      `${API_ROOT}/chat/conversations?limit=${limit}`,
-      {
-        cursor,
-      },
+      `${API_ROOT}/chat/conversations?limit=${limit}&cursor=${cursor ?? ''}`,
+     
     )
     return { userId, conversations: response.data.data.conversations }
   },

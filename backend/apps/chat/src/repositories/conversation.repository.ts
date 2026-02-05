@@ -87,36 +87,12 @@ export class ConversationRepository {
         id: { in: memberships.map((m) => m.conversationId) },
       },
       include: {
-        members: {
-          select: {
-            userId: true,
-            username: true,
-            avatar: true,
-            lastReadAt: true,
-            fullName: true,
-            lastMessageAt: true,
-          },
-        },
+        members: true,
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          select: {
-            id: true,
-            text: true,
-            senderId: true,
-            createdAt: true,
-            conversationId: true,
-            replyToMessageId: true,
-            isDeleted: true,
-            deleteType: true,
-            senderMember: {
-              select: {
-                userId: true,
-                username: true,
-                avatar: true,
-                fullName: true,
-              },
-            },
+          include: {
+            senderMember: true,
           },
         },
       },

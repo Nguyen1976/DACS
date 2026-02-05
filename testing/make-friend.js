@@ -6,12 +6,12 @@ const { monitorEventLoopDelay } = require('perf_hooks')
 // CONFIG
 // ==========================
 const BASE_URL = 'http://localhost:3000'
-// const LOGIN_EMAIL = 'nguyen2202794@gmail.com'
-const LOGIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
+const LOGIN_EMAIL = 'nguyen2202794@gmail.com'
+// const LOGIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
 const PASSWORD = 'heheheee'
 
 const TOTAL_USERS = 10000
-const CONCURRENCY = 100 // 🔥 100 request song song
+const CONCURRENCY = 100 // 100 request song song
 
 // ==========================
 // STATS
