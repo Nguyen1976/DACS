@@ -1,6 +1,5 @@
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
-import { UtilService } from '@app/util'
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Status } from '@prisma/client'
@@ -24,9 +23,6 @@ export class NotificationService {
   private readonly mailerService: MailerService
   @Inject(PrismaService)
   private readonly prisma: PrismaService
-
-  @Inject(UtilService)
-  private readonly utilService: UtilService
 
   @Inject('USER_REDIS')
   private readonly redis: RedisClient
@@ -64,11 +60,11 @@ export class NotificationService {
 
     if (!inviteeStatus) {
       //nếu offline thì gửi mail
-      await this.mailerService.sendMakeFriendNotification({
-        senderName: data.inviterName,
-        friendEmail: data.inviteeEmail,
-        receiverName: data.inviteeName,
-      })
+      // await this.mailerService.sendMakeFriendNotification({
+      //   senderName: data.inviterName,
+      //   friendEmail: data.inviteeEmail,
+      //   receiverName: data.inviteeName,
+      // })
     } else {
       //bắn socket
       this.amqpConnection.publish(

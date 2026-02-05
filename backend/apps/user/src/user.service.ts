@@ -30,7 +30,6 @@ import type {
 @Injectable()
 export class UserService {
   constructor(
-    @Inject('USER_REDIS') private readonly redis: RedisClient,
     private readonly userRepo: UserRepository,
     private readonly friendRequestRepo: FriendRequestRepository,
     private readonly friendShipRepo: FriendShipRepository,

@@ -1,120 +1,90 @@
-const axios = require('axios')
-const os = require('os')
-const { monitorEventLoopDelay } = require('perf_hooks')
+import http from 'k6/http'
+import { check } from 'k6'
+import { scenario } from 'k6/execution'
 
-// ==========================
-// CONFIG
-// ==========================
+
+// export const options = {
+//   stages: [
+//     { duration: '30s', target: 100 },  // ramp up
+//     { duration: '1m', target: 100 },   // giữ tải
+//     { duration: '30s', target: 0 },    // ramp down
+//   ],
+//   thresholds: {
+//     http_req_duration: ['p(95)<300'],  // SLA
+//     http_req_failed: ['rate<0.01'],
+//   },
+// }
+export const options = {
+  scenarios: {
+    rps_test: {
+      executor: 'constant-arrival-rate',
+      rate: 50,
+      timeUnit: '1s',
+      duration: '30s',
+      preAllocatedVUs: 50,
+      maxVUs: 200,
+    },
+  },
+
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<300'],
+  },
+}
+
 const BASE_URL = 'http://localhost:3000'
-const LOGIN_EMAIL = 'nguyen2202794@gmail.com'
-// const LOGIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
+const LOGIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
 const PASSWORD = 'heheheee'
 
-const TOTAL_USERS = 10000
-const CONCURRENCY = 100 // 100 request song song
-
-// ==========================
-// STATS
-// ==========================
-let friendSuccess = 0
-let friendFail = 0
-
-// ==========================
-// EVENT LOOP MONITOR
-// ==========================
-const h = monitorEventLoopDelay({ resolution: 20 })
-h.enable()
-
-setInterval(() => {
-  const mem = process.memoryUsage()
-  const cpu = process.cpuUsage()
-
-  console.clear()
-
-  console.log('================ SYSTEM =================')
-  console.log('CPU Cores:', os.cpus().length)
-  console.log('Load Avg:', os.loadavg())
-
-  console.log('\n================ PROCESS =================')
-  console.log('RSS MB:', (mem.rss / 1024 / 1024).toFixed(2))
-  console.log('Heap Used MB:', (mem.heapUsed / 1024 / 1024).toFixed(2))
-  console.log('CPU User (ms):', (cpu.user / 1000).toFixed(0))
-  console.log('CPU System (ms):', (cpu.system / 1000).toFixed(0))
-  console.log('Event Loop Delay (ms):', (h.mean / 1e6).toFixed(2))
-
-  console.log('\n================ LOAD =================')
-  console.log('Make Friend Success:', friendSuccess)
-  console.log('Make Friend Fail:', friendFail)
-  console.log('========================================')
-}, 5000)
-
-// ==========================
-// LOGIN
-// ==========================
-async function login() {
-  try {
-    const res = await axios.post(`${BASE_URL}/user/login`, {
+export function setup() {
+  const res = http.post(
+    `${BASE_URL}/user/login`,
+    JSON.stringify({
       email: LOGIN_EMAIL,
       password: PASSWORD,
-    })
+    }),
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
 
-    console.log('Login success')
-    return res.data.data.token
-  } catch (err) {
-    console.error('Login failed')
-    process.exit(1)
-  }
+  check(res, {
+    'login success': (r) => r.status === 200,
+  })
+  const token = res.json('data.token')
+
+  return { token }
 }
 
-// ==========================
-// MAKE FRIEND
-// ==========================
-async function makeFriend(token, email) {
-  try {
-    await axios.post(
-      `${BASE_URL}/user/make-friend`,
-      { email },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+export default function (data) {
+  const userId = scenario.iterationInTest + 1
+
+  const email = `user${userId}@test.com`
+
+  const res = http.post(
+    `${BASE_URL}/user/make-friend`,
+    JSON.stringify({ email }),
+    {
+      headers: {
+        Authorization: `Bearer ${data.token}`,
+        'Content-Type': 'application/json',
       },
-    )
+    },
+  )
 
-    friendSuccess++
-  } catch (err) {
-    friendFail++
-  }
+  check(res, {
+    'make friend success': (r) => r.status === 200,
+  })
+  // sleep(1) // think time
 }
 
-// ==========================
-// MAIN
-// ==========================
-async function run() {
-  const token = await login()
 
-  console.log(`Starting load test: ${TOTAL_USERS} users`)
-  console.log(`Concurrency: ${CONCURRENCY}`)
+import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js'
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js'
 
-  const startTime = Date.now()
-
-  for (let i = 1; i <= TOTAL_USERS; i += CONCURRENCY) {
-    const batch = []
-
-    for (let j = i; j < i + CONCURRENCY && j <= TOTAL_USERS; j++) {
-      const email = `user${j}@test.com`
-      batch.push(makeFriend(token, email))
-    }
-
-    await Promise.all(batch)
+export function handleSummary(data) {
+  return {
+    'report.html': htmlReport(data),
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
   }
-
-  const endTime = Date.now()
-  const duration = (endTime - startTime) / 1000
-
-  console.log('\n========== DONE ==========')
-  console.log('Total time:', duration.toFixed(2), 'seconds')
-  console.log('Throughput:', (TOTAL_USERS / duration).toFixed(2), 'req/sec')
 }
-
-run()

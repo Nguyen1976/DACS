@@ -20,14 +20,6 @@ import { LoggerModule } from '@app/logger/logger.module'
 
 @Module({
   imports: [
-    RedisModule.forRoot(
-      {
-        host: 'localhost',
-        port: 6379,
-        db: 0,
-      },
-      'USER_REDIS',
-    ),
     PrismaModule,
     CommonModule,
     UtilModule,
