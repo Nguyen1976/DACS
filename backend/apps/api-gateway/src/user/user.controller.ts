@@ -4,7 +4,6 @@ import {
   Body,
   Get,
   Query,
-  Param,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common'
@@ -66,7 +65,16 @@ export class UserController {
 
   @Get('list-friends')
   @RequireLogin()
-  async listFriends(@UserInfo() user: any, @Query('limit') limit = 10, @Query('page') page = 1) {
+  async listFriends(
+    @UserInfo() user: any,
+    @Query('limit') limit: string,
+    @Query('page') page: string,
+  ) {
+    console.log(
+      '🚀 ~ user.controller.ts:100 ~ listFriends ~ user:',
+      limit,
+      page,
+    )
     return await this.userService.listFriends(user.userId, limit, page)
   }
 

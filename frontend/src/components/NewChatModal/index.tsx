@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   getFriends,
   selectFriend,
-  type FriendState,
+  selectFriendPage,
 } from '@/redux/slices/friendSlice'
 import type { AppDispatch } from '@/redux/store'
 import { useForm } from 'react-hook-form'
@@ -23,17 +23,21 @@ interface NewChatModalProps {
 export function NewChatModal({ onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
-  const [friends, setFriends] = useState<FriendState['friends']>([])
   const [slectedFriends, setSelectedFriends] = useState<string[]>([])
-
+  const friends = useSelector(selectFriend)
+  const page = useSelector(selectFriendPage)
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
     //fetch friends từ redux store hoặc API
-    dispatch(getFriends()).then((res) => {
-      setFriends(res.payload.friends)
-    })
-  }, [dispatch])
+    if (friends.length === 0) {
+      dispatch(getFriends({ limit: 20, page: 1 }))
+    }
+  }, [dispatch, friends.length])
+
+  const loadMoreFriends = () => {
+    dispatch(getFriends({ limit: 20, page: page + 1 }))
+  }
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -53,7 +57,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
             avatar: friend.avatar,
             fullName: friend.fullName,
           })),
-      })
+      }),
     )
       .unwrap()
       .finally(() => {
@@ -133,7 +137,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                       setSelectedFriends((state) => [...state, user.id])
                     } else {
                       setSelectedFriends((state) =>
-                        state.filter((id) => id !== user.id)
+                        state.filter((id) => id !== user.id),
                       )
                     }
                   }}
@@ -150,6 +154,16 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                 <span className='text-text font-medium'>{user.username}</span>
               </div>
             ))}
+          </div>
+          <div className='w-full flex items-center justify-center my-4'>
+            <Button
+              className='interceptor-loading bg-transparent hover:bg-[#00000032]'
+              onClick={() => {
+                loadMoreFriends()
+              }}
+            >
+              Load More
+            </Button>
           </div>
         </div>
         <div className='w-full flex justify-end'>

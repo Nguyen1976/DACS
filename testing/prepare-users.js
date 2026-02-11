@@ -5,10 +5,10 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js'
 
 const BASE_URL = 'http://localhost:3000'
 
-const MAIN_EMAIL = '23010310@st.phenikaa-uni.edu.vn'
+const MAIN_EMAIL = 'nguyen2202794@gmail.com'
 const MAIN_PASSWORD = 'heheheee'
 
-const USERS_PER_VU = 20 // 100 VU × 20 = 2000 user
+const USERS_PER_VU = 100 // 100 VU × 100 = 10000 user
 
 export const options = {
   scenarios: {
@@ -21,7 +21,7 @@ export const options = {
   },
 }
 
-// 🔹 Setup: login main account
+// Setup: login main account
 export function setup() {
   console.log('Login main account...')
 
@@ -44,7 +44,7 @@ export function setup() {
   }
 }
 
-// 🔹 Mỗi iteration tạo 1 user
+// Mỗi iteration tạo 1 user
 export default function (data) {
   const globalIndex = (__VU - 1) * USERS_PER_VU + __ITER + 1
 
@@ -98,33 +98,33 @@ export default function (data) {
     },
   )
 
-  // 🔹 Lưu userId vào global object (hack nhỏ)
+  // Lưu userId vào global object (hack nhỏ)
   if (!globalThis.memberIds) {
     globalThis.memberIds = []
   }
   globalThis.memberIds.push(userId)
 
-  // 🔹 Chỉ VU cuối cùng tạo group sau khi xong iteration cuối
-  if (__VU === 100 && __ITER === USERS_PER_VU - 1) {
-    console.log('Creating group...')
+  // Chỉ VU cuối cùng tạo group sau khi xong iteration cuối
+  // if (__VU === 100 && __ITER === USERS_PER_VU - 1) {
+  //   console.log('Creating group...')
 
-    http.post(
-      `${BASE_URL}/chat/create`,
-      JSON.stringify({
-        groupName: 'Nguyen',
-        members: globalThis.memberIds.map((id) => ({ userId: id })),
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.mainToken}`,
-        },
-      },
-    )
-  }
+  //   http.post(
+  //     `${BASE_URL}/chat/create`,
+  //     JSON.stringify({
+  //       groupName: 'Nguyen',
+  //       members: globalThis.memberIds.map((id) => ({ userId: id })),
+  //     }),
+  //     {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${data.mainToken}`,
+  //       },
+  //     },
+  //   )
+  // }
 }
 
-// 🔹 Xuất report
+// Xuất report
 export function handleSummary(data) {
   return {
     'report.html': htmlReport(data),
