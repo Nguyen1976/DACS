@@ -40,3 +40,58 @@ export interface UserUpdatedPayload {
   avatar?: string
   fullName?: string
 }
+
+export interface CallStartedPayload {
+  callId: string
+  roomId: string
+  callerId: string
+  callerName: string
+  callerAvatar?: string
+  targetUserIds: string[]
+  conversationId?: string
+  callType: 'DIRECT' | 'GROUP'
+  mediaType: 'AUDIO' | 'VIDEO'
+}
+
+export interface CallAcceptedPayload {
+  callId: string
+  roomId: string
+  userId: string
+  username: string
+  userAvatar?: string
+  token: string
+  participantUserIds: string[]
+}
+
+export interface CallRejectedPayload {
+  callId: string
+  roomId: string
+  userId: string
+  username: string
+  participantUserIds: string[]
+}
+
+export interface CallEndedPayload {
+  callId: string
+  roomId: string
+  endedBy: string
+  participantUserIds: string[]
+  reason?: string
+}
+
+export interface CallParticipantJoinedPayload {
+  callId: string
+  roomId: string
+  userId: string
+  username: string
+  userAvatar?: string
+  participantUserIds: string[]
+}
+
+export interface CallParticipantLeftPayload {
+  callId: string
+  roomId: string
+  userId: string
+  username: string
+  participantUserIds: string[]
+}

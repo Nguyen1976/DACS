@@ -19,6 +19,15 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
+    "call": {
+      "type": "application",
+      "root": "apps/call",
+      "entryFile": "main",
+      "sourceRoot": "apps/call/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/call/tsconfig.app.json"
+      }
+    },
     "chat": {
       "type": "application",
       "root": "apps/chat",
