@@ -10,12 +10,14 @@ import {
 import { Redis as RedisClient } from 'ioredis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import type {
+  EmitToUserPayload,
   UserCreatedPayload,
   UserMakeFriendPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
+import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 
 @Injectable()
 export class NotificationService {
@@ -68,9 +70,13 @@ export class NotificationService {
     } else {
       //bắn socket
       this.amqpConnection.publish(
-        EXCHANGE_RMQ.NOTIFICATION_EVENTS,
-        ROUTING_RMQ.NOTIFICATION_CREATED,
-        notificationCreated,
+        EXCHANGE_RMQ.REALTIME_EVENTS,
+        ROUTING_RMQ.EMIT_REALTIME_EVENT,
+        {
+          userIds: [notificationCreated?.userId],
+          event: SOCKET_EVENTS.NOTIFICATION.NEW_NOTIFICATION,
+          data: notificationCreated,
+        } as unknown as EmitToUserPayload,
       )
     }
   }
@@ -102,7 +108,11 @@ export class NotificationService {
       this.amqpConnection.publish(
         EXCHANGE_RMQ.NOTIFICATION_EVENTS,
         ROUTING_RMQ.NOTIFICATION_CREATED,
-        createdNotification,
+        {
+          userIds: [createdNotification?.userId],
+          event: SOCKET_EVENTS.NOTIFICATION.NEW_NOTIFICATION,
+          data: createdNotification,
+        } as unknown as EmitToUserPayload,
       )
     } else {
       //offline thì gửi mail (later)
@@ -123,7 +133,7 @@ export class NotificationService {
     return {
       ...res,
       createdAt: res.createdAt.toString(),
-    } as unknown
+    }
   }
 
   async getNotifications(

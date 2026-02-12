@@ -36,3 +36,10 @@ export interface UserUpdatedPayload {
   avatar?: string
   fullName?: string
 }
+
+
+export interface  EmitToUserPayload {
+  userIds: string[]
+  event: string
+  data: any
+}

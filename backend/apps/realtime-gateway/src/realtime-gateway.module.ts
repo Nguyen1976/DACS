@@ -5,6 +5,8 @@ import { RealtimeGateway } from './realtime/realtime.gateway'
 import { RealtimeModule } from './realtime/realtime.module'
 import { RedisModule } from '@app/redis'
 import { CommonModule } from '@app/common'
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
+import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 
 @Module({
   imports: [
@@ -17,6 +19,16 @@ import { CommonModule } from '@app/common'
       },
       'REDIS_CLIENT',
     ),
+    RabbitMQModule.forRoot({
+      exchanges: [
+        {
+          name: EXCHANGE_RMQ.REALTIME_EVENTS,
+          type: 'topic',
+        },
+      ],
+      uri: 'amqp://user:user@localhost:5672',
+      connectionInitOptions: { wait: true },
+    }),
     CommonModule,
   ],
   controllers: [RealtimeGatewayController],

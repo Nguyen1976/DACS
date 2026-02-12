@@ -11,12 +11,12 @@ import {
 import { JwtService } from '@nestjs/jwt'
 import { Inject, Injectable } from '@nestjs/common'
 import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
-import type { SendMessagePayloadSocket } from 'libs/constant/websocket/socket.payload'
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
 import { UserStatusStore } from './user-status.store'
+import type { EmitToUserPayload } from 'libs/constant/rmq/payload'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
 @Injectable()
@@ -73,33 +73,16 @@ export class RealtimeGateway
     }
   }
 
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.NOTIFICATION_EVENTS,
-    routingKey: ROUTING_RMQ.NOTIFICATION_CREATED,
-    queue: QUEUE_RMQ.REALTIME_NOTIFICATIONS_CREATED,
-  })
-  async emitNotificationToUser(data): Promise<void> {
-    await this.emitToUser(
-      [data.userId],
-      SOCKET_EVENTS.NOTIFICATION.NEW_NOTIFICATION,
-      data,
-    )
+  async checkUserOnline(userId: string): Promise<boolean> {
+    return this.userStatusStore.isOnline(userId)
   }
 
   @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.CHAT_EVENTS,
-    routingKey: ROUTING_RMQ.CONVERSATION_CREATED,
-    queue: QUEUE_RMQ.REALTIME_CONVERSATIONS_CREATED,
+    exchange: EXCHANGE_RMQ.REALTIME_EVENTS,
+    routingKey: ROUTING_RMQ.EMIT_REALTIME_EVENT,
+    queue: QUEUE_RMQ.REALTIME_EMIT_EVENT,
   })
-  async emitNewConversationToUser(conversation): Promise<void> {
-    await this.emitToUser(
-      conversation.memberIds as string[],
-      SOCKET_EVENTS.CHAT.NEW_CONVERSATION,
-      { conversation },
-    )
-  }
-
-  async emitToUser(userIds: string[], event: string, data: any) {
+  async emitToUser({ userIds, event, data }: EmitToUserPayload) {
     for (const userId of userIds) {
       const sockets = (await this.userStatusStore.getUserSockets(
         userId,
@@ -109,41 +92,10 @@ export class RealtimeGateway
       })
     }
   }
-
-  async checkUserOnline(userId: string): Promise<boolean> {
-    return this.userStatusStore.isOnline(userId)
-  }
-
-  @SubscribeMessage('ping')
-  handlePing(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
-    return { event: 'pong', data: 'hello from gateway' }
-  }
-
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.CHAT_EVENTS,
-    routingKey: ROUTING_RMQ.MESSAGE_SENT,
-    queue: QUEUE_RMQ.REALTIME_MESSAGES_SENT,
-  })
-  async handleNewMessageSent(data: any): Promise<void> {
-    await this.emitToUser(
-      data.memberIds.filter((id) => id !== data.senderId),
-      SOCKET_EVENTS.CHAT.NEW_MESSAGE,
-      data,
-    )
-  }
-
-  @RabbitSubscribe({
-    exchange: EXCHANGE_RMQ.CHAT_EVENTS,
-    routingKey: ROUTING_RMQ.MEMBER_ADDED_TO_CONVERSATION,
-    queue: QUEUE_RMQ.REALTIME_MEMBERS_ADDED_TO_CONVERSATION,
-  })
-  async handleNewMemberAddedToConversation(data): Promise<void> {
-    await this.emitToUser(
-      data.newMemberIds,
-      SOCKET_EVENTS.CHAT.NEW_MEMBER_ADDED,
-      data,
-    )
-  }
 }
 //đoạn này có thể viết thành dùng chung thì sẽ giảm thiểu được code
 //tức là chỉ viết 1 hàm emit user thì khi có sự kiện payload nó luôn là người nhận, tên sự kiện và data
+//trước khi refactor thì sẽ load lại toàn bộ thông tin về socket io đã nhé
+//còn 1 số sự kiện khác như user typing, message delivered, message seen thì sẽ làm sau vì cần phải tối ưu hơn nữa
+//vì những sự kiện đó tần suất nó sẽ cao hơn nhiều so với những sự kiện hiện tại
+//lên cho gateway này 1 exchange riêng biệt để tránh bị lẫn lộn với các service khác
