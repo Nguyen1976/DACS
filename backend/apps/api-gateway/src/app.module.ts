@@ -9,6 +9,7 @@ import { RedisModule } from '@app/redis'
 import { NotificationModule } from './notification/notification.module'
 import { ChatController } from './chat/chat.controller'
 import { ChatModule } from './chat/chat.module'
+import { CallModule } from './call/call.module'
 import { LoggerModule } from '@app/logger'
 import { CustomRateLimitGuard } from './common/guards/rate-limit.guard'
 
@@ -26,6 +27,7 @@ import { CustomRateLimitGuard } from './common/guards/rate-limit.guard'
     ),
     NotificationModule,
     ChatModule,
+    CallModule,
     LoggerModule.forService('Api-Gateway'),
   ],
   controllers: [AppController, ChatController],
@@ -40,6 +42,6 @@ import { CustomRateLimitGuard } from './common/guards/rate-limit.guard'
       useClass: CustomRateLimitGuard,
     }
   ],
-  exports: [NotificationModule, ChatModule],
+  exports: [NotificationModule, ChatModule, CallModule],
 })
 export class AppModule {}

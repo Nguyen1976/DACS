@@ -8,4 +8,10 @@ export const ROUTING_RMQ = {
   MESSAGE_SEND: 'message.send',
   MEMBER_ADDED_TO_CONVERSATION: 'member.addedToConversation',
   USER_UPDATED: 'user.updated',
+  CALL_STARTED: 'call.started',
+  CALL_ACCEPTED: 'call.accepted',
+  CALL_REJECTED: 'call.rejected',
+  CALL_ENDED: 'call.ended',
+  CALL_PARTICIPANT_JOINED: 'call.participant.joined',
+  CALL_PARTICIPANT_LEFT: 'call.participant.left',
 }

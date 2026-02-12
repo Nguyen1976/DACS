@@ -144,6 +144,85 @@ export class RealtimeGateway
       data,
     )
   }
+
+  // Call event subscribers
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_STARTED,
+    queue: QUEUE_RMQ.REALTIME_CALL_STARTED,
+  })
+  async handleCallStarted(data: any): Promise<void> {
+    await this.emitToUser(
+      data.targetUserIds,
+      SOCKET_EVENTS.CALL.INCOMING_CALL,
+      data,
+    )
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_ACCEPTED,
+    queue: QUEUE_RMQ.REALTIME_CALL_ACCEPTED,
+  })
+  async handleCallAccepted(data: any): Promise<void> {
+    await this.emitToUser(
+      data.participantUserIds,
+      SOCKET_EVENTS.CALL.CALL_ACCEPTED,
+      data,
+    )
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_REJECTED,
+    queue: QUEUE_RMQ.REALTIME_CALL_REJECTED,
+  })
+  async handleCallRejected(data: any): Promise<void> {
+    await this.emitToUser(
+      data.participantUserIds,
+      SOCKET_EVENTS.CALL.CALL_REJECTED,
+      data,
+    )
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_ENDED,
+    queue: QUEUE_RMQ.REALTIME_CALL_ENDED,
+  })
+  async handleCallEnded(data: any): Promise<void> {
+    await this.emitToUser(
+      data.participantUserIds,
+      SOCKET_EVENTS.CALL.CALL_ENDED,
+      data,
+    )
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_PARTICIPANT_JOINED,
+    queue: QUEUE_RMQ.REALTIME_CALL_PARTICIPANT_JOINED,
+  })
+  async handleParticipantJoined(data: any): Promise<void> {
+    await this.emitToUser(
+      data.participantUserIds,
+      SOCKET_EVENTS.CALL.PARTICIPANT_JOINED,
+      data,
+    )
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.CALL_EVENTS,
+    routingKey: ROUTING_RMQ.CALL_PARTICIPANT_LEFT,
+    queue: QUEUE_RMQ.REALTIME_CALL_PARTICIPANT_LEFT,
+  })
+  async handleParticipantLeft(data: any): Promise<void> {
+    await this.emitToUser(
+      data.participantUserIds,
+      SOCKET_EVENTS.CALL.PARTICIPANT_LEFT,
+      data,
+    )
+  }
 }
 //đoạn này có thể viết thành dùng chung thì sẽ giảm thiểu được code
 //tức là chỉ viết 1 hàm emit user thì khi có sự kiện payload nó luôn là người nhận, tên sự kiện và data
