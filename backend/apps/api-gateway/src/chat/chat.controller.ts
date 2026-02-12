@@ -41,16 +41,11 @@ export class ChatController {
     @Body() body: AddMemberToConversationDTO,
     @UserInfo() userInfo: any,
   ) {
-    return await this.chatService.addMemberToConversation(body)
+    return await this.chatService.addMemberToConversation({
+      ...body,
+      userId: userInfo.userId,
+    })
   }
-  //luồng hoạt động của add member
-  //khi thêm 1 member vào conversation đảm bảo check đó phải có type là group
-  /**gateway call frpc chat service
-   * add member
-   * publish sự kiện có member mới và rabbitmq
-   * realtime gateway lawnsng nghe sự kiện và push conversation về cho member
-   * done
-   */
 
   @Get('conversations')
   @RequireLogin()
@@ -106,4 +101,5 @@ export class ChatController {
       userId: userInfo.userId,
     })
   }
+
 }

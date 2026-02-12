@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import type { ClientGrpc } from '@nestjs/microservices'
 import {
   CHAT_GRPC_SERVICE_NAME,
@@ -8,7 +8,6 @@ import {
   SendMessageRequest,
 } from 'interfaces/chat.grpc'
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
-import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
 import { AddMemberToConversationDTO, ReadMessageDto } from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
@@ -48,8 +47,9 @@ export class ChatService implements OnModuleInit {
     return res as CreateConversationResponse
   }
 
-  async addMemberToConversation(dto: AddMemberToConversationDTO) {
-    //nhận vào conversationId, memberIds[]
+  async addMemberToConversation(
+    dto: AddMemberToConversationDTO & { userId: string },
+  ) {
     const observable = this.chatClientService.addMemberToConversation(dto)
     return await firstValueFrom(observable)
   }

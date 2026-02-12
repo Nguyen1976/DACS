@@ -35,6 +35,7 @@ export class ConversationMemberRepository {
       },
       select: {
         userId: true,
+        role: true,
       },
     })
   }
@@ -78,6 +79,7 @@ export class ConversationMemberRepository {
         conversationId,
         userId: memberId,
         role: 'member',
+        lastMessageAt: new Date(),//vì vừa mới được thêm lên mình sẽ để thời gian này conver sẽ ở đầu
       })),
     })
   }

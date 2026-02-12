@@ -118,27 +118,40 @@ export class ChatService {
       ChatErrors.conversationNotFound()
     }
 
-    const existingMembers =
-      await this.memberRepo.findByConversationIdAndUserIds(
-        dto.conversationId,
-        dto.memberIds,
-      )
+    if (conversation.type === conversationType.DIRECT) {
+      ChatErrors.userNoPermission()
+    }
+
+    const existingMembers = await this.memberRepo.findByConversationId(
+      dto.conversationId,
+    )
+    console.log(dto)
+    //check role
+    const checkRole = existingMembers.find(
+      (m) => m.userId === dto.userId && m.role === 'admin',
+    )
+    if (!checkRole) {
+      ChatErrors.userNoPermission()
+    }
+
+    const memberIds = dto.members.map((member) => member.userId)
 
     const existingMemberIds = existingMembers.map((m) => m.userId)
-    const newMemberIds = dto.memberIds.filter(
+    const newMemberIds = memberIds.filter(
       (id) => !existingMemberIds.includes(id),
     )
 
     if (newMemberIds.length === 0) {
       return {
-        status: 'Member already in conversation',
+        status: 'SUCCESS',
       }
     }
 
     await this.memberRepo.addMembers(dto.conversationId, newMemberIds)
+    const res = await this.conversationRepo.findByIdWithMembers(conversation.id)
 
     this.eventsPublisher.publishMemberAddedToConversation({
-      conversationId: dto.conversationId,
+      ...res,
       newMemberIds,
     })
 

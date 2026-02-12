@@ -33,7 +33,8 @@ export interface CreateConversationResponse {
 
 export interface AddMemberToConversationRequest {
   conversationId: string;
-  memberIds: string[];
+  members: Member[];
+  userId: string;
 }
 
 export interface AddMemberToConversationResponse {

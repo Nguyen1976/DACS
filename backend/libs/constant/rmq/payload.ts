@@ -30,10 +30,6 @@ export interface SendMessagePayload {
   tempMessageId: string
 }
 
-export interface MemberAddedToConversationPayload {
-  conversationId: string
-  newMemberIds: string[]
-}
 
 export interface UserUpdatedPayload {
   userId: string

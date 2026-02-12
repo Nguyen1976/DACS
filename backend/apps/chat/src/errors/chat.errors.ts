@@ -9,6 +9,13 @@ export class ChatErrors {
     })
   }
 
+  static userNoPermission(): never {
+    throw new RpcException({
+      code: status.PERMISSION_DENIED,
+      message: 'User has no permission to perform this action',
+    })
+  }
+
   static senderNotMember(): never {
     throw new RpcException({
       code: status.FAILED_PRECONDITION,

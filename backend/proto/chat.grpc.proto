@@ -33,7 +33,8 @@ message CreateConversationResponse {
 
 message AddMemberToConversationRequest {
   string conversationId = 1;
-  repeated string memberIds = 2;
+  repeated Member members = 2;
+  string userId = 3;
 }
 
 message AddMemberToConversationResponse {

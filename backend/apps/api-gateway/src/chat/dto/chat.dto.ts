@@ -27,7 +27,7 @@ export class AddMemberToConversationDTO {
   @IsNotEmpty({
     message: 'memberIds is required',
   })
-  memberIds: string[]
+  members: Member[]
 }
 
 export class SendMessageDTO {

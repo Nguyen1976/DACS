@@ -16,7 +16,6 @@ import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
-import type { MemberAddedToConversationPayload } from 'libs/constant/rmq/payload'
 import { UserStatusStore } from './user-status.store'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
@@ -138,13 +137,13 @@ export class RealtimeGateway
     routingKey: ROUTING_RMQ.MEMBER_ADDED_TO_CONVERSATION,
     queue: QUEUE_RMQ.REALTIME_MEMBERS_ADDED_TO_CONVERSATION,
   })
-  async handleNewMemberAddedToConversation(
-    data: MemberAddedToConversationPayload,
-  ): Promise<void> {
+  async handleNewMemberAddedToConversation(data): Promise<void> {
     await this.emitToUser(
       data.newMemberIds,
       SOCKET_EVENTS.CHAT.NEW_MEMBER_ADDED,
-      data.conversationId,
+      data,
     )
   }
 }
+//đoạn này có thể viết thành dùng chung thì sẽ giảm thiểu được code
+//tức là chỉ viết 1 hàm emit user thì khi có sự kiện payload nó luôn là người nhận, tên sự kiện và data
