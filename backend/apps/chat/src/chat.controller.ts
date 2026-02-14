@@ -9,10 +9,9 @@ import {
   type GetConversationsRequest,
   GetConversationsResponse,
   type GetMessagesRequest,
-  type SendMessageRequest,
-  type SendMessageResponse,
   ReadMessageResponse,
   type ReadMessageRequest,
+  type SearchConversationRequest,
 } from 'interfaces/chat.grpc'
 import { Metadata } from '@grpc/grpc-js'
 import { ConversationMapper } from './domain/conversation.mapper'
@@ -73,15 +72,6 @@ export class ChatController {
     return res
   }
 
-  // @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'sendMessage')
-  // async sendMessage(
-  //   data: SendMessageRequest,
-  //   metadata: Metadata,
-  // ): Promise<SendMessageResponse> {
-  //   const message = await safeExecute(() => this.chatService.sendMessage(data))
-  //   return message
-  // }
-
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'readMessage')
   async readMessage(
     data: ReadMessageRequest,
@@ -89,5 +79,19 @@ export class ChatController {
   ): Promise<ReadMessageResponse> {
     const res = await safeExecute(() => this.chatService.readMessage(data))
     return res
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'searchConversations')
+  async searchConversations(
+    data: SearchConversationRequest,
+    metadata: Metadata,
+  ): Promise<any> {
+    const res = await safeExecute(() =>
+      this.chatService.searchConversations(data.userId, data.keyword),
+    )
+    return ConversationMapper.toGetConversationsResponse(
+      res.conversations,
+      res.unreadMap,
+    )
   }
 }

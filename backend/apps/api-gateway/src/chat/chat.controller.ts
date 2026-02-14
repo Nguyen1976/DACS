@@ -7,6 +7,7 @@ import {
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
+import { query } from 'winston'
 
 @Controller('chat')
 export class ChatController {
@@ -102,4 +103,12 @@ export class ChatController {
     })
   }
 
+  @Get('search')
+  @RequireLogin()
+  async searchConversations(
+    @Query('keyword') keyword: string,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.searchConversations(userInfo.userId, keyword)
+  }
 }

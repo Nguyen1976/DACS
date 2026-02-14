@@ -12,23 +12,42 @@ import { Plus, User, Users } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectConversationById } from '@/redux/slices/conversationSlice'
 import type { AppDispatch, RootState } from '@/redux/store'
-import { getFriends, selectFriend } from '@/redux/slices/friendSlice'
+import {
+  getFriends,
+  selectFriend,
+  selectFriendPage,
+} from '@/redux/slices/friendSlice'
+import { useLocation } from 'react-router'
 
 export function GroupMemberManager() {
   const [selectedTab, setSelectedTab] = useState('members')
   const [open, setOpen] = useState(false)
+
+  const conversationId = useLocation().pathname.split('/').pop() || ''
+
   const conversation = useSelector((state: RootState) =>
-    selectConversationById(state, 'some-conversation-id'),
+    selectConversationById(state, conversationId),
   )
+
+  const friends = useSelector(selectFriend)
 
   const dispatch = useDispatch<AppDispatch>()
 
+  const page = useSelector(selectFriendPage)
+
+  const loadMoreFriends = () => {
+    dispatch(getFriends({ limit: 20, page: page + 1 }))
+  }
+
   useEffect(() => {
-    dispatch(getFriends())
-  }, [dispatch])
+    if (friends.length === 0) {
+      dispatch(getFriends({ limit: 20, page: 1 }))
+    }
+  }, [dispatch, friends.length])
   // Get available friends not already in the group
-  const availableFriends = useSelector(selectFriend).filter(
-    (friend) => conversation?.members.map((m) => m.userId).indexOf(friend.id) === -1,
+  const availableFriends = friends.filter(
+    (friend) =>
+      conversation?.members.map((m) => m.userId).indexOf(friend.id) === -1,
   )
 
   return (
@@ -92,7 +111,9 @@ export function GroupMemberManager() {
                             src={member.avatar || '/placeholder.svg'}
                             alt={member.username || 'User'}
                           />
-                          <AvatarFallback>{member.username?.[0] || '?'}</AvatarFallback>
+                          <AvatarFallback>
+                            {member.username?.[0] || '?'}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className='text-sm font-medium text-white'>
@@ -140,7 +161,9 @@ export function GroupMemberManager() {
                             src={friend.avatar || '/placeholder.svg'}
                             alt={friend.username || 'User'}
                           />
-                          <AvatarFallback>{friend.username?.[0] || '?'}</AvatarFallback>
+                          <AvatarFallback>
+                            {friend.username?.[0] || '?'}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className='text-sm font-medium text-white'>
@@ -162,6 +185,14 @@ export function GroupMemberManager() {
                     </div>
                   ))
                 )}
+                <div className='w-full flex items-center justify-center my-4'>
+                  <Button
+                    className='interceptor-loading'
+                    onClick={() => loadMoreFriends()}
+                  >
+                    Load More
+                  </Button>
+                </div>
               </div>
             </ScrollArea>
           </TabsContent>

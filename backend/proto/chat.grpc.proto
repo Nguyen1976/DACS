@@ -9,6 +9,7 @@ service ChatGrpcService {
   rpc getMessagesByConversationId (GetMessagesRequest) returns (GetMessagesResponse) {}
   rpc sendMessage (SendMessageRequest) returns (SendMessageResponse) {}
   rpc readMessage (ReadMessageRequest) returns (ReadMessageResponse) {}
+  rpc searchConversations (SearchConversationRequest) returns (SearchConversationResponse) {}
 }
 
 message Member {
@@ -126,4 +127,13 @@ message ReadMessageRequest {
 
 message ReadMessageResponse {
   string lastReadMessageId = 1;
+}
+
+message SearchConversationRequest {
+  string userId = 1;
+  string keyword = 2;
+}
+
+message SearchConversationResponse {
+  repeated Conversation conversations = 1;
 }

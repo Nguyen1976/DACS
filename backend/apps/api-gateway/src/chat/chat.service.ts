@@ -88,4 +88,12 @@ export class ChatService implements OnModuleInit {
     const observable = this.chatClientService.readMessage(dto)
     return await firstValueFrom(observable)
   }
+
+  async searchConversations(userId: string, keyword: string) {
+    const observable = this.chatClientService.searchConversations({
+      userId,
+      keyword,
+    })
+    return await firstValueFrom(observable)
+  }
 }

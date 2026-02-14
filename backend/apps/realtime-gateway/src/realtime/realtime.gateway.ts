@@ -30,7 +30,7 @@ export class RealtimeGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server
+  server!: Server
 
   private userStatusStore: UserStatusStore
   constructor(

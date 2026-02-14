@@ -73,40 +73,6 @@ export class ChatService {
     return res
   }
 
-  // async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
-  //   const conversationMembers = await this.memberRepo.findByConversationId(
-  //     data.conversationId,
-  //   )
-  //   const memberIds = conversationMembers.map((cm) => cm.userId)
-
-  //   if (!memberIds.includes(data.senderId)) {
-  //     ChatErrors.senderNotMember()
-  //   }
-
-  //   const message = await this.messageRepo.create({
-  //     conversationId: data.conversationId,
-  //     senderId: data.senderId,
-  //     text: data.message,
-  //     replyToMessageId: data.replyToMessageId,
-  //   })
-
-  //   await this.conversationRepo.updateUpdatedAt(data.conversationId)
-
-  //   await this.memberRepo.updateLastMessageAt(
-  //     data.conversationId,
-  //     message.createdAt,
-  //   )
-
-  //   this.eventsPublisher.publishMessageSent(message, memberIds as string[])
-
-  //   return {
-  //     message: {
-  //       ...message,
-  //       createdAt: message.createdAt.toString(),
-  //     },
-  //   } as SendMessageResponse
-  // }
-
   async sendMessage(data: MessageSendPayload) {
     const conversationMembers = await this.memberRepo.findByConversationId(
       data.conversationId,
@@ -261,6 +227,19 @@ export class ChatService {
       avatar: data.avatar,
       fullName: data.fullName,
     })
+  }
+
+  async searchConversations(userId: string, keyword: string) {
+    const conversations = await this.conversationRepo.searchByKeyword(
+      userId,
+      keyword,
+    )
+    const unreadMap = await this.calculateUnreadCounts(conversations, userId)
+
+    return {
+      conversations,
+      unreadMap,
+    }
   }
 
   private async calculateUnreadCounts(

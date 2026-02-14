@@ -17,7 +17,7 @@ interface ProfileSettingsProps {
 export function ProfileSettings({ onClose }: ProfileSettingsProps) {
   return (
     <div className='left-0 right-0 top-0 bottom-0 mx-auto bg-[rgba(0,0,0,0.56)] text-foreground  fixed z-50 '>
-      <div className='w-1/3 max-w-3/4 mt-5 mx-auto bg-card rounded-lg border border-border shadow-2xl'>
+      <div className='min-w-1/3 max-w-3/4 mt-5 mx-auto bg-card rounded-lg border border-border shadow-2xl'>
         {/* Header */}
         <div className='flex items-center justify-between p-4 border-b border-border'>
           <h2 className='text-xl font-semibold'>Settings & Privacy</h2>

@@ -112,4 +112,46 @@ export class ConversationRepository {
       data: { updatedAt: new Date() },
     })
   }
+
+  async searchByKeyword(userId: string, keyword: string) {
+    // 1️⃣ Lấy danh sách conversation mà user tham gia
+    const memberships = await this.prisma.conversationMember.findMany({
+      where: {
+        userId,
+        conversation: {
+          groupName: {
+            contains: keyword,
+            mode: 'insensitive', // không phân biệt hoa thường
+          },
+        },
+      },
+      orderBy: { lastMessageAt: 'desc' },
+      select: { conversationId: true },
+    })
+
+    if (!memberships.length) return []
+
+    // 2️⃣ Lấy conversation giống cấu trúc findByUserIdPaginated
+    const conversations = await this.prisma.conversation.findMany({
+      where: {
+        id: { in: memberships.map((m) => m.conversationId) },
+      },
+      include: {
+        members: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            senderMember: true,
+          },
+        },
+      },
+    })
+
+    // 3️⃣ Giữ đúng thứ tự theo membership
+    const map = new Map(conversations.map((c) => [c.id, c]))
+    const ordered = memberships.map((m) => map.get(m.conversationId))
+
+    return ordered
+  }
 }

@@ -125,6 +125,15 @@ export interface ReadMessageResponse {
   lastReadMessageId: string;
 }
 
+export interface SearchConversationRequest {
+  userId: string;
+  keyword: string;
+}
+
+export interface SearchConversationResponse {
+  conversations: Conversation[];
+}
+
 export const CHAT_PACKAGE_NAME = "chat";
 
 export interface ChatGrpcServiceClient {
@@ -142,6 +151,8 @@ export interface ChatGrpcServiceClient {
   sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
 
   readMessage(request: ReadMessageRequest, metadata?: Metadata): Observable<ReadMessageResponse>;
+
+  searchConversations(request: SearchConversationRequest, metadata?: Metadata): Observable<SearchConversationResponse>;
 }
 
 export interface ChatGrpcServiceController {
@@ -177,6 +188,11 @@ export interface ChatGrpcServiceController {
     request: ReadMessageRequest,
     metadata?: Metadata,
   ): Promise<ReadMessageResponse> | Observable<ReadMessageResponse> | ReadMessageResponse;
+
+  searchConversations(
+    request: SearchConversationRequest,
+    metadata?: Metadata,
+  ): Promise<SearchConversationResponse> | Observable<SearchConversationResponse> | SearchConversationResponse;
 }
 
 export function ChatGrpcServiceControllerMethods() {
@@ -188,6 +204,7 @@ export function ChatGrpcServiceControllerMethods() {
       "getMessagesByConversationId",
       "sendMessage",
       "readMessage",
+      "searchConversations",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
