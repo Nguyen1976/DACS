@@ -7,4 +7,5 @@ export const QUEUE_RMQ = {
     'notification_queue_user_updateStatusMakeFriend',
   CHAT_USER_UPDATED: 'chat_queue_user_updated',
   REALTIME_EMIT_EVENT: 'realtime_queue_emit_event',
+  CHAT_SEND_MESSAGE: 'chat_queue_send_message',
 }

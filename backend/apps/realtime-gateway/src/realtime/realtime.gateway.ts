@@ -11,7 +11,7 @@ import {
 import { JwtService } from '@nestjs/jwt'
 import { Inject, Injectable } from '@nestjs/common'
 import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
+import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
@@ -37,6 +37,7 @@ export class RealtimeGateway
     private jwtService: JwtService,
     @Inject('REDIS_CLIENT')
     private redisClient: any,
+    private readonly amqpConnection: AmqpConnection,
   ) {
     this.userStatusStore = new UserStatusStore(this.redisClient)
   }
@@ -91,6 +92,20 @@ export class RealtimeGateway
         this.server.to(socketId).emit(event, data)
       })
     }
+  }
+
+  //nhận sự kiện send_message ở đây
+  @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
+  async handleSendMessage(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    //tin nhan duoc gui di qua rabbitmq
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.REALTIME_EVENTS,
+      ROUTING_RMQ.SEND_MESSAGE,
+      data,
+    )
   }
 }
 //đoạn này có thể viết thành dùng chung thì sẽ giảm thiểu được code

@@ -5,4 +5,5 @@ export const ROUTING_RMQ = {
   MESSAGE_SEND: 'message.send',
   USER_UPDATED: 'user.updated',
   EMIT_REALTIME_EVENT: 'realtime.emitEvent',
+  SEND_MESSAGE: 'realtime.sendMessage',
 }

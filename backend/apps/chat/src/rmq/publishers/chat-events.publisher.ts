@@ -30,7 +30,7 @@ export class ChatEventsPublisher {
       EXCHANGE_RMQ.REALTIME_EVENTS,
       ROUTING_RMQ.EMIT_REALTIME_EVENT,
       {
-        userIds: data.memberIds.filter((id) => id !== data.senderId),
+        userIds: data.memberIds,
         event: SOCKET_EVENTS.CHAT.NEW_MESSAGE,
         data,
       } as EmitToUserPayload,

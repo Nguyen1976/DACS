@@ -10,7 +10,6 @@ import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 
 @Module({
   imports: [
-    RealtimeModule,
     RedisModule.forRoot(
       {
         host: 'localhost',

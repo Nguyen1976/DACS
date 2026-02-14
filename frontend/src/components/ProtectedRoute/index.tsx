@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           lastMessage: { ...data },
         }),
       )
-      console.log(selectedChatIdRef.current)
+      
       if (data.conversationId !== selectedChatIdRef.current) {
         dispatch(
           upUnreadCount({

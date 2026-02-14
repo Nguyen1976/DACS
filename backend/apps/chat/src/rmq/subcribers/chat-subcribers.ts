@@ -6,6 +6,7 @@ import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
 import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { safeExecute } from '@app/common/rpc/safe-execute'
 import type {
+  MessageSendPayload,
   UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
@@ -13,7 +14,7 @@ import type {
 @Injectable()
 export class MessageSubscriber {
   constructor(private readonly chatService: ChatService) {}
-  
+
   @RabbitSubscribe({
     exchange: EXCHANGE_RMQ.USER_EVENTS,
     routingKey: ROUTING_RMQ.USER_UPDATE_STATUS_MAKE_FRIEND,
@@ -21,7 +22,7 @@ export class MessageSubscriber {
   })
   async createConversationWhenAcceptFriend(
     data: UserUpdateStatusMakeFriendPayload,
-  ):Promise<void> {
+  ): Promise<void> {
     await safeExecute(() =>
       this.chatService.createConversationWhenAcceptFriend(data),
     )
@@ -34,5 +35,14 @@ export class MessageSubscriber {
   })
   async handleUserUpdated(data: UserUpdatedPayload): Promise<void> {
     await safeExecute(() => this.chatService.handleUserUpdated(data))
+  }
+
+  @RabbitSubscribe({
+    exchange: EXCHANGE_RMQ.REALTIME_EVENTS,
+    routingKey: ROUTING_RMQ.SEND_MESSAGE,
+    queue: QUEUE_RMQ.CHAT_SEND_MESSAGE,
+  })
+  async sendMessage(data: MessageSendPayload): Promise<void> {
+    await safeExecute(() => this.chatService.sendMessage(data))
   }
 }

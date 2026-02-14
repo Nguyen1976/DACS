@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import {
   readMessage,
-  updateNewMessage,
   type ConversationState,
 } from '@/redux/slices/conversationSlice'
 import { useDispatch, useSelector } from 'react-redux'
@@ -22,7 +21,6 @@ import {
   addMessage,
   getMessages,
   selectMessage,
-  sendMessage,
   type Message,
 } from '@/redux/slices/messageSlice'
 import MessageComponent from './Messages'
@@ -32,6 +30,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { socket } from '@/lib/socket'
 
 interface ChatWindowProps {
   conversationId?: string
@@ -55,11 +54,11 @@ export default function ChatWindow({
   const conversation = useSelector(
     (state: { conversations: ConversationState }) => {
       return state.conversations?.find((c) => c.id === conversationId)
-    }
+    },
   )
   const user = useSelector(selectUser)
   const messages = useSelector((state: RootState) =>
-    selectMessage(state, conversationId)
+    selectMessage(state, conversationId),
   )
 
   useEffect(() => {
@@ -76,7 +75,6 @@ export default function ChatWindow({
     }
   }, [dispatch, messages.length, conversationId])
 
- 
   useEffect(() => {
     if (!conversationId) return
     if (messages.length === 0) return
@@ -90,7 +88,7 @@ export default function ChatWindow({
       readMessage({
         conversationId,
         lastReadMessageId: lastMessage.id,
-      })
+      }),
     )
   }, [messages, conversationId, dispatch, user.id])
 
@@ -105,22 +103,18 @@ export default function ChatWindow({
       status: 'pending',
       createdAt: new Date().toISOString(),
     }
+
     dispatch(addMessage(tempMessage))
-    dispatch(
-      sendMessage({
-        conversationId,
-        message: msg,
-        tempMessageId: tempMessage.id,
-      })
-    ).then((res) => {
-      dispatch(
-        updateNewMessage({
-          conversationId,
-          lastMessage: res.payload.message as Message,
-        })
-      )
+
+    //bắn sự kiện chat.send_message qua socket io ở đây
+    socket.emit('chat.send_message', {
+      conversationId,
+      text: msg,
+      tempMessageId: tempMessage.id,
+      senderId: user.id,
     })
     setMsg('')
+    console.log('sent message:', msg)
 
     requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

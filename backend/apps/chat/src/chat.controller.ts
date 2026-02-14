@@ -1,6 +1,6 @@
-import { Catch, Controller } from '@nestjs/common'
+import { Controller } from '@nestjs/common'
 import { ChatService } from './chat.service'
-import { GrpcMethod, RpcException } from '@nestjs/microservices'
+import { GrpcMethod } from '@nestjs/microservices'
 import {
   type AddMemberToConversationRequest,
   CHAT_GRPC_SERVICE_NAME,
@@ -73,14 +73,14 @@ export class ChatController {
     return res
   }
 
-  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'sendMessage')
-  async sendMessage(
-    data: SendMessageRequest,
-    metadata: Metadata,
-  ): Promise<SendMessageResponse> {
-    const message = await safeExecute(() => this.chatService.sendMessage(data))
-    return message
-  }
+  // @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'sendMessage')
+  // async sendMessage(
+  //   data: SendMessageRequest,
+  //   metadata: Metadata,
+  // ): Promise<SendMessageResponse> {
+  //   const message = await safeExecute(() => this.chatService.sendMessage(data))
+  //   return message
+  // }
 
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'readMessage')
   async readMessage(

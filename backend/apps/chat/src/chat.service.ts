@@ -1,4 +1,3 @@
-import { UtilService } from '@app/util'
 import { Inject, Injectable } from '@nestjs/common'
 import { conversationType, Status } from '@prisma/client'
 import {
@@ -12,6 +11,7 @@ import {
   SendMessageResponse,
 } from 'interfaces/chat.grpc'
 import type {
+  MessageSendPayload,
   UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
@@ -73,7 +73,41 @@ export class ChatService {
     return res
   }
 
-  async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
+  // async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
+  //   const conversationMembers = await this.memberRepo.findByConversationId(
+  //     data.conversationId,
+  //   )
+  //   const memberIds = conversationMembers.map((cm) => cm.userId)
+
+  //   if (!memberIds.includes(data.senderId)) {
+  //     ChatErrors.senderNotMember()
+  //   }
+
+  //   const message = await this.messageRepo.create({
+  //     conversationId: data.conversationId,
+  //     senderId: data.senderId,
+  //     text: data.message,
+  //     replyToMessageId: data.replyToMessageId,
+  //   })
+
+  //   await this.conversationRepo.updateUpdatedAt(data.conversationId)
+
+  //   await this.memberRepo.updateLastMessageAt(
+  //     data.conversationId,
+  //     message.createdAt,
+  //   )
+
+  //   this.eventsPublisher.publishMessageSent(message, memberIds as string[])
+
+  //   return {
+  //     message: {
+  //       ...message,
+  //       createdAt: message.createdAt.toString(),
+  //     },
+  //   } as SendMessageResponse
+  // }
+
+  async sendMessage(data: MessageSendPayload) {
     const conversationMembers = await this.memberRepo.findByConversationId(
       data.conversationId,
     )
@@ -86,7 +120,7 @@ export class ChatService {
     const message = await this.messageRepo.create({
       conversationId: data.conversationId,
       senderId: data.senderId,
-      text: data.message,
+      text: data.text,
       replyToMessageId: data.replyToMessageId,
     })
 
@@ -97,14 +131,10 @@ export class ChatService {
       message.createdAt,
     )
 
-    this.eventsPublisher.publishMessageSent(message, memberIds as string[])
-
-    return {
-      message: {
-        ...message,
-        createdAt: message.createdAt.toString(),
-      },
-    } as SendMessageResponse
+    this.eventsPublisher.publishMessageSent(
+      { ...message, tempMessageId: data.tempMessageId },
+      memberIds as string[],
+    )
   }
 
   async addMemberToConversation(
@@ -125,7 +155,6 @@ export class ChatService {
     const existingMembers = await this.memberRepo.findByConversationId(
       dto.conversationId,
     )
-    console.log(dto)
     //check role
     const checkRole = existingMembers.find(
       (m) => m.userId === dto.userId && m.role === 'admin',

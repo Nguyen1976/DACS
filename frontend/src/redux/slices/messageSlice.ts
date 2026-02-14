@@ -26,6 +26,7 @@ export interface Message {
   createdAt?: string
   senderMember?: SenderMember | undefined
   status?: 'sent' | 'pending'
+  tempMessageId?: string
 }
 
 export interface MessageState {
@@ -48,29 +49,10 @@ export const getMessages = createAsyncThunk(
     page?: number
   }) => {
     const response = await authorizeAxiosInstance.get(
-      `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`
+      `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`,
     )
     return response.data.data
-  }
-)
-
-export const sendMessage = createAsyncThunk(
-  `/chat/send-message`,
-  async ({
-    conversationId,
-    message,
-    tempMessageId,
-  }: {
-    conversationId: string
-    message: string
-    tempMessageId?: string
-  }) => {
-    const response = await authorizeAxiosInstance.post(
-      `${API_ROOT}/chat/send_message`,
-      { conversationId, message }
-    )
-    return { ...response.data.data, tempMessageId }
-  }
+  },
 )
 
 export const messageSlice = createSlice({
@@ -79,10 +61,30 @@ export const messageSlice = createSlice({
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
       const message = action.payload
+      //2 trường hợp 1 là emssage của mình 2 là message của họ
+      //nhưng có vấn đề đó chính là khi message về có senđẻ member nhưng mình sẽ k biết được vì mình đang chx biết userId của mình
+      //nhưng mình có thể dựa vào tempId nếu trong tempId có tồn tại trong list message thì đó sẽ là message của mình chỉ cần update trạng thái
+
       if (!state.messages[message.conversationId]) {
         state.messages[message.conversationId] = []
       }
-      state.messages[message.conversationId].unshift(message)
+      const currentMessages = state.messages[message.conversationId]
+      //check trong message có message nào tồn tại id giống với tempId k
+      const index = currentMessages.findIndex(
+        (m) => m.id === message.tempMessageId,
+      )
+      if (index !== -1) {
+        //messsage của mình
+        currentMessages[index] = {
+          ...currentMessages[index],
+          ...message,
+          status: 'sent',
+        }
+        return
+      } else {
+        //message của họ
+        state.messages[message.conversationId].unshift(message)
+      }
     },
   },
   extraReducers: (builder) => {
@@ -98,36 +100,7 @@ export const messageSlice = createSlice({
           ...messages,
           ...state.messages[conversationId || ''],
         ]
-      }
-    )
-    builder.addCase(
-      sendMessage.fulfilled,
-      (
-        state,
-        action: PayloadAction<{ message: Message; tempMessageId?: string }>
-      ) => {
-        const { message, tempMessageId } = action.payload
-
-        if (!state.messages[message.conversationId]) {
-          state.messages[message.conversationId] = []
-        }
-        if (tempMessageId) {
-          const index = state.messages[message.conversationId].findIndex(
-            (m) => m.id === tempMessageId
-          )
-          if (index !== -1) {
-            state.messages[message.conversationId][index] = {
-              ...message,
-              status: 'sent',
-            }
-            return
-          }
-        }
-        state.messages[message.conversationId].unshift({
-          ...message,
-          status: 'sent',
-        })
-      }
+      },
     )
   },
 })
@@ -143,7 +116,7 @@ export const selectMessage = createSelector(
     if (!messages) return []
 
     return [...messages].reverse()
-  }
+  },
 )
 
 export const { addMessage } = messageSlice.actions

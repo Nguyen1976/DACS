@@ -43,3 +43,11 @@ export interface  EmitToUserPayload {
   event: string
   data: any
 }
+
+export interface MessageSendPayload {
+  conversationId: string
+  senderId: string
+  text: string
+  replyToMessageId?: string
+  tempMessageId: string
+}
