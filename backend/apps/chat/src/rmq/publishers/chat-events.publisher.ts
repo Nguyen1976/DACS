@@ -39,8 +39,8 @@ export class ChatEventsPublisher {
 
   publishMemberAddedToConversation(payload): void {
     this.amqpConnection.publish(
-      EXCHANGE_RMQ.CHAT_EVENTS,
-      ROUTING_RMQ.MEMBER_ADDED_TO_CONVERSATION,
+      EXCHANGE_RMQ.REALTIME_EVENTS,
+      ROUTING_RMQ.EMIT_REALTIME_EVENT,
       {
         userIds: payload.newMemberIds,
         event: SOCKET_EVENTS.CHAT.NEW_MEMBER_ADDED,

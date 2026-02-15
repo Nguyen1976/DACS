@@ -111,4 +111,5 @@ export class ChatController {
   ) {
     return await this.chatService.searchConversations(userInfo.userId, keyword)
   }
+
 }

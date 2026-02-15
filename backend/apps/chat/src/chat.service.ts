@@ -234,10 +234,18 @@ export class ChatService {
       userId,
       keyword,
     )
-    const unreadMap = await this.calculateUnreadCounts(conversations, userId)
+
+    const converOfFriend = await this.conversationRepo.findDirectConversationOfFriend(userId, keyword)
+
+    const mergedConversations = [...converOfFriend]
+
+    const unreadMap = await this.calculateUnreadCounts(
+      mergedConversations,
+      userId,
+    )
 
     return {
-      conversations,
+      conversations: mergedConversations,
       unreadMap,
     }
   }

@@ -6,6 +6,15 @@ import { conversationType } from '@prisma/client'
 export class ConversationRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  private normalizeString(str: string) {
+    return str
+      .normalize('NFD') // tách ký tự + dấu
+      .replace(/[\u0300-\u036f]/g, '') // xóa dấu
+      .replace(/đ/g, 'd') // xử lý riêng đ
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+  }
+
   async create(data: {
     type: conversationType
     groupName?: string
@@ -15,6 +24,10 @@ export class ConversationRepository {
       data: {
         type: data.type,
         groupName: data.groupName || null,
+        groupNameLower: data.groupName?.toLocaleLowerCase() || null,
+        groupNameSearch: data.groupName
+          ? this.normalizeString(data.groupName)
+          : null,
         groupAvatar: data.groupAvatar || null,
       },
     })
@@ -113,16 +126,142 @@ export class ConversationRepository {
     })
   }
 
+  // async searchByKeyword(userId: string, keyword: string) {
+  //   const memberships = await this.prisma.conversationMember.findMany({
+  //     where: {
+  //       userId,
+  //       conversation: {
+  //         groupName: {
+  //           startsWith: keyword,
+  //           mode: 'insensitive',
+  //         },
+  //       },
+  //     },
+  //     orderBy: { lastMessageAt: 'desc' },
+  //     include: {
+  //       conversation: {
+  //         include: {
+  //           members: true,
+  //           messages: {
+  //             orderBy: { createdAt: 'desc' },
+  //             take: 1,
+  //             include: {
+  //               senderMember: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   })
+
+  //   if (!memberships.length) return []
+
+  //   // 👇 Trả về đúng structure như cũ
+  //   return memberships.map((m) => m.conversation)
+  // }
+
+  // async findDirectConversationOfFriend(userId: string, keyword: string) {
+  //   // 1️⃣ Lấy conversationMember của user hiện tại
+  //   const memberships = await this.prisma.conversationMember.findMany({
+  //     where: {
+  //       userId,
+  //       conversation: {
+  //         type: 'DIRECT',
+  //         members: {
+  //           some: {
+  //             NOT: { userId }, // phải là người khác
+  //             username: {
+  //               startsWith: keyword,
+  //               mode: 'insensitive',
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     orderBy: { lastMessageAt: 'desc' },
+  //     select: { conversationId: true },
+  //   })
+
+  //   if (!memberships.length) return []
+
+  //   // 2️⃣ Lấy conversation giống searchByKeyword
+  //   const conversations = await this.prisma.conversation.findMany({
+  //     where: {
+  //       id: { in: memberships.map((m) => m.conversationId) },
+  //     },
+  //     include: {
+  //       members: true,
+  //       messages: {
+  //         orderBy: { createdAt: 'desc' },
+  //         take: 1,
+  //         include: {
+  //           senderMember: true,
+  //         },
+  //       },
+  //     },
+  //   })
+
+  //   // 3️⃣ Giữ thứ tự theo membership
+  //   const map = new Map(conversations.map((c) => [c.id, c]))
+  //   const ordered = memberships.map((m) => map.get(m.conversationId))
+
+  //   return ordered
+  // }
+
   async searchByKeyword(userId: string, keyword: string) {
-    // 1️⃣ Lấy danh sách conversation mà user tham gia
+    return this.prisma.conversation.findMany({
+      where: {
+        type: 'GROUP',
+        groupNameSearch: {
+          startsWith: this.normalizeString(keyword),
+          // mode: 'insensitive',
+        },
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+      include: {
+        members: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            senderMember: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    })
+  }
+
+  async findDirectConversationOfFriend(userId: string, keyword: string) {
+    // 1️⃣ Tìm member KHÁC user match username
+    const matchedMembers = await this.prisma.conversationMember.findMany({
+      where: {
+        userId: { not: userId },
+        username: {
+          startsWith: keyword,
+          mode: 'insensitive',
+        },
+      },
+      select: { conversationId: true },
+    })
+
+    if (!matchedMembers.length) return []
+
+    const conversationIds = matchedMembers.map((m) => m.conversationId)
+
+    // 2️⃣ Lấy membership của current user trong các conversation đó
     const memberships = await this.prisma.conversationMember.findMany({
       where: {
         userId,
+        conversationId: { in: conversationIds },
         conversation: {
-          groupName: {
-            contains: keyword,
-            mode: 'insensitive', // không phân biệt hoa thường
-          },
+          type: 'DIRECT',
         },
       },
       orderBy: { lastMessageAt: 'desc' },
@@ -131,7 +270,7 @@ export class ConversationRepository {
 
     if (!memberships.length) return []
 
-    // 2️⃣ Lấy conversation giống cấu trúc findByUserIdPaginated
+    // 3️⃣ Lấy conversation giống như cũ
     const conversations = await this.prisma.conversation.findMany({
       where: {
         id: { in: memberships.map((m) => m.conversationId) },
@@ -148,10 +287,7 @@ export class ConversationRepository {
       },
     })
 
-    // 3️⃣ Giữ đúng thứ tự theo membership
     const map = new Map(conversations.map((c) => [c.id, c]))
-    const ordered = memberships.map((m) => map.get(m.conversationId))
-
-    return ordered
+    return memberships.map((m) => map.get(m.conversationId))
   }
 }

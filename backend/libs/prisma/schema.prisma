@@ -68,6 +68,8 @@ model conversation {
 
   //trong trường hợp là cuộc trò chuyện cá nhận thì 2 thằng này là null
   groupName String?
+  groupNameLower String?
+
   groupAvatar String?
 
   members     conversationMember[]
@@ -75,8 +77,10 @@ model conversation {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  groupNameSearch String?
 
-  @@index([updatedAt])
+  @@index([type, groupNameSearch, updatedAt])
+
 }
 
 model conversationMember {
@@ -102,8 +106,9 @@ model conversationMember {
 
   lastMessageAt DateTime?
 
-  @@index([userId])
   @@unique([conversationId, userId])
+  @@index([userId, lastMessageAt])
+  @@index([username])
 }
 
 enum deleteType {
