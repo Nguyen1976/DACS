@@ -106,8 +106,8 @@ export class NotificationService {
 
     if (inviterStatus) {
       this.amqpConnection.publish(
-        EXCHANGE_RMQ.NOTIFICATION_EVENTS,
-        ROUTING_RMQ.NOTIFICATION_CREATED,
+        EXCHANGE_RMQ.REALTIME_EVENTS,
+        ROUTING_RMQ.EMIT_REALTIME_EVENT,
         {
           userIds: [createdNotification?.userId],
           event: SOCKET_EVENTS.NOTIFICATION.NEW_NOTIFICATION,
