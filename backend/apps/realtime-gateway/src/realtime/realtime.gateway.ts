@@ -25,6 +25,8 @@ import type { EmitToUserPayload } from 'libs/constant/rmq/payload'
     origin: '*',
   },
   namespace: 'realtime',
+  pingInterval: 20000,
+  pingTimeout: 10000,
 })
 export class RealtimeGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -50,28 +52,47 @@ export class RealtimeGateway
         client.disconnect()
         return
       }
-      const payload = this.jwtService.verify(token! as string)
 
-      if (!payload.userId) {
+      const payload = this.jwtService.verify(token as string)
+      const userId = payload?.userId
+      if (!userId) {
         client.disconnect()
         return
       }
-      client.data.userId = payload.userId
-      await this.userStatusStore.addConnection(payload.userId, client.id)
 
-      this.server.emit(SOCKET_EVENTS.CONNECTION, { userId: payload.userId })
-    } catch (error) {
+      client.data.userId = userId
+
+      // 🔥 Join room theo user
+      client.join(`user:${userId}`)
+
+      // 🔥 Lưu Redis + TTL
+      await this.userStatusStore.addConnection(userId, client.id)
+    } catch {
       client.disconnect()
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const userId = client.data.userId
     if (!userId) return
-    this.userStatusStore.removeConnection(userId, client.id)
-    if (!this.userStatusStore.isOnline(userId)) {
-      this.server.emit(SOCKET_EVENTS.DISCONNECTION, { userId })
+
+    await this.userStatusStore.removeConnection(userId, client.id)
+
+    const stillOnline = await this.userStatusStore.isOnline(userId)
+
+    if (!stillOnline) {
+      // publish event qua RMQ nếu cần
+      this.amqpConnection.publish(
+        EXCHANGE_RMQ.REALTIME_EVENTS,
+        ROUTING_RMQ.USER_OFFLINE,
+        { userId },
+      )
     }
+  }
+
+  @SubscribeMessage('heartbeat')
+  async handleHeartbeat(@ConnectedSocket() client: Socket) {
+    await this.redisClient.expire(`socket:${client.id}`, 60)
   }
 
   async checkUserOnline(userId: string): Promise<boolean> {
@@ -85,12 +106,7 @@ export class RealtimeGateway
   })
   async emitToUser({ userIds, event, data }: EmitToUserPayload) {
     for (const userId of userIds) {
-      const sockets = (await this.userStatusStore.getUserSockets(
-        userId,
-      )) as string[]
-      sockets.forEach((socketId) => {
-        this.server.to(socketId).emit(event, data)
-      })
+      this.server.to(`user:${userId}`).emit(event, data)
     }
   }
 

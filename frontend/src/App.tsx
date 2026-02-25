@@ -1,33 +1,33 @@
-import { useEffect } from 'react'
-import ProtectedRoute from './components/ProtectedRoute'
-import AuthPage from './pages/Auth'
-import ChatPage from './pages/Chat'
+import { useEffect } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthPage from "./pages/Auth";
+import ChatPage from "./pages/Chat";
 
-import { createBrowserRouter, RouterProvider } from 'react-router'
-import { socket } from './lib/socket'
-import { FriendsPage } from './pages/Friend/FriendPage'
-import ListFriend from './pages/Friend/ListFriend'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch } from './redux/store'
-import { useSound } from 'use-sound'
-import notificationSound from './assets/notification.mp3'
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { socket } from "./lib/socket";
+import { FriendsPage } from "./pages/Friend/FriendPage";
+import ListFriend from "./pages/Friend/ListFriend";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch } from "./redux/store";
+import { useSound } from "use-sound";
+import notificationSound from "./assets/notification.mp3";
 import {
   addConversation,
   type Conversation,
-} from './redux/slices/conversationSlice'
-import { selectUser } from './redux/slices/userSlice'
+} from "./redux/slices/conversationSlice";
+import { selectUser } from "./redux/slices/userSlice";
 import {
   addNotification,
   type Notification,
-} from './redux/slices/notificationSlice'
+} from "./redux/slices/notificationSlice";
 
 const router = createBrowserRouter([
   {
-    path: '/auth',
+    path: "/auth",
     element: <AuthPage />,
   },
   {
-    path: '/',
+    path: "/",
     element: (
       <ProtectedRoute>
         <ChatPage />
@@ -35,7 +35,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/chat/:conversationId',
+    path: "/chat/:conversationId",
     element: (
       <ProtectedRoute>
         <ChatPage />
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/friends',
+    path: "/friends",
     element: (
       <ProtectedRoute>
         <FriendsPage>
@@ -53,7 +53,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/groups',
+    path: "/groups",
     element: (
       <ProtectedRoute>
         <FriendsPage />
@@ -61,59 +61,80 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/friend_requests',
+    path: "/friend_requests",
     element: (
       <ProtectedRoute>
         <FriendsPage />
       </ProtectedRoute>
     ),
   },
-])
+]);
 
 function App() {
-  const dispatch = useDispatch<AppDispatch>()
-  const user = useSelector(selectUser)
-  const [play] = useSound(notificationSound, { volume: 0.5 })
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector(selectUser);
+  const [play] = useSound(notificationSound, { volume: 0.5 });
 
-
-
-  // ✅ connect socket khi có user
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id) return;
 
-    socket.connect()
+    socket.auth = {
+      token: localStorage.getItem("token"),
+    };
+
+    socket.connect();
+
+    let interval: ReturnType<typeof setInterval>;
+
+    const startHeartbeat = () => {
+      interval = setInterval(() => {
+        if (socket.connected) {
+          socket.emit("heartbeat");
+        }
+      }, 30000);
+    };
+
+    const stopHeartbeat = () => {
+      if (interval) clearInterval(interval);
+    };
+
+    socket.on("connect", startHeartbeat);
+    socket.on("disconnect", stopHeartbeat);
 
     return () => {
-      socket.disconnect()
-    }
-  }, [user?.id])
+      stopHeartbeat();
+      socket.off("connect", startHeartbeat);
+      socket.off("disconnect", stopHeartbeat);
+      socket.disconnect();
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     const handler = ({ conversation }: { conversation: Conversation }) => {
-      dispatch(addConversation({ conversation, userId: user.id }))
-    }
+      dispatch(addConversation({ conversation, userId: user.id }));
+    };
 
-    socket.on('chat.new_conversation', handler)
+    socket.on("chat.new_conversation", handler);
 
     return () => {
-      socket.off('chat.new_conversation', handler)
-    }
-  }, [dispatch, user.id])
+      socket.off("chat.new_conversation", handler);
+    };
+  }, [dispatch, user.id]);
 
   useEffect(() => {
     const handler = (data: Notification) => {
-      dispatch(addNotification(data))
-      play()
-    }
+      dispatch(addNotification(data));
+      play();
+    };
 
-    socket.on('notification.new_notification', handler)
+    socket.on("notification.new_notification", handler);
 
     return () => {
-      socket.off('notification.new_notification', handler)
-    }
-  }, [dispatch, play])
+      socket.off("notification.new_notification", handler);
+    };
+  }, [dispatch, play]);
 
-  return <RouterProvider router={router} />
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;
