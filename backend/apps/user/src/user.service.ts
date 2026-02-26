@@ -26,6 +26,7 @@ import type {
   UpdateStatusRequest,
   UpdateProfileRequest,
 } from 'interfaces/user.grpc'
+import { RedisService } from '@app/redis/redis.service'
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,7 @@ export class UserService {
     private readonly eventsPublisher: UserEventsPublisher,
     @Inject(StorageR2Service)
     private readonly storageR2Service: StorageR2Service,
+    private readonly redisService: RedisService,
   ) {}
 
   async register(data: UserRegisterRequest): Promise<UserEntity> {
@@ -204,12 +206,13 @@ export class UserService {
     userId: string,
     limit = 10,
     page = 1,
-  ): Promise<UserEntity[]> {
+  ): Promise<(UserEntity & { status: boolean })[]> {
     const friendships = await this.friendShipRepo.findFriendsByUserId(
       userId,
       limit,
       page,
     )
+
     if (!friendships) {
       UserErrors.userNotFound()
     }
@@ -217,7 +220,15 @@ export class UserService {
     const friends = await this.userRepo.findManyByIds(
       friendships.map((f) => f.friendId) || [],
     )
-    return friends as UserEntity[]
+
+    const friendsWithStatus = await Promise.all(
+      friends.map(async (f) => ({
+        ...f,
+        status: await this.redisService.isOnline(f.id),
+      })),
+    )
+
+    return friendsWithStatus as (UserEntity & { status: boolean })[]
   }
 
   async detailMakeFriend(

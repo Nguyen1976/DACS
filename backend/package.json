@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "proto:gen": "powershell -Command \"protoc -I ./proto --plugin=protoc-gen-ts_proto='D:/Source/project/chat-real-time/backend/node_modules/.bin/protoc-gen-ts_proto.cmd' --ts_proto_out=interfaces --ts_proto_opt=nestJs=true,addGrpcMetadata=true $(Get-ChildItem ./proto/*.proto | ForEach-Object { $_.Name })\"",
+    "proto:gen": "protoc -I ./proto   --ts_proto_out=interfaces   --ts_proto_opt=nestJs=true,addGrpcMetadata=true   ./proto/*.proto",
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",

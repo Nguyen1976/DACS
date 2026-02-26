@@ -68,6 +68,7 @@ export class UserMapper {
         fullName: friend.fullName || '',
         avatar: friend.avatar || '',
         bio: friend.bio || '',
+        status: (friend  as any).status || false,
       })),
     }
   }

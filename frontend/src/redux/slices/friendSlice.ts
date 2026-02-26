@@ -10,6 +10,7 @@ export interface Friend {
   username: string
   avatar?: string
   fullName?: string
+  status: boolean
 }
 
 export interface FriendState {

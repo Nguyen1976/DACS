@@ -14,6 +14,7 @@ import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
 import { MessageSubscriber } from './rmq/subcribers/chat-subcribers'
 import { RmqModule } from './rmq.module'
 import { LoggerModule } from '@app/logger'
+import { RedisModule } from '@app/redis/redis.module'
 
 @Module({
   imports: [

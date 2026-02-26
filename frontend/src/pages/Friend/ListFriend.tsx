@@ -1,70 +1,78 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   getFriends,
   selectFriend,
   type Friend,
-} from '@/redux/slices/friendSlice'
-import type { AppDispatch } from '@/redux/store'
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+} from "@/redux/slices/friendSlice";
+import type { AppDispatch } from "@/redux/store";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const ListFriend = () => {
-  const dispatch = useDispatch<AppDispatch>()
-  const friends = useSelector(selectFriend) || []
+  const dispatch = useDispatch<AppDispatch>();
+  const friends = useSelector(selectFriend) || [];
   useEffect(() => {
     //fetch friends từ redux store hoặc API
     if (friends.length === 0) {
-      dispatch(getFriends({ limit: 20, page: 1 }))
+      dispatch(getFriends({ limit: 20, page: 1 }));
     }
-  }, [dispatch, friends.length])
+  }, [dispatch, friends.length]);
   return (
     <>
       {/* Friends List */}
-      <ScrollArea className='flex-1'>
-        <div className='p-6'>
-          <div className='mb-6'>
+      <ScrollArea className="flex-1">
+        <div className="p-6">
+          <div className="mb-6">
             {/* Letter Header */}
             {/* <h3 className='text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide'>
                 {letter}
               </h3> */}
 
             {/* Friends in this group */}
-            <div className='space-y-2'>
+            <div className="space-y-2">
               {friends.map((friend: Friend) => (
                 <button
                   key={friend.id}
-                  className='w-full p-3 rounded-lg flex items-center gap-3 hover:bg-accent transition-colors group'
+                  className="w-full p-3 rounded-lg flex items-center gap-3 hover:bg-accent transition-colors group"
                 >
-                  <Avatar className='w-12 h-12 flex-shrink-0'>
-                    <AvatarImage
-                      src={friend.avatar || '/placeholder.svg'}
-                      alt={friend.username}
-                    />
-                    <AvatarFallback>{friend.username[0]}</AvatarFallback>
-                  </Avatar>
+                  <div className="relative w-12 h-12 flex-shrink-0">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage
+                        src={friend.avatar || "/placeholder.svg"}
+                        alt={friend.username}
+                      />
+                      <AvatarFallback>{friend.username[0]}</AvatarFallback>
+                    </Avatar>
 
-                  <div className='flex-1 min-w-0 text-left'>
-                    <p className='font-medium text-foreground truncate'>
+                    {friend.status && (
+                      <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="font-medium text-foreground truncate">
                       {friend.username}
                     </p>
-                    <p className='text-xs text-muted-foreground'>{'Offline'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {friend.status ? "Online" : "Offline"}
+                    </p>
                   </div>
 
                   {/* Action Menu */}
                   <Button
-                    variant='ghost'
-                    size='icon'
-                    className='opacity-0 group-hover:opacity-100 transition-opacity'
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <span className='text-xl'>⋮</span>
+                    <span className="text-xl">⋮</span>
                   </Button>
                 </button>
               ))}
             </div>
-            <div className='w-full flex items-center justify-center my-4'>
-              <Button className='interceptor-loading' onClick={() => {}}>
+            <div className="w-full flex items-center justify-center my-4">
+              <Button className="interceptor-loading" onClick={() => {}}>
                 Load More
               </Button>
             </div>
@@ -78,7 +86,7 @@ const ListFriend = () => {
         </div>
       </ScrollArea>
     </>
-  )
-}
+  );
+};
 
-export default ListFriend
+export default ListFriend;

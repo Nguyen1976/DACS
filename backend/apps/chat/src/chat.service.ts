@@ -22,6 +22,7 @@ import {
 } from './repositories'
 import { ChatErrors } from './errors/chat.errors'
 import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
+import { RedisService } from '@app/redis'
 
 @Injectable()
 export class ChatService {
@@ -235,7 +236,11 @@ export class ChatService {
       keyword,
     )
 
-    const converOfFriend = await this.conversationRepo.findDirectConversationOfFriend(userId, keyword)
+    const converOfFriend =
+      await this.conversationRepo.findDirectConversationOfFriend(
+        userId,
+        keyword,
+      )
 
     const mergedConversations = [...converOfFriend]
 

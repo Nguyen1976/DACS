@@ -47,6 +47,14 @@ import { LoggerModule } from '@app/logger/logger.module'
       publicUrl: process.env.R2_PUBLIC_URL!,
     }),
     LoggerModule.forService('Api-Gateway'),
+    RedisModule.forRoot(
+      {
+        host: 'localhost',
+        port: 6379,
+        db: 0,
+      },
+      'REDIS_CLIENT',
+    ),
   ],
   controllers: [UserController],
   providers: [
