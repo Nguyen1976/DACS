@@ -15,8 +15,9 @@ import {
   FriendRequestRepository,
   FriendShipRepository,
 } from './repositories'
-import { UserEventsPublisher } from './publishers/user-events.publisher'
+import { UserEventsPublisher } from './rmq/publishers/user-events.publisher'
 import { LoggerModule } from '@app/logger/logger.module'
+import { MessageSubscriber } from './rmq/subcribers/user-subcribers'
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { LoggerModule } from '@app/logger/logger.module'
     FriendRequestRepository,
     UserEventsPublisher,
     FriendShipRepository,
+    MessageSubscriber
   ],
 })
 export class UserModule {}

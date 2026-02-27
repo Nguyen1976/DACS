@@ -11,7 +11,7 @@ import {
   FriendShipRepository,
 } from './repositories'
 import { UserErrors } from './errors/user.errors'
-import { UserEventsPublisher } from './publishers/user-events.publisher'
+import { UserEventsPublisher } from './rmq/publishers/user-events.publisher'
 import {
   AuthSession,
   UserEntity,
@@ -280,5 +280,25 @@ export class UserService {
       bio: user.bio,
       avatar: avatarUrl || user.avatar,
     }
+  }
+
+  async handleUserOnline(userId: string): Promise<void> {
+    const friends = await this.friendShipRepo.findAllFriendsByUserId(userId)
+    const friendIds = friends.map((f) => f.friendId)
+
+    this.eventsPublisher.publisherUserOnline({
+      userIds: friendIds,
+      userId,
+    })
+  }
+
+  async handleUserOffline(userId: string): Promise<void> {
+    const friends = await this.friendShipRepo.findAllFriendsByUserId(userId)
+    const friendIds = friends.map((f) => f.friendId)
+
+     this.eventsPublisher.publisherUserOffline({
+      userIds: friendIds,
+      userId,
+    })
   }
 }

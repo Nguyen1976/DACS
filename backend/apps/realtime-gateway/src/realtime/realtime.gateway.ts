@@ -25,7 +25,7 @@ import type { EmitToUserPayload } from 'libs/constant/rmq/payload'
     origin: '*',
   },
   namespace: 'realtime',
-  pingInterval: 20000,
+  pingInterval: 40000,
   pingTimeout: 10000,
 })
 export class RealtimeGateway
@@ -62,11 +62,38 @@ export class RealtimeGateway
 
       client.data.userId = userId
 
+      const prevOnline = await this.userStatusStore.isOnline(userId)
+
       // 🔥 Join room theo user
       client.join(`user:${userId}`)
 
       // 🔥 Lưu Redis + TTL
       await this.userStatusStore.addConnection(userId, client.id)
+
+      client.conn.on('packet', async (packet) => {
+        if (packet.type === 'pong') {
+          await this.redisClient.expire(`socket:${client.id}`, 60)
+        }
+      })
+
+      //follow
+      /**
+       * khi user tạo 1 connect thì sẽ kiểm tra trong redis đã có connect nào chưa trước khi mà user online
+       * trường hợp chưa có prev Online thì cần phải thông báo cho bạn bè là đã online
+       * 
+       * ở đây sẽ publish 1 sự kiện cho user service xử lý
+       * và user service sẽ lấy danh sách bạn bè của user đó rồi publish 
+       * lại vào đây với sự kiện user_online kèm theo id của mình
+       * còn lại là fe xử lý
+       */
+
+      if(!prevOnline) {
+        this.amqpConnection.publish(
+          EXCHANGE_RMQ.REALTIME_EVENTS,
+          ROUTING_RMQ.USER_ONLINE,
+          { userId },
+        )
+      }
     } catch {
       client.disconnect()
     }
@@ -90,7 +117,7 @@ export class RealtimeGateway
     }
   }
 
-  @SubscribeMessage('heartbeat')
+  @SubscribeMessage('pong')
   async handleHeartbeat(@ConnectedSocket() client: Socket) {
     await this.redisClient.expire(`socket:${client.id}`, 60)
   }

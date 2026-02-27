@@ -32,4 +32,11 @@ export class FriendShipRepository {
       },
     })
   }
+
+  async findAllFriendsByUserId(userId: string) {
+    return await this.prisma.friendship.findMany({
+      where: { userId },
+      select: { friendId: true },
+    })
+  }
 }

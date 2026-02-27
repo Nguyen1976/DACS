@@ -8,4 +8,6 @@ export const QUEUE_RMQ = {
   CHAT_USER_UPDATED: 'chat_queue_user_updated',
   REALTIME_EMIT_EVENT: 'realtime_queue_emit_event',
   CHAT_SEND_MESSAGE: 'chat_queue_send_message',
+  USER_ONLINE: 'user_online_queue',
+  USER_OFFLINE: 'user_offline_queue',
 }

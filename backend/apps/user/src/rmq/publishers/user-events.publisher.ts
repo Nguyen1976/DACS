@@ -3,12 +3,14 @@ import { Injectable } from '@nestjs/common'
 import { Status } from '@prisma/client'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
 import {
+  EmitToUserPayload,
   UserCreatedPayload,
   UserMakeFriendPayload,
   UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
+import { SOCKET_EVENTS } from 'libs/constant/websocket/socket.events'
 
 @Injectable()
 export class UserEventsPublisher {
@@ -45,6 +47,29 @@ export class UserEventsPublisher {
       EXCHANGE_RMQ.USER_EVENTS,
       ROUTING_RMQ.USER_UPDATED,
       payload,
+    )
+  }
+
+  publisherUserOnline(payload: { userIds: string[]; userId: string }): void {
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.REALTIME_EVENTS,
+      ROUTING_RMQ.EMIT_REALTIME_EVENT,
+      {
+        userIds: payload.userIds,
+        event: SOCKET_EVENTS.USER.ONLINE_STATUS_CHANGED,
+        data: payload.userId,
+      } as EmitToUserPayload,
+    )
+  }
+  publisherUserOffline(payload: { userIds: string[]; userId: string }): void {
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.REALTIME_EVENTS,
+      ROUTING_RMQ.EMIT_REALTIME_EVENT,
+      {
+        userIds: payload.userIds,
+        event: SOCKET_EVENTS.USER.OFFLINE_STATUS_CHANGED,
+        data: payload.userId,
+      } as EmitToUserPayload,
     )
   }
 }

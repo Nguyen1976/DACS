@@ -7,4 +7,5 @@ export const ROUTING_RMQ = {
   EMIT_REALTIME_EVENT: 'realtime.emitEvent',
   SEND_MESSAGE: 'realtime.sendMessage',
   USER_OFFLINE: 'user.offline',
+  USER_ONLINE: 'user.online',
 }

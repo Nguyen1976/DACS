@@ -20,6 +20,7 @@ import {
   addNotification,
   type Notification,
 } from "./redux/slices/notificationSlice";
+import { updateStatus } from "./redux/slices/friendSlice";
 
 const router = createBrowserRouter([
   {
@@ -84,27 +85,7 @@ function App() {
 
     socket.connect();
 
-    let interval: ReturnType<typeof setInterval>;
-
-    const startHeartbeat = () => {
-      interval = setInterval(() => {
-        if (socket.connected) {
-          socket.emit("heartbeat");
-        }
-      }, 30000);
-    };
-
-    const stopHeartbeat = () => {
-      if (interval) clearInterval(interval);
-    };
-
-    socket.on("connect", startHeartbeat);
-    socket.on("disconnect", stopHeartbeat);
-
     return () => {
-      stopHeartbeat();
-      socket.off("connect", startHeartbeat);
-      socket.off("disconnect", stopHeartbeat);
       socket.disconnect();
     };
   }, [user?.id]);
@@ -133,6 +114,32 @@ function App() {
       socket.off("notification.new_notification", handler);
     };
   }, [dispatch, play]);
+
+  useEffect(() => {
+    const handleOnlineStatusChanged = (userId: string) => {
+      console.log("Online status changed:", userId);
+      dispatch(updateStatus({ friendId: userId, status: true }));
+    };
+
+    socket.on("user.online_status_changed", handleOnlineStatusChanged);
+
+    return () => {
+      socket.off("user.online_status_changed", handleOnlineStatusChanged);
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleOfflineStatusChanged = (userId: string) => {
+      console.log("Offline status changed:", userId);
+      dispatch(updateStatus({ friendId: userId, status: false }));
+    };
+
+    socket.on("user.offline_status_changed", handleOfflineStatusChanged);
+
+    return () => {
+      socket.off("user.offline_status_changed", handleOfflineStatusChanged);
+    };
+  }, [dispatch]);
 
   return <RouterProvider router={router} />;
 }
