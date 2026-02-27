@@ -71,16 +71,40 @@ export const userSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
+    builder.addCase(loginAPI.pending, (state) => {
+      Object.assign(state, initialState);
+    });
+
     builder.addCase(
       loginAPI.fulfilled,
       (state, action: PayloadAction<UserState>) => {
         const { token, ...user } = action.payload;
-        localStorage.setItem("token", token!);
-        Object.assign(state, user);
+        Object.assign(state, initialState, user);
+        if (token) {
+          localStorage.setItem("token", token);
+        } else {
+          localStorage.removeItem("token");
+        }
       },
     );
+    builder.addCase(loginAPI.rejected, (state) => {
+      Object.assign(state, initialState);
+      localStorage.removeItem("token");
+    });
+
+    builder.addCase(logoutAPI.pending, (state) => {
+      Object.assign(state, initialState);
+      localStorage.removeItem("token");
+    });
+
     builder.addCase(logoutAPI.fulfilled, (state) => {
       Object.assign(state, initialState);
+      localStorage.removeItem("token");
+    });
+
+    builder.addCase(logoutAPI.rejected, (state) => {
+      Object.assign(state, initialState);
+      localStorage.removeItem("token");
     });
     builder.addCase(
       updateProfileAPI.fulfilled,

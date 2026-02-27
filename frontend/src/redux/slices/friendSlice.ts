@@ -7,6 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
+import { logoutAPI } from "./userSlice";
 
 export interface Friend {
   id: string;
@@ -22,6 +23,14 @@ export interface FriendState {
   friends: Array<Friend>;
 }
 
+interface UserProfileByIdResponse {
+  fullName: string;
+  username: string;
+  email: string;
+  bio: string;
+  avatar: string;
+}
+
 const initialState: FriendState = {
   page: 1,
   friends: [],
@@ -34,6 +43,29 @@ export const getFriends = createAsyncThunk(
       `${API_ROOT}/user/list-friends?limit=${limit}&page=${page}`,
     );
     return { ...response.data.data, page: page };
+  },
+);
+
+export const upsertOnlineFriend = createAsyncThunk(
+  `/friend/upsert-online`,
+  async (friendId: string, { getState }) => {
+    const state = getState() as RootState;
+    const existingFriend = state.friend.friends.find(
+      (friend) => friend.id === friendId,
+    );
+
+    if (existingFriend) {
+      return { friendId, profile: null as UserProfileByIdResponse | null };
+    }
+
+    const response = await authorizeAxiosInstance.get(
+      `${API_ROOT}/user?userId=${friendId}`,
+    );
+
+    return {
+      friendId,
+      profile: response.data.data as UserProfileByIdResponse,
+    };
   },
 );
 
@@ -66,6 +98,34 @@ export const friendSlice = createSlice({
         return state;
       },
     );
+
+    builder.addCase(upsertOnlineFriend.fulfilled, (state, action) => {
+      const { friendId, profile } = action.payload;
+
+      const existingIndex = state.friends.findIndex(
+        (friend) => friend.id === friendId,
+      );
+
+      if (existingIndex !== -1) {
+        state.friends[existingIndex].status = true;
+        return state;
+      }
+
+      if (!profile) return state;
+
+      state.friends.unshift({
+        id: friendId,
+        email: profile.email,
+        username: profile.username,
+        fullName: profile.fullName,
+        avatar: profile.avatar,
+        status: true,
+      });
+
+      return state;
+    });
+
+    builder.addCase(logoutAPI.fulfilled, () => initialState);
   },
 });
 

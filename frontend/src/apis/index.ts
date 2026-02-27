@@ -121,3 +121,44 @@ export const getConversationByFriendIdAPI = async (
   );
   return response.data.data;
 };
+
+export interface SearchConversationItem {
+  id: string;
+  type: string;
+  unreadCount?: string;
+  groupName?: string;
+  groupAvatar?: string;
+  createdAt: string;
+  updatedAt?: string;
+  members: Array<{
+    userId: string;
+    lastReadAt?: string;
+    username?: string;
+    avatar?: string;
+    fullName?: string;
+    lastMessageAt?: string;
+  }>;
+  lastMessage: {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    text: string;
+    isDeleted?: boolean;
+    createdAt: string;
+    senderMember?: {
+      userId: string;
+      username?: string;
+      avatar?: string;
+      fullName?: string;
+    };
+  } | null;
+}
+
+export const searchConversationsAPI = async (
+  keyword: string,
+): Promise<SearchConversationItem[]> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/chat/search?keyword=${encodeURIComponent(keyword)}`,
+  );
+  return response.data.data.conversations || [];
+};

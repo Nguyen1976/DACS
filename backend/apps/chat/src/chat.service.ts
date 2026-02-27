@@ -247,26 +247,50 @@ export class ChatService {
   }
 
   async searchConversations(userId: string, keyword: string) {
+    const safeKeyword = keyword?.trim()
+
+    if (!safeKeyword) {
+      return {
+        conversations: [],
+        unreadMap: new Map<string, string>(),
+      }
+    }
+
     const conversations = await this.conversationRepo.searchByKeyword(
       userId,
-      keyword,
+      safeKeyword,
     )
 
     const converOfFriend =
       await this.conversationRepo.findDirectConversationOfFriend(
         userId,
-        keyword,
+        safeKeyword,
       )
 
-    const mergedConversations = [...converOfFriend]
+    const mergedConversations = [...conversations, ...converOfFriend].filter(
+      (conversation): conversation is any => conversation != null,
+    )
+
+    const uniqueConversations = Array.from(
+      new Map(
+        mergedConversations.map((conversation) => [
+          conversation.id,
+          conversation,
+        ]),
+      ).values(),
+    ).sort((a, b) => {
+      const bTime = new Date(b.updatedAt ?? b.createdAt).getTime()
+      const aTime = new Date(a.updatedAt ?? a.createdAt).getTime()
+      return bTime - aTime
+    })
 
     const unreadMap = await this.calculateUnreadCounts(
-      mergedConversations,
+      uniqueConversations,
       userId,
     )
 
     return {
-      conversations: mergedConversations,
+      conversations: uniqueConversations,
       unreadMap,
     }
   }
@@ -287,8 +311,6 @@ export class ChatService {
     }
 
     const unreadMap = await this.calculateUnreadCounts([conversation], userId)
-    console.log('unreadMap', unreadMap)
-    console.log('conversation', conversation)
     return {
       conversation,
       unreadMap,

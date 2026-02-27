@@ -9,6 +9,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
 import type { Message } from "./messageSlice";
 import { toast } from "sonner";
+import { logoutAPI } from "./userSlice";
 
 export interface ConversationMember {
   userId: string;
@@ -215,7 +216,8 @@ export const conversationSlice = createSlice({
           conversation.unreadCount = "0";
           return state;
         },
-      );
+      )
+      .addCase(logoutAPI.fulfilled, () => initialState);
   },
 });
 

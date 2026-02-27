@@ -21,7 +21,7 @@ import {
   addNotification,
   type Notification,
 } from "./redux/slices/notificationSlice";
-import { updateStatus } from "./redux/slices/friendSlice";
+import { upsertOnlineFriend, updateStatus } from "./redux/slices/friendSlice";
 
 const router = createBrowserRouter([
   {
@@ -116,7 +116,7 @@ function App() {
 
   useEffect(() => {
     const handleOnlineStatusChanged = (userId: string) => {
-      dispatch(updateStatus({ friendId: userId, status: true }));
+      void dispatch(upsertOnlineFriend(userId));
     };
 
     socket.on("user.online_status_changed", handleOnlineStatusChanged);
