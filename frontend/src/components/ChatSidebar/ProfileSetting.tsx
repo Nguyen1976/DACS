@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { ProfileSettings } from '../Setting'
-import { useSelector } from 'react-redux'
-import { selectUser } from '@/redux/slices/userSlice'
+} from "../ui/dropdown-menu";
+import { ProfileSettings } from "../Setting";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/redux/slices/userSlice";
 
 const ProfileSetting = () => {
-  const [showSetting, setShowSetting] = useState(false)
-  const user = useSelector(selectUser)
+  const [showSetting, setShowSetting] = useState(false);
+  const user = useSelector(selectUser);
 
   return (
     <>
@@ -23,15 +23,17 @@ const ProfileSetting = () => {
         <DropdownMenuTrigger asChild>
           <Avatar>
             <AvatarImage
-              src={user.avatar || '/placeholder.svg'}
+              src={user.avatar || "/placeholder.svg"}
               alt={user.username}
             />
             <AvatarFallback>{user.username[0]}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-56' align='start'>
+        <DropdownMenuContent className="w-56" align="start">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowSetting(true)}>
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowSetting(true)}>
               Settings
@@ -40,7 +42,7 @@ const ProfileSetting = () => {
         </DropdownMenuContent>
       </DropdownMenu>
     </>
-  )
-}
+  );
+};
 
-export default ProfileSetting
+export default ProfileSetting;

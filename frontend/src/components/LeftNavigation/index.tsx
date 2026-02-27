@@ -1,59 +1,62 @@
-import { Users, MessageSquare, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import ProfileSetting from '../ChatSidebar/ProfileSetting'
-import { useLocation, useNavigate } from 'react-router'
-import { useEffect } from 'react'
-import type { AppDispatch } from '@/redux/store'
-import { useDispatch } from 'react-redux'
-import { logoutAPI } from '@/redux/slices/userSlice'
+import { Users, MessageSquare, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import ProfileSetting from "../ChatSidebar/ProfileSetting";
+import { useLocation, useNavigate } from "react-router";
+import { useEffect } from "react";
+import type { AppDispatch } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { logoutAPI } from "@/redux/slices/userSlice";
 
 export function LeftNavigation() {
-  const navigate = useNavigate()
-  const pathname = useLocation().pathname
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
   useEffect(() => {
-    console.log(pathname)
-  }, [pathname])
+    console.log(pathname);
+  }, [pathname]);
 
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
   const handleLogout = () => {
-    dispatch(logoutAPI())
-    navigate('/auth')
-  }
+    dispatch(logoutAPI());
+    navigate("/auth");
+  };
   return (
-    <div className='w-20 bg-black-bland border-r flex flex-col items-center py-4 gap-4'>
+    <div className="w-20 bg-black-bland border-r flex flex-col items-center py-4 gap-4">
       {/* User Avatar at top */}
       <ProfileSetting />
 
       {/* Navigation Icons */}
-      <div className='flex flex-col gap-4 flex-1'>
+      <div className="flex flex-col gap-4 flex-1">
         {/* Chat Tab */}
         <Button
-          variant='ghost'
-          size='icon'
+          variant="ghost"
+          size="icon"
           className={cn(
-            'w-12 h-12 rounded-lg transition-colors',
-            (pathname === '/' || pathname.startsWith('/chat')) &&
-              'bg-primary text-primary-foreground',
+            "w-12 h-12 rounded-lg transition-colors",
+            (pathname === "/" || pathname.startsWith("/chat")) &&
+              "bg-primary text-primary-foreground",
           )}
-          title='Chats'
-          onClick={() => navigate('/')}
+          title="Chats"
+          onClick={() => navigate("/")}
         >
-          <MessageSquare className='w-6 h-6' />
+          <MessageSquare className="w-6 h-6" />
         </Button>
 
         {/* Friends Tab */}
         <Button
-          variant='ghost'
-          size='icon'
+          variant="ghost"
+          size="icon"
           className={cn(
-            'w-12 h-12 rounded-lg transition-colors',
-            pathname === '/friends' && 'bg-primary text-primary-foreground',
+            "w-12 h-12 rounded-lg transition-colors",
+            (pathname === "/friends" ||
+              pathname === "/groups" ||
+              pathname === "/friend_requests") &&
+              "bg-primary text-primary-foreground",
           )}
-          title='Friends'
-          onClick={() => navigate('/friends')}
+          title="Friends"
+          onClick={() => navigate("/friends")}
         >
-          <Users className='w-6 h-6' />
+          <Users className="w-6 h-6" />
         </Button>
 
         {/* Other Navigation Items */}
@@ -78,14 +81,14 @@ export function LeftNavigation() {
 
       {/* Logout at bottom */}
       <Button
-        variant='ghost'
-        size='icon'
-        className='w-12 h-12 rounded-lg text-muted-foreground hover:text-destructive transition-colors'
-        title='Logout'
+        variant="ghost"
+        size="icon"
+        className="w-12 h-12 rounded-lg text-muted-foreground hover:text-destructive transition-colors"
+        title="Logout"
         onClick={handleLogout}
       >
-        <LogOut className='w-6 h-6' />
+        <LogOut className="w-6 h-6" />
       </Button>
     </div>
-  )
+  );
 }
