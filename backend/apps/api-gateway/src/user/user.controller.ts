@@ -53,6 +53,16 @@ export class UserController {
     return res
   }
 
+  @Post('logout')
+  @RequireLogin()
+  async logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie('accessToken')
+    response.clearCookie('refreshToken')
+    return {
+      message: 'Logout successful',
+    }
+  }
+
   @Get('')
   @RequireLogin()
   async getUserById(@Query('userId') userId: string) {

@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils'
 import ProfileSetting from '../ChatSidebar/ProfileSetting'
 import { useLocation, useNavigate } from 'react-router'
 import { useEffect } from 'react'
+import type { AppDispatch } from '@/redux/store'
+import { useDispatch } from 'react-redux'
+import { logoutAPI } from '@/redux/slices/userSlice'
 
 export function LeftNavigation() {
   const navigate = useNavigate()
@@ -11,6 +14,12 @@ export function LeftNavigation() {
   useEffect(() => {
     console.log(pathname)
   }, [pathname])
+
+  const dispatch = useDispatch<AppDispatch>()
+  const handleLogout = () => {
+    dispatch(logoutAPI())
+    navigate('/auth')
+  }
   return (
     <div className='w-20 bg-black-bland border-r flex flex-col items-center py-4 gap-4'>
       {/* User Avatar at top */}
@@ -73,6 +82,7 @@ export function LeftNavigation() {
         size='icon'
         className='w-12 h-12 rounded-lg text-muted-foreground hover:text-destructive transition-colors'
         title='Logout'
+        onClick={handleLogout}
       >
         <LogOut className='w-6 h-6' />
       </Button>
