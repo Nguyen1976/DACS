@@ -117,7 +117,6 @@ function App() {
 
   useEffect(() => {
     const handleOnlineStatusChanged = (userId: string) => {
-      console.log("Online status changed:", userId);
       dispatch(updateStatus({ friendId: userId, status: true }));
     };
 
@@ -130,7 +129,6 @@ function App() {
 
   useEffect(() => {
     const handleOfflineStatusChanged = (userId: string) => {
-      console.log("Offline status changed:", userId);
       dispatch(updateStatus({ friendId: userId, status: false }));
     };
 

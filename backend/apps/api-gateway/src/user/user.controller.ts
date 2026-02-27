@@ -70,11 +70,6 @@ export class UserController {
     @Query('limit') limit: string,
     @Query('page') page: string,
   ) {
-    console.log(
-      '🚀 ~ user.controller.ts:100 ~ listFriends ~ user:',
-      limit,
-      page,
-    )
     return await this.userService.listFriends(user.userId, limit, page)
   }
 

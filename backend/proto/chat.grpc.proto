@@ -21,11 +21,12 @@ message Member {
 }
 
 message CreateConversationRequest {
-    string type = 1;
-    repeated Member members = 2;
-    optional string groupName = 3;
-    optional string groupAvatar = 4;
-    optional string createrId = 5;
+  string type = 1;
+  repeated Member members = 2;
+  optional string groupName = 3;
+  optional bytes groupAvatar = 4;
+  optional string groupAvatarFilename = 5;
+  optional string createrId = 6;
 }
 
 message CreateConversationResponse {

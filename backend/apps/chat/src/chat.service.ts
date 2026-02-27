@@ -22,7 +22,7 @@ import {
 } from './repositories'
 import { ChatErrors } from './errors/chat.errors'
 import { ChatEventsPublisher } from './rmq/publishers/chat-events.publisher'
-import { RedisService } from '@app/redis'
+import { StorageR2Service } from '@app/storage-r2/storage-r2.service'
 
 @Injectable()
 export class ChatService {
@@ -31,6 +31,8 @@ export class ChatService {
     private readonly messageRepo: MessageRepository,
     private readonly memberRepo: ConversationMemberRepository,
     private readonly eventsPublisher: ChatEventsPublisher,
+    @Inject(StorageR2Service)
+    private readonly storageR2Service: StorageR2Service,
   ) {}
 
   async createConversationWhenAcceptFriend(
@@ -51,10 +53,23 @@ export class ChatService {
     if (data.createrId && memberIds.length <= 1) {
       ChatErrors.conversationNotEnoughMembers()
     }
+
+    let avatarUrl = ''
+    if (data.groupAvatar && data.groupAvatarFilename) {
+      const mime = this.getMimeType(data.groupAvatarFilename) || 'application/octet-stream'
+
+      avatarUrl = await this.storageR2Service.upload({
+        buffer: data.groupAvatar as Buffer,
+        mime,
+        folder: 'avatars',
+        ext: data.groupAvatarFilename?.split('.').pop() || 'bin',
+      })
+    }
+
     const conversation = await this.conversationRepo.create({
       type: data.type as conversationType,
       groupName: data.groupName,
-      groupAvatar: data.groupAvatar,
+      groupAvatar: avatarUrl,
     })
 
     await this.memberRepo.createMany(
@@ -253,6 +268,19 @@ export class ChatService {
       conversations: mergedConversations,
       unreadMap,
     }
+  }
+
+  private getMimeType(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase()
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      bmp: 'image/bmp',
+    }
+    return mimeTypes[ext || ''] || 'application/octet-stream'
   }
 
   private async calculateUnreadCounts(

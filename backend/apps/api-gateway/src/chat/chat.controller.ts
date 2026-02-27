@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common'
 import {
   AddMemberToConversationDTO,
   CreateConversationDTO,
@@ -7,31 +16,43 @@ import {
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
-import { query } from 'winston'
+import { FileInterceptor } from '@nestjs/platform-express/multer/interceptors/file.interceptor'
+import type { Multer } from 'multer'
 
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post('create')
+  @UseInterceptors(
+    FileInterceptor('groupAvatar', {
+      limits: {
+        fileSize: 2 * 1024 * 1024,
+      },
+    }),
+  )
   @RequireLogin()
   async createConversation(
     @Body() createConversationDto: CreateConversationDTO,
     @UserInfo() userInfo: any,
+    @UploadedFile() groupAvatar?: Multer.File,
   ) {
+    const parsedMembers = typeof createConversationDto.members === 'string'
+      ? JSON.parse(createConversationDto.members || '[]')
+      : (createConversationDto.members || [])
+    
     return await this.chatService.createConversation({
       ...createConversationDto,
-      type: 'GROUP',
       members: [
-        ...(createConversationDto.members || []),
+        ...(parsedMembers as any[]),
         {
           userId: userInfo.userId,
           username: userInfo.username,
-          avatar: userInfo.avatar,
           fullName: userInfo.fullName,
         },
       ],
       createrId: userInfo.userId,
+      groupAvatar,
     })
   }
 
@@ -111,5 +132,4 @@ export class ChatController {
   ) {
     return await this.chatService.searchConversations(userInfo.userId, keyword)
   }
-
 }

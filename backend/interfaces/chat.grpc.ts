@@ -23,7 +23,8 @@ export interface CreateConversationRequest {
   type: string;
   members: Member[];
   groupName?: string | undefined;
-  groupAvatar?: string | undefined;
+  groupAvatar?: Uint8Array | undefined;
+  groupAvatarFilename?: string | undefined;
   createrId?: string | undefined;
 }
 

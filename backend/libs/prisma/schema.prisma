@@ -80,7 +80,6 @@ model conversation {
   groupNameSearch String?
 
   @@index([type, groupNameSearch, updatedAt])
-
 }
 
 model conversationMember {

@@ -14,8 +14,6 @@ export class CreateConversationDTO {
 
   @IsNotEmpty()
   groupName: string
-
-  groupAvatar?: string
 }
 
 export class AddMemberToConversationDTO {

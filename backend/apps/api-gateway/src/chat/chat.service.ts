@@ -11,6 +11,8 @@ import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
 import { AddMemberToConversationDTO, ReadMessageDto } from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
+import { CreateConversationDTO } from './dto/chat.dto'
+import type { Multer } from 'multer'
 
 @Injectable()
 export class ChatService implements OnModuleInit {
@@ -28,20 +30,20 @@ export class ChatService implements OnModuleInit {
   }
 
   async createConversation(
-    dto: CreateConversationRequest,
+    dto: CreateConversationDTO & {
+      createrId: string
+      members: Member[]
+      groupAvatar?: Multer.File
+    },
   ): Promise<CreateConversationResponse> {
-    /**
-     * export interface CreateConversationRequest {
-        type: string;
-        memberIds: string[];
-        groupName?: string | undefined;
-        groupAvatar?: string | undefined;
-        createrId?: string | undefined;
-        }
-     */
-    //nhận vào type, memberIds, groupName?, groupAvatar?
-    let observable = this.chatClientService.createConversation(dto) //grpc qua chat service (microservice)
-    //bắn socket về các member trong conversation
+    let observable = this.chatClientService.createConversation({
+      ...dto,
+      type: 'GROUP',
+      groupAvatar: dto.groupAvatar ? dto.groupAvatar.buffer : undefined,
+      groupAvatarFilename: dto.groupAvatar
+        ? dto.groupAvatar.originalname
+        : undefined,
+    })
     const res = await firstValueFrom(observable)
 
     return res as CreateConversationResponse
