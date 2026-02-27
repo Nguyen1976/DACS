@@ -3,7 +3,6 @@ import { UtilService } from '@app/util/util.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Status } from '@prisma/client'
-import { Redis as RedisClient } from 'ioredis'
 import { lookup } from 'mime-types'
 import {
   UserRepository,
@@ -82,16 +81,26 @@ export class UserService {
       UserErrors.userNotFound()
     }
 
-    const token = this.jwtService.sign({
+    const payload = {
       userId: user.id,
       email: user.email,
       username: user.username,
+    }
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '15m',
+    })
+
+    // refresh token
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
     })
 
     return {
       userId: user.id,
       ...user,
-      token,
+      accessToken,
+      refreshToken,
     }
   }
 
@@ -296,7 +305,7 @@ export class UserService {
     const friends = await this.friendShipRepo.findAllFriendsByUserId(userId)
     const friendIds = friends.map((f) => f.friendId)
 
-     this.eventsPublisher.publisherUserOffline({
+    this.eventsPublisher.publisherUserOffline({
       userIds: friendIds,
       userId,
     })

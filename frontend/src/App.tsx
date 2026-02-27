@@ -79,10 +79,6 @@ function App() {
   useEffect(() => {
     if (!user?.id) return;
 
-    socket.auth = {
-      token: localStorage.getItem("token"),
-    };
-
     socket.connect();
 
     return () => {

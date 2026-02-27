@@ -53,7 +53,8 @@ message UserLoginResponse {
   optional string avatar = 4;
   optional string bio = 5;
   string fullName = 6;
-  string token = 7;
+  string accessToken = 7;
+  string refreshToken = 8;
 }
 
 message MakeFriendRequest {

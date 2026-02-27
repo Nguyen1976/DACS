@@ -11,6 +11,7 @@ import { ChatController } from './chat/chat.controller'
 import { ChatModule } from './chat/chat.module'
 import { LoggerModule } from '@app/logger'
 import { CustomRateLimitGuard } from './common/guards/rate-limit.guard'
+import { UtilModule } from '@app/util'
 
 @Module({
   imports: [

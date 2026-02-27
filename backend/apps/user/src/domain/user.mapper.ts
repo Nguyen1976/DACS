@@ -33,7 +33,8 @@ export class UserMapper {
       fullName: session.fullName || '',
       avatar: session.avatar || '',
       bio: session.bio || '',
-      token: session.token,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
     }
   }
 
@@ -68,7 +69,7 @@ export class UserMapper {
         fullName: friend.fullName || '',
         avatar: friend.avatar || '',
         bio: friend.bio || '',
-        status: (friend  as any).status || false,
+        status: (friend as any).status || false,
       })),
     }
   }

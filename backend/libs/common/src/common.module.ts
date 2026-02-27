@@ -3,16 +3,10 @@ import { CommonService } from './common.service'
 import { JwtModule } from '@nestjs/jwt'
 @Module({
   imports: [
-    JwtModule.registerAsync({
+    JwtModule.register({
       global: true,
-      useFactory() {
-        return {
-          secret: 'my_key',
-          signOptions: { expiresIn: '7d' },
-        }
-      },
+      secret: 'my_key',
     }),
-    
   ],
   providers: [CommonService],
   exports: [CommonService],

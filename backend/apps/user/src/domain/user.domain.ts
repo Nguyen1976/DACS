@@ -22,7 +22,8 @@ export interface AuthSession {
   fullName: string | null
   avatar: string | null
   bio: string | null
-  token: string
+  accessToken: string
+  refreshToken: string
 }
 
 export interface Friendship {

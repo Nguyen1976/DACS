@@ -34,8 +34,7 @@ export const loginAPI = createAsyncThunk(
 )
 
 export const logoutAPI = createAsyncThunk(`/user/logout`, () => {
-  //xử lý sau
-  // localStorage.delete('token')
+  console.log('logout')
 })
 
 export const updateProfileAPI = createAsyncThunk(

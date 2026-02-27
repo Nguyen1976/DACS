@@ -6,8 +6,10 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common'
 import type { Multer } from 'multer'
+import type { Response } from 'express'
 import { UserService } from './user.service'
 import {
   LoginUserDto,
@@ -16,7 +18,11 @@ import {
   UpdateProfileDto,
   UpdateStatusMakeFriendDto,
 } from './dto/user.dto'
-import { RequireLogin, UserInfo } from '@app/common/common.decorator'
+import {
+  RequireLogin,
+  UserInfo,
+  WithoutLogin,
+} from '@app/common/common.decorator'
 import { FileInterceptor } from '@nestjs/platform-express'
 
 @Controller('user')
@@ -24,13 +30,26 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('register')
+  @WithoutLogin()
   async register(@Body() registerUserDto: RegisterUserDto) {
     return await this.userService.register(registerUserDto)
   }
 
   @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto) {
+  @WithoutLogin()
+  async login(
+    @Body() loginUserDto: LoginUserDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const res = await this.userService.login(loginUserDto)
+    response.cookie('accessToken', res.accessToken, {
+      httpOnly: true,
+      secure: true,
+    })
+    response.cookie('refreshToken', res.refreshToken, {
+      httpOnly: true,
+      secure: true,
+    })
     return res
   }
 

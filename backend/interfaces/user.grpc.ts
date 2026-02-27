@@ -52,7 +52,8 @@ export interface UserLoginResponse {
   avatar?: string | undefined;
   bio?: string | undefined;
   fullName: string;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface MakeFriendRequest {

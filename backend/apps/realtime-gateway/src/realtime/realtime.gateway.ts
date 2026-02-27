@@ -17,6 +17,7 @@ import { QUEUE_RMQ } from 'libs/constant/rmq/queue'
 import { ROUTING_RMQ } from 'libs/constant/rmq/routing'
 import { UserStatusStore } from './user-status.store'
 import type { EmitToUserPayload } from 'libs/constant/rmq/payload'
+import * as cookie from 'cookie'
 
 //nếu k đặt tên cổng thì nó sẽ trùng với cổng của http
 @Injectable()
@@ -25,6 +26,7 @@ import type { EmitToUserPayload } from 'libs/constant/rmq/payload'
     origin: '*',
   },
   namespace: 'realtime',
+  credentials: true,
   pingInterval: 40000,
   pingTimeout: 10000,
 })
@@ -47,13 +49,21 @@ export class RealtimeGateway
   //default function
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token
-      if (!token) {
+      const rawCookie = client.handshake.headers.cookie
+      if (!rawCookie) {
         client.disconnect()
         return
       }
 
-      const payload = this.jwtService.verify(token as string)
+      const parsed = cookie.parse(rawCookie)
+      const accessToken = parsed.accessToken
+
+      if (!accessToken) {
+        client.disconnect()
+        return
+      }
+
+      const payload = this.jwtService.verify(accessToken)
       const userId = payload?.userId
       if (!userId) {
         client.disconnect()
@@ -80,14 +90,14 @@ export class RealtimeGateway
       /**
        * khi user tạo 1 connect thì sẽ kiểm tra trong redis đã có connect nào chưa trước khi mà user online
        * trường hợp chưa có prev Online thì cần phải thông báo cho bạn bè là đã online
-       * 
+       *
        * ở đây sẽ publish 1 sự kiện cho user service xử lý
-       * và user service sẽ lấy danh sách bạn bè của user đó rồi publish 
+       * và user service sẽ lấy danh sách bạn bè của user đó rồi publish
        * lại vào đây với sự kiện user_online kèm theo id của mình
        * còn lại là fe xử lý
        */
 
-      if(!prevOnline) {
+      if (!prevOnline) {
         this.amqpConnection.publish(
           EXCHANGE_RMQ.REALTIME_EVENTS,
           ROUTING_RMQ.USER_ONLINE,

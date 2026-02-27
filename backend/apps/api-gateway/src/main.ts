@@ -3,10 +3,11 @@ import { AppModule } from './app.module'
 import { BadRequestException, ValidationPipe } from '@nestjs/common'
 import { GrpcToHttpExceptionFilter } from './common/filters/grpc-exception.filter'
 import { ResponseInterceptor } from './common/interceptor/response.interceptor'
+import cookieParser from 'cookie-parser'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
-
+  app.use(cookieParser())
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
