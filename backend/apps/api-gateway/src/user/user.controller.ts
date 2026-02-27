@@ -102,6 +102,22 @@ export class UserController {
     return await this.userService.listFriends(user.userId, limit, page)
   }
 
+  @Get('search')
+  @RequireLogin()
+  async searchUsers(@UserInfo() user: any, @Query('keyword') keyword: string) {
+    return await this.userService.searchUsers(user.userId, keyword)
+  }
+
+  @Get('list-friend-requests')
+  @RequireLogin()
+  async listFriendRequests(
+    @UserInfo() user: any,
+    @Query('limit') limit: string,
+    @Query('page') page: string,
+  ) {
+    return await this.userService.listFriendRequests(user.userId, limit, page)
+  }
+
   @Get('detail-friend-request')
   @RequireLogin()
   async detailMakeFriend(

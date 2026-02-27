@@ -240,6 +240,73 @@ export class UserService {
     return friendsWithStatus as (UserEntity & { status: boolean })[]
   }
 
+  async searchFriends(
+    userId: string,
+    keyword: string,
+  ): Promise<(UserEntity & { status: boolean })[]> {
+    const safeKeyword = keyword?.trim()
+    if (!safeKeyword) {
+      return []
+    }
+
+    const friendships = await this.friendShipRepo.findAllFriendsByUserId(userId)
+    if (!friendships.length) {
+      return []
+    }
+
+    const friends = await this.userRepo.findManyByIdsAndUsername(
+      friendships.map((f) => f.friendId),
+      safeKeyword,
+    )
+
+    const friendsWithStatus = await Promise.all(
+      friends.map(async (friend) => ({
+        ...friend,
+        status: await this.redisService.isOnline(friend.id),
+      })),
+    )
+
+    return friendsWithStatus as (UserEntity & { status: boolean })[]
+  }
+
+  async listFriendRequests(
+    userId: string,
+    limit = 10,
+    page = 1,
+  ): Promise<any[]> {
+    const requests = await this.friendRequestRepo.findPendingByToUserId(
+      userId,
+      limit,
+      page,
+    )
+
+    if (!requests.length) {
+      return []
+    }
+
+    const fromUserIds = [
+      ...new Set(requests.map((request) => request.fromUserId)),
+    ]
+    const fromUsers = await this.userRepo.findManyByIds(fromUserIds)
+    const userMap = new Map(
+      fromUsers.map((fromUser) => [fromUser.id, fromUser]),
+    )
+
+    return requests
+      .map((request) => {
+        const fromUser = userMap.get(request.fromUserId)
+        if (!fromUser) {
+          return null
+        }
+
+        return {
+          ...request,
+          fromUser,
+        }
+      })
+      .filter(Boolean)
+  }
+
   async detailMakeFriend(
     friendRequestId: string,
   ): Promise<FriendRequestDetail> {

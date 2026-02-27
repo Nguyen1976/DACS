@@ -31,6 +31,20 @@ export class FriendRequestRepository {
     })
   }
 
+  async findPendingByToUserId(toUserId: string, limit: number, page: number) {
+    return await this.prisma.friendRequest.findMany({
+      where: {
+        toUserId,
+        status: Status.PENDING,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      skip: (page - 1) * limit,
+    })
+  }
+
   async updateStatus(fromUserId: string, toUserId: string, status: Status) {
     return await this.prisma.friendRequest.updateMany({
       where: {

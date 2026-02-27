@@ -8,6 +8,8 @@ import {
   UpdateStatusResponse,
   USER_GRPC_SERVICE_NAME,
   UserGrpcServiceClient,
+  ListFriendRequestsRequest,
+  SearchUsersRequest,
   UserLoginRequest,
   UserLoginResponse,
   UserRegisterRequest,
@@ -96,6 +98,27 @@ export class UserService implements OnModuleInit {
       limit: String(limit),
       page: String(page),
     })
+    return await firstValueFrom(observable)
+  }
+
+  async searchUsers(userId: string, keyword: string): Promise<any> {
+    const observable = this.userClientService.searchUsers({
+      userId,
+      keyword,
+    } as SearchUsersRequest)
+    return await firstValueFrom(observable)
+  }
+
+  async listFriendRequests(
+    userId: string,
+    limit: string,
+    page: string,
+  ): Promise<any> {
+    const observable = this.userClientService.listFriendRequests({
+      userId,
+      limit: String(limit),
+      page: String(page),
+    } as ListFriendRequestsRequest)
     return await firstValueFrom(observable)
   }
 

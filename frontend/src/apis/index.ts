@@ -46,6 +46,27 @@ export interface DetailMakeFriendResponse {
   updatedAt: string;
 }
 
+export interface FriendRequestListItem {
+  id: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  fromUser: FromUser;
+}
+
+export const getFriendRequestsAPI = async ({
+  limit,
+  page,
+}: {
+  limit: number;
+  page: number;
+}): Promise<FriendRequestListItem[]> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/user/list-friend-requests?limit=${limit}&page=${page}`,
+  );
+  return response.data.data.friendRequests || [];
+};
+
 export const updateFriendRequestStatus = async ({
   inviterId,
   inviteeName,
@@ -70,6 +91,15 @@ export interface UserProfileByIdResponse {
   avatar: string;
 }
 
+export interface SearchFriendItem {
+  id: string;
+  email: string;
+  username: string;
+  avatar?: string;
+  fullName?: string;
+  status?: boolean;
+}
+
 export const getUserProfileByIdAPI = async (
   userId: string,
 ): Promise<UserProfileByIdResponse> => {
@@ -79,8 +109,17 @@ export const getUserProfileByIdAPI = async (
   return response.data.data;
 };
 
+export const searchUsersAPI = async (
+  keyword: string,
+): Promise<SearchFriendItem[]> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/user/search?keyword=${encodeURIComponent(keyword)}`,
+  );
+  return response.data.data.friends || [];
+};
+
 export interface ConversationByFriendResponse {
-  conversations: {
+  conversation: {
     id: string;
     type: string;
     unreadCount?: string;

@@ -64,6 +64,25 @@ export class UserRepository {
     })
   }
 
+  async findManyByIdsAndUsername(userIds: string[], keyword: string) {
+    return await this.prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+        username: {
+          startsWith: keyword,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        avatar: true,
+        fullName: true,
+      },
+    })
+  }
+
   async updateProfile(
     userId: string,
     data: {

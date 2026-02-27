@@ -8,6 +8,8 @@ service UserGrpcService {
   rpc makeFriend (MakeFriendRequest) returns (MakeFriendResponse) {}
   rpc updateStatusMakeFriend (UpdateStatusRequest) returns (UpdateStatusResponse) {}
   rpc listFriends (ListFriendsRequest) returns (ListFriendsResponse) {}
+  rpc listFriendRequests (ListFriendRequestsRequest) returns (ListFriendRequestsResponse) {}
+  rpc searchUsers (SearchUsersRequest) returns (ListFriendsResponse) {}
   rpc detailMakeFriend (DetailMakeFriendRequest) returns (DetailMakeFriendResponse) {}
   rpc updateProfile (UpdateProfileRequest) returns (UpdateProfileResponse) {}
   rpc getUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
@@ -93,8 +95,31 @@ message ListFriendsRequest {
   string page = 3;
 }
 
+message SearchUsersRequest {
+  string userId = 1;
+  string keyword = 2;
+}
+
 message ListFriendsResponse {
   repeated Friend friends = 1;
+}
+
+message ListFriendRequestsRequest {
+  string userId = 1;
+  string limit = 2;
+  string page = 3;
+}
+
+message FriendRequestItem {
+  string id = 1;
+  string status = 2;
+  string createdAt = 3;
+  string updatedAt = 4;
+  FromUser fromUser = 5;
+}
+
+message ListFriendRequestsResponse {
+  repeated FriendRequestItem friendRequests = 1;
 }
 
 message DetailMakeFriendRequest {

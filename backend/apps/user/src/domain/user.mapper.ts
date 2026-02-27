@@ -5,6 +5,7 @@ import {
   MakeFriendResponse,
   UpdateStatusResponse,
   ListFriendsResponse,
+  ListFriendRequestsResponse,
   DetailMakeFriendResponse,
   UpdateProfileResponse,
 } from 'interfaces/user.grpc'
@@ -90,6 +91,26 @@ export class UserMapper {
         fullName: friendRequest.fromUser.fullName || '',
         avatar: friendRequest.fromUser.avatar || '',
       },
+    }
+  }
+
+  static toListFriendRequestsResponse(
+    friendRequests: any[],
+  ): ListFriendRequestsResponse {
+    return {
+      friendRequests: friendRequests.map((request) => ({
+        id: request.id,
+        status: request.status,
+        createdAt: request.createdAt.toString(),
+        updatedAt: request.updatedAt.toString(),
+        fromUser: {
+          id: request.fromUser.id,
+          email: request.fromUser.email,
+          username: request.fromUser.username,
+          fullName: request.fromUser.fullName || '',
+          avatar: request.fromUser.avatar || '',
+        },
+      })),
     }
   }
 

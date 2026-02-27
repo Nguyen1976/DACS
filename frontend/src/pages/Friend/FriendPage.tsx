@@ -67,7 +67,7 @@ export function FriendsPage({ children }: { children?: React.ReactNode }) {
                 Danh sách nhóm và cộng đồng
               </Button>
               <Button
-                variant={params === "/friend-requests" ? "default" : "ghost"}
+                variant={params === "/friend_requests" ? "default" : "ghost"}
                 className="justify-start"
                 onClick={() => navigate("/friend_requests")}
               >

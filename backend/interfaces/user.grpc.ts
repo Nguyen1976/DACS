@@ -92,8 +92,31 @@ export interface ListFriendsRequest {
   page: string;
 }
 
+export interface SearchUsersRequest {
+  userId: string;
+  keyword: string;
+}
+
 export interface ListFriendsResponse {
   friends: Friend[];
+}
+
+export interface ListFriendRequestsRequest {
+  userId: string;
+  limit: string;
+  page: string;
+}
+
+export interface FriendRequestItem {
+  id: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  fromUser: FromUser | undefined;
+}
+
+export interface ListFriendRequestsResponse {
+  friendRequests: FriendRequestItem[];
 }
 
 export interface DetailMakeFriendRequest {
@@ -142,6 +165,10 @@ export interface UserGrpcServiceClient {
 
   listFriends(request: ListFriendsRequest, metadata?: Metadata): Observable<ListFriendsResponse>;
 
+  listFriendRequests(request: ListFriendRequestsRequest, metadata?: Metadata): Observable<ListFriendRequestsResponse>;
+
+  searchUsers(request: SearchUsersRequest, metadata?: Metadata): Observable<ListFriendsResponse>;
+
   detailMakeFriend(request: DetailMakeFriendRequest, metadata?: Metadata): Observable<DetailMakeFriendResponse>;
 
   updateProfile(request: UpdateProfileRequest, metadata?: Metadata): Observable<UpdateProfileResponse>;
@@ -175,6 +202,16 @@ export interface UserGrpcServiceController {
     metadata?: Metadata,
   ): Promise<ListFriendsResponse> | Observable<ListFriendsResponse> | ListFriendsResponse;
 
+  listFriendRequests(
+    request: ListFriendRequestsRequest,
+    metadata?: Metadata,
+  ): Promise<ListFriendRequestsResponse> | Observable<ListFriendRequestsResponse> | ListFriendRequestsResponse;
+
+  searchUsers(
+    request: SearchUsersRequest,
+    metadata?: Metadata,
+  ): Promise<ListFriendsResponse> | Observable<ListFriendsResponse> | ListFriendsResponse;
+
   detailMakeFriend(
     request: DetailMakeFriendRequest,
     metadata?: Metadata,
@@ -199,6 +236,8 @@ export function UserGrpcServiceControllerMethods() {
       "makeFriend",
       "updateStatusMakeFriend",
       "listFriends",
+      "listFriendRequests",
+      "searchUsers",
       "detailMakeFriend",
       "updateProfile",
       "getUserById",

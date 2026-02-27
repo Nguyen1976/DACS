@@ -1,8 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import {
   getConversationByFriendIdAPI,
+  searchUsersAPI,
+  type SearchFriendItem,
   getUserProfileByIdAPI,
   type UserProfileByIdResponse,
 } from "@/apis";
@@ -19,6 +22,7 @@ import {
 } from "@/redux/slices/friendSlice";
 import type { AppDispatch } from "@/redux/store";
 import { selectUser } from "@/redux/slices/userSlice";
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
@@ -35,6 +39,10 @@ const ListFriend = () => {
     useState<UserProfileByIdResponse | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isStartingChat, setIsStartingChat] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchFriendItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     //fetch friends từ redux store hoặc API
@@ -51,11 +59,60 @@ const ListFriend = () => {
     }
   }, [friends, selectedFriendId]);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedKeyword(keyword.trim());
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [keyword]);
+
+  useEffect(() => {
+    if (!debouncedKeyword) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const runSearch = async () => {
+      try {
+        setIsSearching(true);
+        const results = await searchUsersAPI(debouncedKeyword);
+        if (cancelled) return;
+        setSearchResults(results);
+
+        if (results.length > 0 && !selectedFriendId) {
+          setSelectedFriendId(results[0].id);
+          await handleSelectFriend(results[0] as Friend);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.log(error);
+          toast.error("Không thể tìm kiếm bạn bè");
+        }
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    };
+
+    void runSearch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedKeyword, selectedFriendId]);
+
   const page = useSelector(selectFriendPage);
 
   const loadMoreFriends = () => {
     dispatch(getFriends({ limit: 20, page: page + 1 }));
   };
+
+  const displayedFriends = debouncedKeyword
+    ? (searchResults as Friend[])
+    : friends;
 
   const handleSelectFriend = async (friend: Friend) => {
     try {
@@ -90,7 +147,7 @@ const ListFriend = () => {
     try {
       setIsStartingChat(true);
       const response = await getConversationByFriendIdAPI(selectedFriendId);
-      const conversation = response.conversations as Conversation;
+      const conversation = response.conversation as Conversation;
 
       if (conversation.lastMessage) {
         dispatch(addConversation({ conversation, userId: user.id }));
@@ -114,11 +171,23 @@ const ListFriend = () => {
   return (
     <div className="h-full min-h-0 flex-1 flex">
       <div className="h-full min-h-0 flex-1 border-r">
+        <div className="p-4 border-b">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder="Tìm theo username..."
+              className="pl-10"
+            />
+          </div>
+        </div>
+
         <ScrollArea className="h-full">
           <div className="p-6">
             <div className="mb-6">
               <div className="space-y-2">
-                {friends.map((friend: Friend) => (
+                {displayedFriends.map((friend: Friend) => (
                   <button
                     key={friend.id}
                     onClick={() => void handleSelectFriend(friend)}
@@ -159,14 +228,33 @@ const ListFriend = () => {
                   </button>
                 ))}
               </div>
-              <div className="w-full flex items-center justify-center my-4">
-                <Button
-                  className="interceptor-loading"
-                  onClick={loadMoreFriends}
-                >
-                  Load More
-                </Button>
-              </div>
+
+              {isSearching && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">Đang tìm kiếm...</p>
+                </div>
+              )}
+
+              {displayedFriends.length === 0 && !isSearching && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">
+                    {debouncedKeyword
+                      ? "Không tìm thấy bạn bè phù hợp"
+                      : "Chưa có bạn bè"}
+                  </p>
+                </div>
+              )}
+
+              {!debouncedKeyword && (
+                <div className="w-full flex items-center justify-center my-4">
+                  <Button
+                    className="interceptor-loading"
+                    onClick={loadMoreFriends}
+                  >
+                    Load More
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </ScrollArea>

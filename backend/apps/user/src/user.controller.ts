@@ -19,6 +19,9 @@ import {
   type UserLoginRequest,
   type UserLoginResponse,
   type DetailMakeFriendResponse,
+  type ListFriendRequestsRequest,
+  type ListFriendRequestsResponse,
+  type SearchUsersRequest,
 } from 'interfaces/user.grpc'
 import { UserMapper } from './domain/user.mapper'
 import { safeExecute } from '@app/common/rpc/safe-execute'
@@ -80,6 +83,32 @@ export class UserController implements UserGrpcServiceController {
       ),
     )
     return UserMapper.toListFriendsResponse(friends)
+  }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'searchUsers')
+  async searchUsers(
+    data: SearchUsersRequest,
+    metadata: Metadata,
+  ): Promise<any> {
+    const friends = await safeExecute(() =>
+      this.userService.searchFriends(data.userId, data.keyword),
+    )
+    return UserMapper.toListFriendsResponse(friends)
+  }
+
+  @GrpcMethod(USER_GRPC_SERVICE_NAME, 'listFriendRequests')
+  async listFriendRequests(
+    data: ListFriendRequestsRequest,
+    metadata: Metadata,
+  ): Promise<ListFriendRequestsResponse> {
+    const requests = await safeExecute(() =>
+      this.userService.listFriendRequests(
+        data.userId,
+        Number(data.limit),
+        Number(data.page),
+      ),
+    )
+    return UserMapper.toListFriendRequestsResponse(requests)
   }
 
   @GrpcMethod(USER_GRPC_SERVICE_NAME, 'detailMakeFriend')
