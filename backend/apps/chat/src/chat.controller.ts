@@ -12,6 +12,7 @@ import {
   ReadMessageResponse,
   type ReadMessageRequest,
   type SearchConversationRequest,
+  GetConversationByFriendIdResponse,
 } from 'interfaces/chat.grpc'
 import { Metadata } from '@grpc/grpc-js'
 import { ConversationMapper } from './domain/conversation.mapper'
@@ -93,5 +94,19 @@ export class ChatController {
       res.conversations,
       res.unreadMap,
     )
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'getConversationByFriendId')
+  async getConversationByFriendId(
+    data: { friendId: string; userId: string },
+    metadata: Metadata,
+  ): Promise<GetConversationByFriendIdResponse> {
+    const res = await safeExecute(() =>
+      this.chatService.getConversationByFriendId(data.friendId, data.userId),
+    )
+    return ConversationMapper.toGetConversationByFriendIdResponse(
+      res.conversation,
+      res.unreadMap,
+    ) as GetConversationByFriendIdResponse
   }
 }

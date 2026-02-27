@@ -61,3 +61,63 @@ export const updateFriendRequestStatus = async ({
   );
   return response.data;
 };
+
+export interface UserProfileByIdResponse {
+  fullName: string;
+  username: string;
+  email: string;
+  bio: string;
+  avatar: string;
+}
+
+export const getUserProfileByIdAPI = async (
+  userId: string,
+): Promise<UserProfileByIdResponse> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/user?userId=${userId}`,
+  );
+  return response.data.data;
+};
+
+export interface ConversationByFriendResponse {
+  conversations: {
+    id: string;
+    type: string;
+    unreadCount?: string;
+    groupName?: string;
+    groupAvatar?: string;
+    createdAt: string;
+    updatedAt?: string;
+    members: Array<{
+      userId: string;
+      lastReadAt?: string;
+      username?: string;
+      avatar?: string;
+      fullName?: string;
+      lastMessageAt?: string;
+    }>;
+    lastMessage: {
+      id: string;
+      conversationId: string;
+      senderId: string;
+      text: string;
+      isDeleted?: boolean;
+      createdAt: string;
+      senderMember?: {
+        userId: string;
+        username?: string;
+        avatar?: string;
+        fullName?: string;
+      };
+    } | null;
+  };
+}
+
+export const getConversationByFriendIdAPI = async (
+  friendId: string,
+): Promise<ConversationByFriendResponse> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/chat/conversation-by-friend/?friendId=${friendId}`,
+  );
+  return response.data.data;
+};

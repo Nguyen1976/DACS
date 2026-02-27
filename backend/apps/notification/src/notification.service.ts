@@ -1,5 +1,6 @@
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
+import { RedisService } from '@app/redis'
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq'
 import { Inject, Injectable } from '@nestjs/common'
 import { NotificationType, Status } from '@prisma/client'
@@ -25,15 +26,9 @@ export class NotificationService {
   private readonly mailerService: MailerService
   @Inject(PrismaService)
   private readonly prisma: PrismaService
-
-  @Inject('USER_REDIS')
-  private readonly redis: RedisClient
+  private readonly redisService: RedisService
   constructor(private readonly amqpConnection: AmqpConnection) {}
 
-  checkUserOnline = async (userId: string): Promise<boolean> => {
-    const socketCount = await this.redis.scard(`user:${userId}:sockets`)
-    return socketCount > 0
-  }
 
   @RabbitSubscribe({
     exchange: EXCHANGE_RMQ.USER_EVENTS,
@@ -51,7 +46,7 @@ export class NotificationService {
     queue: QUEUE_RMQ.NOTIFICATION_USER_MAKE_FRIEND,
   })
   async handleMakeFriend(data: UserMakeFriendPayload) {
-    let inviteeStatus = await this.checkUserOnline(data.inviteeId)
+    let inviteeStatus = await this.redisService.isOnline(data.inviteeId)
 
     const notificationCreated = await this.createNotification({
       userId: data.inviteeId,
@@ -102,7 +97,7 @@ export class NotificationService {
       }.`,
       type: NotificationType.NORMAL_NOTIFICATION,
     })
-    const inviterStatus = await this.checkUserOnline(data.inviterId)
+    const inviterStatus = await this.redisService.isOnline(data.inviterId)
 
     if (inviterStatus) {
       this.amqpConnection.publish(

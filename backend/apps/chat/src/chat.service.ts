@@ -56,7 +56,8 @@ export class ChatService {
 
     let avatarUrl = ''
     if (data.groupAvatar && data.groupAvatarFilename) {
-      const mime = this.getMimeType(data.groupAvatarFilename) || 'application/octet-stream'
+      const mime =
+        this.getMimeType(data.groupAvatarFilename) || 'application/octet-stream'
 
       avatarUrl = await this.storageR2Service.upload({
         buffer: data.groupAvatar as Buffer,
@@ -266,6 +267,30 @@ export class ChatService {
 
     return {
       conversations: mergedConversations,
+      unreadMap,
+    }
+  }
+
+  async getConversationByFriendId(friendId: string, userId: string) {
+    const conversation = await this.conversationRepo.findConversationByFriendId(
+      friendId,
+      userId,
+    )
+
+    if (!conversation) {
+      ChatErrors.conversationNotFound()
+    }
+
+    const isMember = conversation.members.find((m) => m.userId === userId)
+    if (!isMember) {
+      ChatErrors.userNotMember()
+    }
+
+    const unreadMap = await this.calculateUnreadCounts([conversation], userId)
+    console.log('unreadMap', unreadMap)
+    console.log('conversation', conversation)
+    return {
+      conversation,
       unreadMap,
     }
   }

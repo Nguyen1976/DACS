@@ -1,10 +1,15 @@
 import {
   CreateConversationResponse,
+  GetConversationByFriendIdResponse,
   GetConversationsResponse,
 } from 'interfaces/chat.grpc'
 
 export class ConversationMapper {
   // Add mapping methods here as needed
+
+  static toGetConversationByIdResponse(res: any): any {
+    return this.formatConversationResponse(res)
+  }
 
   static toGetConversationsResponse(
     conversations,
@@ -36,6 +41,36 @@ export class ConversationMapper {
           : null,
       })),
     } as GetConversationsResponse
+  }
+  static toGetConversationByFriendIdResponse(
+    conversation,
+    unreadMap: Map<string, string>,
+  ): GetConversationByFriendIdResponse {
+    return {
+      conversation: {
+        id: conversation.id,
+        type: conversation.type,
+        groupName: conversation.groupName,
+        groupAvatar: conversation.groupAvatar,
+        unreadCount: unreadMap.get(conversation.id) ?? '0',
+        createdAt: conversation.createdAt.toString(),
+        updatedAt: conversation.updatedAt.toString(),
+        members: conversation.members.map((m) => ({
+          userId: m.userId,
+          username: m.username,
+          avatar: m.avatar,
+          fullName: m.fullName,
+          lastReadAt: m.lastReadAt?.toString() ?? null,
+          lastMessageAt: m.lastMessageAt.toString(),
+        })),
+        lastMessage: conversation.messages.length
+          ? {
+              ...conversation.messages[0],
+              createdAt: conversation.messages[0].createdAt.toString(),
+            }
+          : null,
+      },
+    } as GetConversationByFriendIdResponse
   }
 
   static toCreateConversationResponse(res: any): CreateConversationResponse {

@@ -10,7 +10,9 @@ import {
   CircleChevronDown,
 } from "lucide-react";
 import {
+  addConversation,
   readMessage,
+  type Conversation,
   type ConversationState,
 } from "@/redux/slices/conversationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,6 +33,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { socket } from "@/lib/socket";
+import { useLocation } from "react-router";
 
 interface ChatWindowProps {
   conversationId?: string;
@@ -50,13 +53,38 @@ export default function ChatWindow({
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
 
   const conversation = useSelector(
     (state: { conversations: ConversationState }) => {
       return state.conversations?.find((c) => c.id === conversationId);
     },
   );
+  const pendingConversation = (
+    location.state as { conversation?: Conversation } | null
+  )?.conversation;
+  const fallbackConversation =
+    pendingConversation?.id === conversationId
+      ? pendingConversation
+      : undefined;
+  const effectiveConversation = conversation || fallbackConversation;
   const user = useSelector(selectUser);
+
+  const conversationName =
+    effectiveConversation?.type === "DIRECT"
+      ? effectiveConversation.members.find(
+          (member) => member.userId !== user.id,
+        )?.username ||
+        effectiveConversation.groupName ||
+        "Direct Chat"
+      : effectiveConversation?.groupName || "Group Chat";
+
+  const conversationAvatar =
+    effectiveConversation?.type === "DIRECT"
+      ? effectiveConversation.members.find(
+          (member) => member.userId !== user.id,
+        )?.avatar || ""
+      : (effectiveConversation?.groupAvatar as string) || "";
   const messages = useSelector((state: RootState) =>
     selectMessage(state, conversationId),
   );
@@ -107,6 +135,19 @@ export default function ChatWindow({
 
     dispatch(addMessage(tempMessage));
 
+    if (!conversation && effectiveConversation) {
+      dispatch(
+        addConversation({
+          conversation: {
+            ...effectiveConversation,
+            lastMessage: tempMessage,
+            updatedAt: tempMessage.createdAt,
+          },
+          userId: user.id,
+        }),
+      );
+    }
+
     //bắn sự kiện chat.send_message qua socket io ở đây
     socket.emit("chat.send_message", {
       conversationId,
@@ -119,7 +160,14 @@ export default function ChatWindow({
     requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     });
-  }, [msg, dispatch, conversationId, user.id]);
+  }, [
+    msg,
+    dispatch,
+    conversationId,
+    user.id,
+    conversation,
+    effectiveConversation,
+  ]);
 
   return (
     <div className="flex-1 flex flex-col bg-bg-box-chat">
@@ -131,16 +179,16 @@ export default function ChatWindow({
         >
           <Avatar className="w-10 h-10">
             <AvatarImage
-              src={conversation?.groupAvatar || "/placeholder.svg"}
-              alt={conversation?.groupName || "Group Avatar"}
+              src={conversationAvatar || "/placeholder.svg"}
+              alt={conversationName || "Group Avatar"}
             />
-            <AvatarFallback>{conversation?.groupName?.[0]}</AvatarFallback>
+            <AvatarFallback>{conversationName?.[0]}</AvatarFallback>
           </Avatar>
           <div className="text-left">
-            <div className="font-medium text-text">
-              {conversation?.groupName}
+            <div className="font-medium text-text">{conversationName}</div>
+            <div className="text-xs text-gray-400">
+              {effectiveConversation?.type}
             </div>
-            <div className="text-xs text-gray-400">{conversation?.type}</div>
           </div>
         </button>
 

@@ -37,10 +37,11 @@ export class ChatController {
     @UserInfo() userInfo: any,
     @UploadedFile() groupAvatar?: Multer.File,
   ) {
-    const parsedMembers = typeof createConversationDto.members === 'string'
-      ? JSON.parse(createConversationDto.members || '[]')
-      : (createConversationDto.members || [])
-    
+    const parsedMembers =
+      typeof createConversationDto.members === 'string'
+        ? JSON.parse(createConversationDto.members || '[]')
+        : createConversationDto.members || []
+
     return await this.chatService.createConversation({
       ...createConversationDto,
       members: [
@@ -131,5 +132,17 @@ export class ChatController {
     @UserInfo() userInfo: any,
   ) {
     return await this.chatService.searchConversations(userInfo.userId, keyword)
+  }
+
+  @Get('/conversation-by-friend')
+  @RequireLogin()
+  async getConversationByFriendId(
+    @Query('friendId') friendId: string,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.getConversationByFriendId(
+      friendId,
+      userInfo.userId,
+    )
   }
 }

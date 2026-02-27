@@ -56,7 +56,6 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload
       return true
     } catch (err) {
-      console.log('AuthGuard error', err)
       // 🔥 Chỉ refresh khi access hết hạn
       if (err instanceof TokenExpiredError) {
         if (!refreshToken) {

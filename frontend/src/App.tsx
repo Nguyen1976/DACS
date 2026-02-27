@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { socket } from "./lib/socket";
 import { FriendsPage } from "./pages/Friend/FriendPage";
 import ListFriend from "./pages/Friend/ListFriend";
+import ListGroupCommunity from "./pages/Friend/ListGroupCommunity";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch } from "./redux/store";
 import { useSound } from "use-sound";
@@ -57,7 +58,9 @@ const router = createBrowserRouter([
     path: "/groups",
     element: (
       <ProtectedRoute>
-        <FriendsPage />
+        <FriendsPage>
+          <ListGroupCommunity />
+        </FriendsPage>
       </ProtectedRoute>
     ),
   },

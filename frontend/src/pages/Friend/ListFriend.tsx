@@ -2,90 +2,230 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  getConversationByFriendIdAPI,
+  getUserProfileByIdAPI,
+  type UserProfileByIdResponse,
+} from "@/apis";
+import {
+  addConversation,
+  selectConversation,
+  type Conversation,
+} from "@/redux/slices/conversationSlice";
+import {
   getFriends,
   selectFriend,
+  selectFriendPage,
   type Friend,
 } from "@/redux/slices/friendSlice";
 import type { AppDispatch } from "@/redux/store";
-import { useEffect } from "react";
+import { selectUser } from "@/redux/slices/userSlice";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 const ListFriend = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const friends = useSelector(selectFriend) || [];
+  const navigate = useNavigate();
+  const friends = useSelector(selectFriend);
+  const user = useSelector(selectUser);
+  const conversations = useSelector(selectConversation);
+  const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] =
+    useState<UserProfileByIdResponse | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
   useEffect(() => {
     //fetch friends từ redux store hoặc API
     if (friends.length === 0) {
-      dispatch(getFriends({ limit: 20, page: 1 }));
+      dispatch(getFriends({ limit: 100, page: 1 }));
     }
   }, [dispatch, friends.length]);
+
+  useEffect(() => {
+    if (friends.length > 0 && !selectedFriendId) {
+      const firstFriend = friends[0];
+      setSelectedFriendId(firstFriend.id);
+      void handleSelectFriend(firstFriend);
+    }
+  }, [friends, selectedFriendId]);
+
+  const page = useSelector(selectFriendPage);
+
+  const loadMoreFriends = () => {
+    dispatch(getFriends({ limit: 20, page: page + 1 }));
+  };
+
+  const handleSelectFriend = async (friend: Friend) => {
+    try {
+      setSelectedFriendId(friend.id);
+      setIsLoadingProfile(true);
+      const profile = await getUserProfileByIdAPI(friend.id);
+      setSelectedProfile(profile);
+    } catch (error) {
+      console.log(error);
+      toast.error("Không lấy được thông tin người dùng");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  const handleChatWithFriend = async () => {
+    if (!selectedFriendId || !user?.id) return;
+
+    const existingConversation = conversations.find(
+      (conversation) =>
+        conversation.type === "DIRECT" &&
+        conversation.members.some(
+          (member) => member.userId === selectedFriendId,
+        ),
+    );
+
+    if (existingConversation) {
+      navigate(`/chat/${existingConversation.id}`);
+      return;
+    }
+
+    try {
+      setIsStartingChat(true);
+      const response = await getConversationByFriendIdAPI(selectedFriendId);
+      const conversation = response.conversations as Conversation;
+
+      if (conversation.lastMessage) {
+        dispatch(addConversation({ conversation, userId: user.id }));
+      }
+
+      navigate(`/chat/${conversation.id}`, {
+        state: { conversation },
+      });
+    } catch (error) {
+      console.log(error);
+      toast.error("Không thể mở cuộc trò chuyện");
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
+
+  const selectedFriend = friends.find(
+    (friend) => friend.id === selectedFriendId,
+  );
+
   return (
-    <>
-      {/* Friends List */}
-      <ScrollArea className="flex-1">
-        <div className="p-6">
-          <div className="mb-6">
-            {/* Letter Header */}
-            {/* <h3 className='text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide'>
-                {letter}
-              </h3> */}
-
-            {/* Friends in this group */}
-            <div className="space-y-2">
-              {friends.map((friend: Friend) => (
-                <button
-                  key={friend.id}
-                  className="w-full p-3 rounded-lg flex items-center gap-3 hover:bg-accent transition-colors group"
-                >
-                  <div className="relative w-12 h-12 flex-shrink-0">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage
-                        src={friend.avatar || "/placeholder.svg"}
-                        alt={friend.username}
-                      />
-                      <AvatarFallback>{friend.username[0]}</AvatarFallback>
-                    </Avatar>
-
-                    {friend.status && (
-                      <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="font-medium text-foreground truncate">
-                      {friend.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {friend.status ? "Online" : "Offline"}
-                    </p>
-                  </div>
-
-                  {/* Action Menu */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+    <div className="h-full min-h-0 flex-1 flex">
+      <div className="h-full min-h-0 flex-1 border-r">
+        <ScrollArea className="h-full">
+          <div className="p-6">
+            <div className="mb-6">
+              <div className="space-y-2">
+                {friends.map((friend: Friend) => (
+                  <button
+                    key={friend.id}
+                    onClick={() => void handleSelectFriend(friend)}
+                    className={`w-full p-3 rounded-lg flex items-center gap-3 hover:bg-accent transition-colors group ${
+                      selectedFriendId === friend.id ? "bg-accent" : ""
+                    }`}
                   >
-                    <span className="text-xl">⋮</span>
-                  </Button>
-                </button>
-              ))}
-            </div>
-            <div className="w-full flex items-center justify-center my-4">
-              <Button className="interceptor-loading" onClick={() => {}}>
-                Load More
-              </Button>
+                    <div className="relative w-12 h-12 shrink-0">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage
+                          src={friend.avatar || "/placeholder.svg"}
+                          alt={friend.username}
+                        />
+                        <AvatarFallback>{friend.username[0]}</AvatarFallback>
+                      </Avatar>
+
+                      {friend.status && (
+                        <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="font-medium text-foreground truncate">
+                        {friend.username}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {friend.status ? "Online" : "Offline"}
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="text-xl">⋮</span>
+                    </Button>
+                  </button>
+                ))}
+              </div>
+              <div className="w-full flex items-center justify-center my-4">
+                <Button
+                  className="interceptor-loading"
+                  onClick={loadMoreFriends}
+                >
+                  Load More
+                </Button>
+              </div>
             </div>
           </div>
+        </ScrollArea>
+      </div>
 
-          {/* {filteredFriends.length === 0 && (
-            <div className='text-center py-12'>
-              <p className='text-muted-foreground'>Không tìm thấy bạn bè</p>
+      <div className="w-90 p-6 flex flex-col justify-center">
+        {!selectedFriendId ? (
+          <p className="text-muted-foreground text-center">
+            Hãy chọn một người bạn để xem thông tin
+          </p>
+        ) : isLoadingProfile ? (
+          <p className="text-muted-foreground text-center">
+            Đang tải thông tin...
+          </p>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center gap-3">
+              <Avatar className="w-24 h-24">
+                <AvatarImage
+                  src={selectedProfile?.avatar || "/placeholder.svg"}
+                  alt={selectedProfile?.username || "User avatar"}
+                />
+                <AvatarFallback>
+                  {(selectedProfile?.username || "U")[0]}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="text-center">
+                <p className="text-lg font-semibold text-foreground">
+                  {selectedProfile?.fullName || selectedProfile?.username}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  @{selectedProfile?.username}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {selectedProfile?.email}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {selectedProfile?.bio || "Chưa có tiểu sử"}
+                </p>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  {selectedFriend?.status ? "Đang online" : "Đang offline"}
+                </p>
+              </div>
             </div>
-          )} */}
-        </div>
-      </ScrollArea>
-    </>
+
+            <Button
+              className="w-full h-12 text-base font-semibold"
+              onClick={() => void handleChatWithFriend()}
+              disabled={isStartingChat}
+            >
+              {isStartingChat
+                ? "Đang mở cuộc trò chuyện..."
+                : "Bạn có muốn chat với họ không?"}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -98,4 +98,12 @@ export class ChatService implements OnModuleInit {
     })
     return await firstValueFrom(observable)
   }
+
+  async getConversationByFriendId(friendId: string, userId: string) {
+    const observable = this.chatClientService.getConversationByFriendId({
+      friendId,
+      userId,
+    })
+    return await firstValueFrom(observable)
+  }
 }

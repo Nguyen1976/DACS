@@ -6,6 +6,28 @@ import { conversationType } from '@prisma/client'
 export class ConversationRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  async findConversationByFriendId(friendId: string, userId: string) {
+    return await this.prisma.conversation.findFirst({
+      where: {
+        type: 'DIRECT',
+        members: {
+          some: { userId },
+          every: { OR: [{ userId }, { userId: friendId }] },
+        },
+      },
+      include: {
+        members: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            senderMember: true,
+          },
+        },
+      },
+    })
+  }
+
   private normalizeString(str: string) {
     return str
       .normalize('NFD') // tách ký tự + dấu

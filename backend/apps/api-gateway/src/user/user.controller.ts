@@ -54,7 +54,7 @@ export class UserController {
   }
 
   @Post('logout')
-  @RequireLogin()
+  @WithoutLogin()
   async logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie('accessToken')
     response.clearCookie('refreshToken')

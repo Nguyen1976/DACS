@@ -18,7 +18,7 @@ import { LoggerModule } from '@app/logger'
         port: 6379,
         db: 0,
       },
-      'USER_REDIS',
+      'REDIS_CLIENT',
     ),
     ConfigModule.forRoot({
       isGlobal: true,
