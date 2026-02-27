@@ -1,49 +1,112 @@
-import { Label } from '@radix-ui/react-label'
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { useForm } from "react-hook-form";
+import { formRegisterScheme } from "./scheme";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { registerAPI } from "@/apis";
+import { toast } from "sonner";
 
 const Register = () => {
-  const handleSubmit = () => {
-    console.log('Register form submitted')
-  }
-  return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='space-y-2'>
-        <Label htmlFor='register-name'>Full name</Label>
-        <Input id='register-name' type='text' placeholder='John Doe' required />
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor='register-email'>Email</Label>
-        <Input
-          id='register-email'
-          type='email'
-          placeholder='your@email.com'
-          required
-        />
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor='register-password'>Password</Label>
-        <Input
-          id='register-password'
-          type='password'
-          placeholder='••••••••'
-          required
-        />
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor='register-confirm'>Confirm password</Label>
-        <Input
-          id='register-confirm'
-          type='password'
-          placeholder='••••••••'
-          required
-        />
-      </div>
-      <Button type='submit' className='w-full'>
-        Register
-      </Button>
-    </form>
-  )
-}
+  const form = useForm<z.infer<typeof formRegisterScheme>>({
+    resolver: zodResolver(formRegisterScheme),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-export default Register
+  const onSubmit = async (data: z.infer<typeof formRegisterScheme>) => {
+    const { username, email, password } = data;
+
+    await registerAPI({ username, email, password });
+    toast.success("Register successfully, please sign in");
+    form.reset();
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="johndoe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="your@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="••••••••" type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm password</FormLabel>
+                <FormControl>
+                  <Input placeholder="••••••••" type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          Register
+        </Button>
+      </form>
+    </Form>
+  );
+};
+
+export default Register;

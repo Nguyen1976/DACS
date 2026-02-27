@@ -1,37 +1,49 @@
-import authorizeAxiosInstance from '@/utils/authorizeAxios'
-import { API_ROOT } from '@/utils/constant'
+import authorizeAxiosInstance from "@/utils/authorizeAxios";
+import { API_ROOT } from "@/utils/constant";
 
 export const makeFriendRequest = async (
-  email: string
+  email: string,
 ): Promise<{ status: string }> => {
   const response = await authorizeAxiosInstance.post(
     `${API_ROOT}/user/make-friend`,
-    { email }
-  )
-  return response.data
-}
+    { email },
+  );
+  return response.data;
+};
 
 export const getFriendRequestDetail = async (friendRequestId: string) => {
   const response = await authorizeAxiosInstance.get(
-    `${API_ROOT}/user/detail-friend-request?friendRequestId=${friendRequestId}`
-  )
-  return response.data.data
-}
+    `${API_ROOT}/user/detail-friend-request?friendRequestId=${friendRequestId}`,
+  );
+  return response.data.data;
+};
+
+export const registerAPI = async (data: {
+  email: string;
+  username: string;
+  password: string;
+}): Promise<unknown> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/user/register`,
+    data,
+  );
+  return response.data;
+};
 
 export interface FromUser {
-  email: string
-  username: string
-  avatar: string
-  id: string
+  email: string;
+  username: string;
+  avatar: string;
+  id: string;
 }
 
 export interface DetailMakeFriendResponse {
-  id: string
-  fromUser: FromUser | undefined
-  toUserId: string
-  status: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  fromUser: FromUser | undefined;
+  toUserId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const updateFriendRequestStatus = async ({
@@ -39,13 +51,13 @@ export const updateFriendRequestStatus = async ({
   inviteeName,
   status,
 }: {
-  inviterId: string
-  inviteeName: string
-  status: 'ACCEPTED' | 'REJECTED'
+  inviterId: string;
+  inviteeName: string;
+  status: "ACCEPTED" | "REJECTED";
 }): Promise<{ status: string }> => {
   const response = await authorizeAxiosInstance.post(
     `${API_ROOT}/user/update-status-make-friend`,
-    { inviterId, inviteeName, status }
-  )
-  return response.data
-}
+    { inviterId, inviteeName, status },
+  );
+  return response.data;
+};

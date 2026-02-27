@@ -36,6 +36,8 @@ export const loginAPI = createAsyncThunk(
 export const logoutAPI = createAsyncThunk(`/user/logout`, async () => {
   //clear cookies
   await authorizeAxiosInstance.post(`${API_ROOT}/user/logout`);
+  //clear data
+  return {};
 });
 
 export const updateProfileAPI = createAsyncThunk(
@@ -78,9 +80,7 @@ export const userSlice = createSlice({
       },
     );
     builder.addCase(logoutAPI.fulfilled, (state) => {
-      state = initialState;
-      localStorage.removeItem("token");
-      return state;
+      Object.assign(state, initialState);
     });
     builder.addCase(
       updateProfileAPI.fulfilled,
