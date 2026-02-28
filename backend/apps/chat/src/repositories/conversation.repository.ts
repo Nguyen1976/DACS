@@ -9,6 +9,9 @@ export class ConversationRepository {
 
   private updatedAtBackfilled = false
   private participantRoleBackfilled = false
+  private readonly activeMemberWhere = {
+    isActive: true,
+  }
 
   private async forceBackfillConversationUpdatedAt() {
     await this.prisma.$runCommandRaw({
@@ -132,12 +135,19 @@ export class ConversationRepository {
       where: {
         type: 'DIRECT',
         members: {
-          some: { userId },
-          every: { OR: [{ userId }, { userId: friendId }] },
+          some: { userId, ...this.activeMemberWhere },
+          every: {
+            OR: [
+              { userId, ...this.activeMemberWhere },
+              { userId: friendId, ...this.activeMemberWhere },
+            ],
+          },
         },
       },
       include: {
-        members: true,
+        members: {
+          where: this.activeMemberWhere,
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -187,15 +197,17 @@ export class ConversationRepository {
     })
   }
 
-  async findByIdWithMembers(id: string) {
+  async findByIdWithMembers(id: string): Promise<any> {
     await this.ensureParticipantRoleNormalized()
 
     return await this.prisma.conversation.findUnique({
       where: { id },
       include: {
         members: {
+          where: this.activeMemberWhere,
           select: {
             userId: true,
+            role: true,
             username: true,
             avatar: true,
             lastReadAt: true,
@@ -246,6 +258,7 @@ export class ConversationRepository {
     const memberships = await this.prisma.conversationMember.findMany({
       where: {
         userId,
+        ...this.activeMemberWhere,
         ...(cursor && {
           lastMessageAt: { lt: cursor },
         }),
@@ -260,7 +273,9 @@ export class ConversationRepository {
         id: { in: memberships.map((m) => m.conversationId) },
       },
       include: {
-        members: true,
+        members: {
+          where: this.activeMemberWhere,
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -401,11 +416,14 @@ export class ConversationRepository {
         members: {
           some: {
             userId,
+            ...this.activeMemberWhere,
           },
         },
       },
       include: {
-        members: true,
+        members: {
+          where: this.activeMemberWhere,
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -431,6 +449,7 @@ export class ConversationRepository {
     // 1️⃣ Tìm member KHÁC user match username
     const matchedMembers = await this.prisma.conversationMember.findMany({
       where: {
+        ...this.activeMemberWhere,
         userId: { not: userId },
         username: {
           startsWith: keyword,
@@ -448,6 +467,7 @@ export class ConversationRepository {
     const memberships = await this.prisma.conversationMember.findMany({
       where: {
         userId,
+        ...this.activeMemberWhere,
         conversationId: { in: conversationIds },
         conversation: {
           type: 'DIRECT',
@@ -467,7 +487,9 @@ export class ConversationRepository {
         id: { in: memberships.map((m) => m.conversationId) },
       },
       include: {
-        members: true,
+        members: {
+          where: this.activeMemberWhere,
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,

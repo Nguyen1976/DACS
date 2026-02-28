@@ -8,6 +8,9 @@ export class ConversationMemberRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private participantRoleBackfilled = false
+  private readonly activeMemberFilter = {
+    isActive: true,
+  }
 
   private async forceBackfillParticipantRole() {
     await this.prisma.$runCommandRaw({
@@ -87,6 +90,7 @@ export class ConversationMemberRepository {
           type === conversationType.GROUP && createrId === member.userId
             ? 'ADMIN'
             : 'MEMBER',
+        isActive: true,
         lastReadMessageId: null,
         lastMessageAt: new Date(),
       })),
@@ -100,10 +104,15 @@ export class ConversationMemberRepository {
       this.prisma.conversationMember.findMany({
         where: {
           conversationId,
+          ...this.activeMemberFilter,
         },
         select: {
           userId: true,
           role: true,
+          username: true,
+          fullName: true,
+          avatar: true,
+          joinedAt: true,
         },
       }),
     )
@@ -131,6 +140,7 @@ export class ConversationMemberRepository {
         where: {
           conversationId,
           userId: { in: userIds },
+          ...this.activeMemberFilter,
         },
         select: { userId: true },
       }),
@@ -145,20 +155,52 @@ export class ConversationMemberRepository {
         where: {
           conversationId,
           userId,
+          ...this.activeMemberFilter,
         },
       }),
     )
   }
 
-  async addMembers(conversationId: string, memberIds: string[]) {
-    return await this.prisma.conversationMember.createMany({
-      data: memberIds.map((memberId) => ({
-        conversationId,
-        userId: memberId,
-        role: 'MEMBER',
-        lastMessageAt: new Date(), //vì vừa mới được thêm lên mình sẽ để thời gian này conver sẽ ở đầu
-      })),
-    })
+  async addMembers(
+    conversationId: string,
+    members: Array<{
+      userId: string
+      username?: string
+      fullName?: string
+      avatar?: string
+    }>,
+  ) {
+    for (const member of members) {
+      const updated = await this.prisma.conversationMember.updateMany({
+        where: {
+          conversationId,
+          userId: member.userId,
+        },
+        data: {
+          role: 'MEMBER',
+          isActive: true,
+          username: member.username || null,
+          fullName: member.fullName || null,
+          avatar: member.avatar || null,
+          lastMessageAt: new Date(),
+        },
+      })
+
+      if (updated.count > 0) continue
+
+      await this.prisma.conversationMember.create({
+        data: {
+          conversationId,
+          userId: member.userId,
+          username: member.username || null,
+          fullName: member.fullName || null,
+          avatar: member.avatar || null,
+          role: 'MEMBER',
+          isActive: true,
+          lastMessageAt: new Date(),
+        },
+      })
+    }
   }
 
   async updateLastRead(
@@ -192,6 +234,44 @@ export class ConversationMemberRepository {
       data: {
         ...(data.avatar !== undefined ? { avatar: data.avatar } : {}),
         ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
+      },
+    })
+  }
+
+  async removeMember(conversationId: string, userId: string) {
+    return await this.prisma.conversationMember.updateMany({
+      where: {
+        conversationId,
+        userId,
+      },
+      data: {
+        isActive: false,
+      },
+    })
+  }
+
+  async findUserProfileById(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        username: true,
+        fullName: true,
+        avatar: true,
+      },
+    })
+  }
+
+  async promoteToAdmin(conversationId: string, userId: string) {
+    return await this.prisma.conversationMember.updateMany({
+      where: {
+        conversationId,
+        userId,
+        ...this.activeMemberFilter,
+      },
+      data: {
+        role: 'ADMIN',
       },
     })
   }

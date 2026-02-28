@@ -25,7 +25,28 @@ export class AddMemberToConversationDTO {
   @IsNotEmpty({
     message: 'memberIds is required',
   })
-  members: Member[]
+  memberIds: string[]
+
+  members?: Member[]
+}
+
+export class RemoveMemberFromConversationDTO {
+  @IsNotEmpty({
+    message: 'conversationId is required',
+  })
+  conversationId: string
+
+  @IsNotEmpty({
+    message: 'targetUserId is required',
+  })
+  targetUserId: string
+}
+
+export class LeaveConversationDTO {
+  @IsNotEmpty({
+    message: 'conversationId is required',
+  })
+  conversationId: string
 }
 
 export class CreateMessageUploadUrlDTO {

@@ -9,6 +9,11 @@ export const SOCKET_EVENTS = {
     MESSAGE_NEW: 'message:new',
     MESSAGE_ACK: 'message:ack',
     MESSAGE_ERROR: 'message:error',
+    MESSAGE_SYSTEM: 'message:system',
+    CONVERSATION_MEMBER_ADDED: 'conversation:member_added',
+    CONVERSATION_MEMBER_REMOVED: 'conversation:member_removed',
+    CONVERSATION_MEMBER_LEFT: 'conversation:member_left',
+    CONVERSATION_UPDATE: 'conversation:update',
     NEW_CONVERSATION: 'chat.new_conversation', //listen
     NEW_MEMBER_ADDED: 'chat.new_member_added', //listen
   },

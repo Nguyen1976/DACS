@@ -14,8 +14,12 @@ import {
   type GetConversationAssetsRequest,
   GetConversationsResponse,
   type GetMessagesRequest,
+  type LeaveConversationRequest,
+  type LeaveConversationResponse,
   ReadMessageResponse,
   type ReadMessageRequest,
+  type RemoveMemberFromConversationRequest,
+  type RemoveMemberFromConversationResponse,
   SendMessageResponse,
   type SendMessageRequest,
   type SearchConversationRequest,
@@ -49,6 +53,24 @@ export class ChatController {
       this.chatService.addMemberToConversation(data),
     )
     return res
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'removeMemberFromConversation')
+  async removeMemberFromConversation(
+    data: RemoveMemberFromConversationRequest,
+    metadata: Metadata,
+  ): Promise<RemoveMemberFromConversationResponse> {
+    return await safeExecute(() =>
+      this.chatService.removeMemberFromConversation(data),
+    )
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'leaveConversation')
+  async leaveConversation(
+    data: LeaveConversationRequest,
+    metadata: Metadata,
+  ): Promise<LeaveConversationResponse> {
+    return await safeExecute(() => this.chatService.leaveConversation(data))
   }
 
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'getConversations')

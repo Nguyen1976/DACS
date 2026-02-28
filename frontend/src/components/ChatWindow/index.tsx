@@ -86,6 +86,9 @@ export default function ChatWindow({
       : undefined;
   const effectiveConversation = conversation || fallbackConversation;
   const user = useSelector(selectUser);
+  const canSendMessage = effectiveConversation?.canSendMessage !== false;
+  const membershipStatus = effectiveConversation?.membershipStatus || "ACTIVE";
+  const canLoadMessages = membershipStatus === "ACTIVE";
 
   const conversationName =
     effectiveConversation?.type === "DIRECT"
@@ -118,6 +121,7 @@ export default function ChatWindow({
   }, [messages.length, isAtBottom]);
 
   useEffect(() => {
+    if (!canLoadMessages) return;
     if (messages.length === 0) {
       dispatch(
         getMessages({
@@ -127,10 +131,11 @@ export default function ChatWindow({
         }),
       );
     }
-  }, [dispatch, messages.length, conversationId]);
+  }, [dispatch, messages.length, conversationId, canLoadMessages]);
 
   const loadOlderMessages = useCallback(async () => {
     if (!conversationId) return;
+    if (!canLoadMessages) return;
     if (!pagination.hasMore) return;
     if (isLoadingOlder) return;
 
@@ -159,12 +164,14 @@ export default function ChatWindow({
   }, [
     conversationId,
     dispatch,
+    canLoadMessages,
     pagination.hasMore,
     pagination.oldestCursor,
     isLoadingOlder,
   ]);
 
   useEffect(() => {
+    if (!canLoadMessages) return;
     const container = containerRef.current;
     const sentinel = topSentinelRef.current;
 
@@ -188,9 +195,10 @@ export default function ChatWindow({
     return () => {
       observer.disconnect();
     };
-  }, [loadOlderMessages, conversationId]);
+  }, [loadOlderMessages, conversationId, canLoadMessages]);
 
   useEffect(() => {
+    if (!canLoadMessages) return;
     if (!focusMessageId || !conversationId) return;
 
     const targetElement = document.getElementById(`message-${focusMessageId}`);
@@ -217,9 +225,11 @@ export default function ChatWindow({
     isLoadingOlder,
     loadOlderMessages,
     onFocusHandled,
+    canLoadMessages,
   ]);
 
   useEffect(() => {
+    if (!canLoadMessages) return;
     if (!conversationId) return;
     if (messages.length === 0) return;
 
@@ -234,9 +244,10 @@ export default function ChatWindow({
         lastReadMessageId: lastMessage.id,
       }),
     );
-  }, [messages, conversationId, dispatch, user.id]);
+  }, [messages, conversationId, dispatch, user.id, canLoadMessages]);
 
   const handleSendMessage = useCallback(() => {
+    if (!canSendMessage) return;
     if (msg.trim() === "" || !conversationId) return;
 
     const clientMessageId = "temp-id-" + Date.now();
@@ -282,6 +293,7 @@ export default function ChatWindow({
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     });
   }, [
+    canSendMessage,
     msg,
     dispatch,
     conversationId,
@@ -298,6 +310,7 @@ export default function ChatWindow({
 
   const handleUploadMedia = useCallback(
     async (file: File) => {
+      if (!canSendMessage) return;
       if (!conversationId) return;
 
       const mediaType = getMessageTypeFromFile(file);
@@ -383,6 +396,7 @@ export default function ChatWindow({
       }
     },
     [
+      canSendMessage,
       conversationId,
       user.id,
       msg,
@@ -456,7 +470,7 @@ export default function ChatWindow({
 
           setIsAtBottom(atBottom);
 
-          if (el.scrollTop <= 24) {
+          if (canLoadMessages && el.scrollTop <= 24) {
             void loadOlderMessages();
           }
         }}
@@ -468,6 +482,14 @@ export default function ChatWindow({
         />
         <div ref={bottomRef} />
       </div>
+
+      {!canSendMessage && (
+        <div className="px-6 py-2 text-sm text-amber-300 bg-amber-500/10 border-t border-amber-500/20">
+          {membershipStatus === "REMOVED"
+            ? "Bạn không còn trong nhóm này"
+            : "Bạn đã rời khỏi nhóm này"}
+        </div>
+      )}
 
       {/* Input */}
       {!isAtBottom && (
@@ -496,6 +518,7 @@ export default function ChatWindow({
           variant="ghost"
           size="icon"
           onClick={() => fileInputRef.current?.click()}
+          disabled={!canSendMessage}
           className="hover:bg-bg-box-message-incoming text-gray-400 hover:text-text"
         >
           <Paperclip className="w-5 h-5" />
@@ -504,6 +527,7 @@ export default function ChatWindow({
         <input
           type="text"
           placeholder="Write a message..."
+          disabled={!canSendMessage}
           className="flex-1 bg-transparent text-text placeholder:text-gray-500 outline-none text-sm"
           onChange={(e) => setMsg(e.target.value)}
           value={msg}

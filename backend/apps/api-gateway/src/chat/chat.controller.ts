@@ -12,7 +12,9 @@ import {
   AddMemberToConversationDTO,
   CreateMessageUploadUrlDTO,
   CreateConversationDTO,
+  LeaveConversationDTO,
   ReadMessageDto,
+  RemoveMemberFromConversationDTO,
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
@@ -64,8 +66,54 @@ export class ChatController {
     @Body() body: AddMemberToConversationDTO,
     @UserInfo() userInfo: any,
   ) {
+    const providedMembers = body.members || []
+
+    const normalizedMembers: Array<{
+      userId: string
+      username: string
+      fullName?: string
+      avatar?: string
+    }> =
+      providedMembers.length > 0
+        ? providedMembers.map((member) => ({
+            userId: member.userId,
+            username: member.username || '',
+            fullName: member.fullName,
+            avatar: member.avatar,
+          }))
+        : (body.memberIds || []).map((memberId) => ({
+            username: '',
+            userId: memberId,
+          }))
+
     return await this.chatService.addMemberToConversation({
-      ...body,
+      conversationId: body.conversationId,
+      members: normalizedMembers,
+      userId: userInfo.userId,
+    })
+  }
+
+  @Post('remove-member')
+  @RequireLogin()
+  async removeMemberFromConversation(
+    @Body() body: RemoveMemberFromConversationDTO,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.removeMemberFromConversation({
+      conversationId: body.conversationId,
+      targetUserId: body.targetUserId,
+      userId: userInfo.userId,
+    })
+  }
+
+  @Post('leave-group')
+  @RequireLogin()
+  async leaveConversation(
+    @Body() body: LeaveConversationDTO,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.leaveConversation({
+      conversationId: body.conversationId,
       userId: userInfo.userId,
     })
   }

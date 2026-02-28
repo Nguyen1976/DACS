@@ -5,6 +5,8 @@ package chat;
 service ChatGrpcService {
   rpc createConversation (CreateConversationRequest) returns (CreateConversationResponse) {}
   rpc addMemberToConversation (AddMemberToConversationRequest) returns (AddMemberToConversationResponse) {}
+  rpc removeMemberFromConversation (RemoveMemberFromConversationRequest) returns (RemoveMemberFromConversationResponse) {}
+  rpc leaveConversation (LeaveConversationRequest) returns (LeaveConversationResponse) {}
   rpc getConversations (GetConversationsRequest) returns (GetConversationsResponse) {}
   rpc getMessagesByConversationId (GetMessagesRequest) returns (GetMessagesResponse) {}
   rpc getConversationAssets (GetConversationAssetsRequest) returns (GetConversationAssetsResponse) {}
@@ -80,6 +82,26 @@ message AddMemberToConversationResponse {
   string status = 1;
 }
 
+message RemoveMemberFromConversationRequest {
+  string conversationId = 1;
+  string targetUserId = 2;
+  string userId = 3;
+}
+
+message RemoveMemberFromConversationResponse {
+  string status = 1;
+}
+
+message LeaveConversationRequest {
+  string conversationId = 1;
+  string userId = 2;
+}
+
+message LeaveConversationResponse {
+  string status = 1;
+  optional string promotedUserId = 2;
+}
+
 message GetConversationsRequest {
   string userId = 1;
   string limit = 2;
@@ -109,6 +131,7 @@ message ConversationMember {
   optional string lastReadMessageId = 5;
   optional string fullName = 6;
   string lastMessageAt = 7;
+  optional string role = 8;
 }
 
 message Conversation {

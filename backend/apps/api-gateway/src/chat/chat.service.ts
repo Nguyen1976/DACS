@@ -1,23 +1,21 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import type { ClientGrpc } from '@nestjs/microservices'
 import {
+  AddMemberToConversationRequest,
   CHAT_GRPC_SERVICE_NAME,
   ConversationAssetKind,
   GetConversationAssetsResponse,
   CreateMessageUploadUrlResponse,
+  LeaveConversationRequest,
   MessageType,
   CreateConversationRequest,
   CreateConversationResponse,
   Member,
+  RemoveMemberFromConversationRequest,
 } from 'interfaces/chat.grpc'
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
-import {
-  AddMemberToConversationDTO,
-  CreateMessageUploadUrlDTO,
-  ReadMessageDto,
-} from './dto/chat.dto'
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
+import { CreateMessageUploadUrlDTO, ReadMessageDto } from './dto/chat.dto'
 import { CreateConversationDTO } from './dto/chat.dto'
 import type { Multer } from 'multer'
 
@@ -26,7 +24,6 @@ export class ChatService implements OnModuleInit {
   private chatClientService: any
   constructor(
     @Inject(CHAT_GRPC_SERVICE_NAME) private readonly chatClient: ClientGrpc,
-    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   onModuleInit() {
@@ -56,10 +53,18 @@ export class ChatService implements OnModuleInit {
     return res as CreateConversationResponse
   }
 
-  async addMemberToConversation(
-    dto: AddMemberToConversationDTO & { userId: string },
-  ) {
+  async addMemberToConversation(dto: AddMemberToConversationRequest) {
     const observable = this.chatClientService.addMemberToConversation(dto)
+    return await firstValueFrom(observable)
+  }
+
+  async removeMemberFromConversation(dto: RemoveMemberFromConversationRequest) {
+    const observable = this.chatClientService.removeMemberFromConversation(dto)
+    return await firstValueFrom(observable)
+  }
+
+  async leaveConversation(dto: LeaveConversationRequest) {
+    const observable = this.chatClientService.leaveConversation(dto)
     return await firstValueFrom(observable)
   }
 

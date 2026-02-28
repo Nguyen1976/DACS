@@ -291,3 +291,41 @@ export const getConversationAssetsAPI = async ({
 
   return response.data.data;
 };
+
+export const addMembersToConversationAPI = async (payload: {
+  conversationId: string;
+  memberIds?: string[];
+  members?: Array<{
+    userId: string;
+    username?: string;
+    fullName?: string;
+    avatar?: string;
+  }>;
+}): Promise<{ status: string }> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/chat/add-member`,
+    payload,
+  );
+  return response.data.data;
+};
+
+export const removeMemberFromConversationAPI = async (payload: {
+  conversationId: string;
+  targetUserId: string;
+}): Promise<{ status: string }> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/chat/remove-member`,
+    payload,
+  );
+  return response.data.data;
+};
+
+export const leaveConversationAPI = async (payload: {
+  conversationId: string;
+}): Promise<{ status: string; promotedUserId?: string }> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/chat/leave-group`,
+    payload,
+  );
+  return response.data.data;
+};

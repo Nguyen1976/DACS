@@ -124,6 +124,7 @@ model conversationMember {
   avatar String? 
 
   role participantRole @default(MEMBER) //nếu là nhóm thì có vai trò như admin hay member
+  isActive Boolean @default(true)
 
   lastReadMessageId   String? @db.ObjectId
   lastReadAt          DateTime?

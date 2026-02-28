@@ -13,6 +13,7 @@ import { logoutAPI } from "./userSlice";
 
 export interface ConversationMember {
   userId: string;
+  role?: "ADMIN" | "MEMBER" | "OWNER";
   /** timestamp (ms) */
   lastReadMessageId?: string;
   lastReadAt?: string;
@@ -26,6 +27,8 @@ export interface Conversation {
   id: string;
   type: string;
   unreadCount?: string;
+  membershipStatus?: "ACTIVE" | "REMOVED" | "LEFT";
+  canSendMessage?: boolean;
   groupName?: string | undefined;
   groupAvatar?: string | undefined;
   createdAt: string;
@@ -117,6 +120,8 @@ export const conversationSlice = createSlice({
             ? conversation.lastMessage
             : null,
         unreadCount: "0",
+        membershipStatus: conversation.membershipStatus || "ACTIVE",
+        canSendMessage: conversation.canSendMessage ?? true,
       });
     },
     updateNewMessage: (
@@ -134,6 +139,127 @@ export const conversationSlice = createSlice({
       };
 
       return [newConversation, ...state.filter((c) => c.id !== conversationId)];
+    },
+    setConversationAccessState: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        membershipStatus: "ACTIVE" | "REMOVED" | "LEFT";
+        canSendMessage: boolean;
+      }>,
+    ) => {
+      const target = state.find((conversation) => {
+        return conversation.id === action.payload.conversationId;
+      });
+
+      if (!target) return;
+
+      target.membershipStatus = action.payload.membershipStatus;
+      target.canSendMessage = action.payload.canSendMessage;
+    },
+    applyConversationUpdate: (
+      state,
+      action: PayloadAction<{
+        conversation: Conversation;
+        membershipStatus?: "ACTIVE" | "REMOVED" | "LEFT";
+        canSendMessage?: boolean;
+      }>,
+    ) => {
+      const { conversation, membershipStatus, canSendMessage } = action.payload;
+
+      const existingIndex = state.findIndex(
+        (item) => item.id === conversation.id,
+      );
+
+      const nextConversation: Conversation = {
+        ...conversation,
+        membershipStatus:
+          membershipStatus || conversation.membershipStatus || "ACTIVE",
+        canSendMessage:
+          canSendMessage ??
+          conversation.canSendMessage ??
+          membershipStatus !== "REMOVED",
+      };
+
+      if (existingIndex === -1) {
+        state.unshift(nextConversation);
+        return;
+      }
+
+      state[existingIndex] = {
+        ...state[existingIndex],
+        ...nextConversation,
+      };
+    },
+    addConversationMembers: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        memberIds: string[];
+        members?: Array<{
+          userId: string;
+          role?: "ADMIN" | "MEMBER" | "OWNER";
+          username?: string;
+          fullName?: string;
+          avatar?: string;
+        }>;
+      }>,
+    ) => {
+      const target = state.find((conversation) => {
+        return conversation.id === action.payload.conversationId;
+      });
+      if (!target) return;
+
+      const incomingById = new Map(
+        (action.payload.members || []).map((member) => [member.userId, member]),
+      );
+
+      const existingIds = new Set(
+        target.members.map((member) => member.userId),
+      );
+
+      for (let index = 0; index < target.members.length; index += 1) {
+        const existing = target.members[index];
+        const incoming = incomingById.get(existing.userId);
+        if (!incoming) continue;
+
+        target.members[index] = {
+          ...existing,
+          ...incoming,
+        };
+      }
+
+      for (const memberId of action.payload.memberIds) {
+        const incoming = incomingById.get(memberId);
+
+        if (existingIds.has(memberId)) {
+          continue;
+        }
+
+        target.members.push({
+          userId: memberId,
+          role: incoming?.role,
+          username: incoming?.username,
+          fullName: incoming?.fullName,
+          avatar: incoming?.avatar,
+        });
+      }
+    },
+    removeConversationMember: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        userId: string;
+      }>,
+    ) => {
+      const target = state.find((conversation) => {
+        return conversation.id === action.payload.conversationId;
+      });
+      if (!target) return;
+
+      target.members = target.members.filter(
+        (member) => member.userId !== action.payload.userId,
+      );
     },
     upUnreadCount: (
       state,
@@ -179,6 +305,8 @@ export const conversationSlice = createSlice({
                     )?.avatar || ""
                   : c.groupAvatar,
               lastMessage: c.lastMessage !== undefined ? c.lastMessage : null,
+              membershipStatus: c.membershipStatus || "ACTIVE",
+              canSendMessage: c.canSendMessage ?? true,
             })) as Conversation[]),
           ];
           return state;
@@ -247,6 +375,13 @@ export const selectMessagesByConversationId = (
   return conversation ? conversation.lastMessage : null;
 };
 
-export const { addConversation, updateNewMessage, upUnreadCount } =
-  conversationSlice.actions;
+export const {
+  addConversation,
+  updateNewMessage,
+  upUnreadCount,
+  setConversationAccessState,
+  applyConversationUpdate,
+  addConversationMembers,
+  removeConversationMember,
+} = conversationSlice.actions;
 export default conversationSlice.reducer;

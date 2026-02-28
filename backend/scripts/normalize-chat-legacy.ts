@@ -34,6 +34,19 @@ async function normalizeConversationMemberRole() {
         ],
         multi: true,
       },
+      {
+        q: {
+          $or: [{ isActive: null }, { isActive: { $exists: false } }],
+        },
+        u: [
+          {
+            $set: {
+              isActive: true,
+            },
+          },
+        ],
+        multi: true,
+      },
     ],
   })
 }

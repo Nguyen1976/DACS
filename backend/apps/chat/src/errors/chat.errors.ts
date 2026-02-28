@@ -71,4 +71,25 @@ export class ChatErrors {
       message: 'Media file not found in storage',
     })
   }
+
+  static memberNotFoundInConversation(): never {
+    throw new RpcException({
+      code: status.NOT_FOUND,
+      message: 'Target user is not a member of this conversation',
+    })
+  }
+
+  static invalidMemberAction(message = 'Invalid member action'): never {
+    throw new RpcException({
+      code: status.INVALID_ARGUMENT,
+      message,
+    })
+  }
+
+  static adminCannotLeaveGroup(): never {
+    throw new RpcException({
+      code: status.FAILED_PRECONDITION,
+      message: 'Admin không thể rời nhóm. Hãy chuyển quyền admin trước.',
+    })
+  }
 }

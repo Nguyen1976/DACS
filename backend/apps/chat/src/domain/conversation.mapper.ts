@@ -43,6 +43,7 @@ export class ConversationMapper {
         members: c.members.map((m) => ({
           ...m,
           userId: m.userId,
+          role: m.role,
           username: m.username,
           avatar: m.avatar,
           fullName: m.fullName,
@@ -68,6 +69,7 @@ export class ConversationMapper {
         updatedAt: conversation.updatedAt.toString(),
         members: conversation.members.map((m) => ({
           userId: m.userId,
+          role: m.role,
           username: m.username,
           avatar: m.avatar,
           fullName: m.fullName,
@@ -98,6 +100,7 @@ export class ConversationMapper {
         updatedAt: res?.updatedAt.toString(),
         members: res?.members.map((m: any) => ({
           ...m,
+          role: m.role,
           lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : '',
         })),
         messages: res?.messages?.map((msg: any) => this.mapMessage(msg)) || [],

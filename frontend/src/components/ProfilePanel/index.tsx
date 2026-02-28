@@ -43,16 +43,27 @@ export default function ProfilePanel({
     return conversation.groupName || "Conversation";
   }, [conversation]);
 
+  const canAccessConversationData =
+    conversation?.membershipStatus !== "REMOVED" &&
+    conversation?.membershipStatus !== "LEFT";
+
   useEffect(() => {
     setAssets([]);
     setCursor(null);
     setNextCursor(null);
-    setHasMore(true);
+    setHasMore(canAccessConversationData);
     setFetchKey((prev) => prev + 1);
-  }, [conversationId, assetKind]);
+  }, [conversationId, assetKind, canAccessConversationData]);
 
   useEffect(() => {
-    if (!conversationId || !hasMore || isLoading) return;
+    if (
+      !conversationId ||
+      !canAccessConversationData ||
+      !hasMore ||
+      isLoading
+    ) {
+      return;
+    }
 
     setIsLoading(true);
     getConversationAssetsAPI({
@@ -73,8 +84,18 @@ export default function ProfilePanel({
         setNextCursor(response.nextCursor || null);
         setHasMore(Boolean(response.nextCursor));
       })
+      .catch(() => {
+        setHasMore(false);
+      })
       .finally(() => setIsLoading(false));
-  }, [conversationId, assetKind, cursor, hasMore, isLoading, fetchKey]);
+  }, [
+    conversationId,
+    assetKind,
+    cursor,
+    hasMore,
+    fetchKey,
+    canAccessConversationData,
+  ]);
 
   const resolveMediaPreviewUrl = (message: ConversationAssetMessage) => {
     const media = message.medias?.[0];
@@ -258,7 +279,11 @@ export default function ProfilePanel({
               {isLoading && <p className="text-xs text-gray-400">Loading...</p>}
 
               {!isLoading && assets.length === 0 && (
-                <p className="text-xs text-gray-500">No data</p>
+                <p className="text-xs text-gray-500">
+                  {canAccessConversationData
+                    ? "No data"
+                    : "Bạn không còn trong nhóm này"}
+                </p>
               )}
 
               {!isLoading && hasMore && assets.length > 0 && (

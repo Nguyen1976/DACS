@@ -79,6 +79,26 @@ export interface AddMemberToConversationResponse {
   status: string;
 }
 
+export interface RemoveMemberFromConversationRequest {
+  conversationId: string;
+  targetUserId: string;
+  userId: string;
+}
+
+export interface RemoveMemberFromConversationResponse {
+  status: string;
+}
+
+export interface LeaveConversationRequest {
+  conversationId: string;
+  userId: string;
+}
+
+export interface LeaveConversationResponse {
+  status: string;
+  promotedUserId?: string | undefined;
+}
+
 export interface GetConversationsRequest {
   userId: string;
   limit: string;
@@ -109,6 +129,7 @@ export interface ConversationMember {
   lastReadMessageId?: string | undefined;
   fullName?: string | undefined;
   lastMessageAt: string;
+  role?: string | undefined;
 }
 
 export interface Conversation {
@@ -240,6 +261,13 @@ export interface ChatGrpcServiceClient {
     metadata?: Metadata,
   ): Observable<AddMemberToConversationResponse>;
 
+  removeMemberFromConversation(
+    request: RemoveMemberFromConversationRequest,
+    metadata?: Metadata,
+  ): Observable<RemoveMemberFromConversationResponse>;
+
+  leaveConversation(request: LeaveConversationRequest, metadata?: Metadata): Observable<LeaveConversationResponse>;
+
   getConversations(request: GetConversationsRequest, metadata?: Metadata): Observable<GetConversationsResponse>;
 
   getMessagesByConversationId(request: GetMessagesRequest, metadata?: Metadata): Observable<GetMessagesResponse>;
@@ -279,6 +307,19 @@ export interface ChatGrpcServiceController {
     | Promise<AddMemberToConversationResponse>
     | Observable<AddMemberToConversationResponse>
     | AddMemberToConversationResponse;
+
+  removeMemberFromConversation(
+    request: RemoveMemberFromConversationRequest,
+    metadata?: Metadata,
+  ):
+    | Promise<RemoveMemberFromConversationResponse>
+    | Observable<RemoveMemberFromConversationResponse>
+    | RemoveMemberFromConversationResponse;
+
+  leaveConversation(
+    request: LeaveConversationRequest,
+    metadata?: Metadata,
+  ): Promise<LeaveConversationResponse> | Observable<LeaveConversationResponse> | LeaveConversationResponse;
 
   getConversations(
     request: GetConversationsRequest,
@@ -332,6 +373,8 @@ export function ChatGrpcServiceControllerMethods() {
     const grpcMethods: string[] = [
       "createConversation",
       "addMemberToConversation",
+      "removeMemberFromConversation",
+      "leaveConversation",
       "getConversations",
       "getMessagesByConversationId",
       "getConversationAssets",

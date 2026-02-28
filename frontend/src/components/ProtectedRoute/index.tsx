@@ -11,6 +11,10 @@ import {
 } from "@/redux/slices/messageSlice";
 import type { AppDispatch } from "@/redux/store";
 import {
+  addConversationMembers,
+  applyConversationUpdate,
+  removeConversationMember,
+  setConversationAccessState,
   updateNewMessage,
   upUnreadCount,
 } from "@/redux/slices/conversationSlice";
@@ -25,6 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [play] = useSound(notificationSound, { volume: 0.5 });
 
   const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     selectedChatIdRef.current = conversationId ?? null;
@@ -100,20 +105,119 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       );
     };
 
+    const systemMessageHandler = (payload: { message: Message }) => {
+      const message = payload.message;
+      dispatch(addMessage(message));
+      dispatch(
+        updateNewMessage({
+          conversationId: message.conversationId,
+          lastMessage: { ...message },
+        }),
+      );
+    };
+
+    const memberAddedHandler = (payload: {
+      conversationId: string;
+      memberIds: string[];
+      members?: Array<{
+        userId: string;
+        role?: "ADMIN" | "MEMBER" | "OWNER";
+        username?: string;
+        fullName?: string;
+        avatar?: string;
+      }>;
+    }) => {
+      dispatch(
+        addConversationMembers({
+          conversationId: payload.conversationId,
+          memberIds: payload.memberIds || [],
+          members: payload.members || [],
+        }),
+      );
+    };
+
+    const memberRemovedHandler = (payload: {
+      conversationId: string;
+      targetUserId: string;
+    }) => {
+      dispatch(
+        removeConversationMember({
+          conversationId: payload.conversationId,
+          userId: payload.targetUserId,
+        }),
+      );
+
+      if (payload.targetUserId === user.id) {
+        dispatch(
+          setConversationAccessState({
+            conversationId: payload.conversationId,
+            membershipStatus: "REMOVED",
+            canSendMessage: false,
+          }),
+        );
+      }
+    };
+
+    const memberLeftHandler = (payload: {
+      conversationId: string;
+      actorId: string;
+    }) => {
+      dispatch(
+        removeConversationMember({
+          conversationId: payload.conversationId,
+          userId: payload.actorId,
+        }),
+      );
+
+      if (payload.actorId === user.id) {
+        dispatch(
+          setConversationAccessState({
+            conversationId: payload.conversationId,
+            membershipStatus: "LEFT",
+            canSendMessage: false,
+          }),
+        );
+      }
+    };
+
+    const conversationUpdateHandler = (payload: {
+      conversation: any;
+      membershipStatus?: "ACTIVE" | "REMOVED" | "LEFT";
+      canSendMessage?: boolean;
+    }) => {
+      if (!payload?.conversation) return;
+      dispatch(
+        applyConversationUpdate({
+          conversation: payload.conversation,
+          membershipStatus: payload.membershipStatus,
+          canSendMessage: payload.canSendMessage,
+        }),
+      );
+    };
+
     socket.on("chat.new_message", handler);
     socket.on("message:new", newMessageHandler);
     socket.on("message:ack", ackHandler);
     socket.on("message:error", errorHandler);
+    socket.on("message:system", systemMessageHandler);
+    socket.on("conversation:member_added", memberAddedHandler);
+    socket.on("conversation:member_removed", memberRemovedHandler);
+    socket.on("conversation:member_left", memberLeftHandler);
+    socket.on("conversation:update", conversationUpdateHandler);
 
     return () => {
       socket.off("chat.new_message", handler);
       socket.off("message:new", newMessageHandler);
       socket.off("message:ack", ackHandler);
       socket.off("message:error", errorHandler);
+      socket.off("message:system", systemMessageHandler);
+      socket.off("conversation:member_added", memberAddedHandler);
+      socket.off("conversation:member_removed", memberRemovedHandler);
+      socket.off("conversation:member_left", memberLeftHandler);
+      socket.off("conversation:update", conversationUpdateHandler);
     };
-  }, [dispatch, play]);
+  }, [dispatch, play, user.id]);
 
-  const user = useSelector(selectUser);
   if (!user?.id) {
     console.log("no user");
     return <Navigate to="/auth" replace />;
