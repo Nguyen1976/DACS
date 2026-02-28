@@ -153,11 +153,66 @@ export class RealtimeGateway
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,
   ) {
+    if (!client.data.userId) {
+      client.emit(SOCKET_EVENTS.CHAT.MESSAGE_ERROR, {
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized socket client',
+        retryable: false,
+      })
+      return
+    }
+
     //tin nhan duoc gui di qua rabbitmq
     this.amqpConnection.publish(
       EXCHANGE_RMQ.REALTIME_EVENTS,
       ROUTING_RMQ.SEND_MESSAGE,
-      data,
+      {
+        ...data,
+        senderId: client.data.userId,
+      },
+    )
+  }
+
+  @SubscribeMessage(SOCKET_EVENTS.CHAT.MESSAGE_CREATE)
+  async handleCreateMessage(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!client.data.userId) {
+      client.emit(SOCKET_EVENTS.CHAT.MESSAGE_ERROR, {
+        conversationId: data?.conversationId,
+        clientMessageId: data?.clientMessageId,
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized socket client',
+        retryable: false,
+      })
+      return
+    }
+
+    if (!data?.conversationId || !data?.clientMessageId) {
+      client.emit(SOCKET_EVENTS.CHAT.MESSAGE_ERROR, {
+        conversationId: data?.conversationId,
+        clientMessageId: data?.clientMessageId,
+        code: 'INVALID_PAYLOAD',
+        message: 'conversationId and clientMessageId are required',
+        retryable: false,
+      })
+      return
+    }
+
+    this.amqpConnection.publish(
+      EXCHANGE_RMQ.REALTIME_EVENTS,
+      ROUTING_RMQ.SEND_MESSAGE,
+      {
+        conversationId: data.conversationId,
+        senderId: client.data.userId,
+        text: data.content,
+        replyToMessageId: data.replyToMessageId,
+        tempMessageId: data.clientMessageId,
+        clientMessageId: data.clientMessageId,
+        type: data.type,
+        medias: data.media || data.medias || [],
+      },
     )
   }
 }

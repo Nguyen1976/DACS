@@ -7,6 +7,22 @@ import {
 export class ConversationMapper {
   // Add mapping methods here as needed
 
+  private static mapMessage(message: any) {
+    if (!message) return null
+
+    return {
+      ...message,
+      text: message.content || '',
+      type: message.type || 'TEXT',
+      clientMessageId: message.clientMessageId || undefined,
+      createdAt: message.createdAt.toString(),
+      medias: (message.medias || []).map((media: any) => ({
+        ...media,
+        size: String(media.size),
+      })),
+    }
+  }
+
   static toGetConversationByIdResponse(res: any): any {
     return this.formatConversationResponse(res)
   }
@@ -33,12 +49,7 @@ export class ConversationMapper {
           lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : null,
           lastMessageAt: m.lastMessageAt.toString(),
         })),
-        lastMessage: c.messages.length
-          ? {
-              ...c.messages[0],
-              createdAt: c.messages[0].createdAt.toString(),
-            }
-          : null,
+        lastMessage: c.messages.length ? this.mapMessage(c.messages[0]) : null,
       })),
     } as GetConversationsResponse
   }
@@ -64,10 +75,7 @@ export class ConversationMapper {
           lastMessageAt: m.lastMessageAt.toString(),
         })),
         lastMessage: conversation.messages.length
-          ? {
-              ...conversation.messages[0],
-              createdAt: conversation.messages[0].createdAt.toString(),
-            }
+          ? this.mapMessage(conversation.messages[0])
           : null,
       },
     } as GetConversationByFriendIdResponse
@@ -92,11 +100,7 @@ export class ConversationMapper {
           ...m,
           lastReadAt: m.lastReadAt ? m.lastReadAt.toString() : '',
         })),
-        messages:
-          res?.messages?.map((msg: any) => ({
-            ...msg,
-            createdAt: msg.createdAt.toString(),
-          })) || [],
+        messages: res?.messages?.map((msg: any) => this.mapMessage(msg)) || [],
       },
     } as CreateConversationResponse
   }

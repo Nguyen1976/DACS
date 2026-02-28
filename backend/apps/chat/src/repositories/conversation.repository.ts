@@ -1,12 +1,133 @@
 import { PrismaService } from '@app/prisma/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { conversationType } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class ConversationRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  private updatedAtBackfilled = false
+  private participantRoleBackfilled = false
+
+  private async forceBackfillConversationUpdatedAt() {
+    await this.prisma.$runCommandRaw({
+      update: 'conversation',
+      updates: [
+        {
+          q: {
+            $or: [{ updatedAt: null }, { updatedAt: { $exists: false } }],
+          },
+          u: [
+            {
+              $set: {
+                updatedAt: {
+                  $ifNull: ['$createdAt', '$$NOW'],
+                },
+              },
+            },
+          ],
+          multi: true,
+        },
+      ],
+    })
+  }
+
+  private async ensureConversationUpdatedAtNotNull() {
+    if (this.updatedAtBackfilled) return
+    await this.forceBackfillConversationUpdatedAt()
+    this.updatedAtBackfilled = true
+  }
+
+  private async forceBackfillParticipantRole() {
+    await this.prisma.$runCommandRaw({
+      update: 'conversationMember',
+      updates: [
+        {
+          q: {
+            $or: [
+              { role: null },
+              { role: { $exists: false } },
+              { role: 'member' },
+              { role: 'admin' },
+              { role: 'owner' },
+            ],
+          },
+          u: [
+            {
+              $set: {
+                role: {
+                  $switch: {
+                    branches: [
+                      { case: { $eq: ['$role', 'admin'] }, then: 'ADMIN' },
+                      { case: { $eq: ['$role', 'owner'] }, then: 'OWNER' },
+                      { case: { $eq: ['$role', 'member'] }, then: 'MEMBER' },
+                    ],
+                    default: 'MEMBER',
+                  },
+                },
+              },
+            },
+          ],
+          multi: true,
+        },
+      ],
+    })
+  }
+
+  private async ensureParticipantRoleNormalized() {
+    if (this.participantRoleBackfilled) return
+    await this.forceBackfillParticipantRole()
+    this.participantRoleBackfilled = true
+  }
+
+  private async findConversationsWithRetry(
+    args: Prisma.conversationFindManyArgs,
+  ) {
+    try {
+      return await this.prisma.conversation.findMany(args)
+    } catch (error) {
+      const prismaError = error as {
+        code?: string
+        meta?: {
+          field_name?: string
+        }
+      }
+      const isUpdatedAtTypeError =
+        prismaError?.code === 'P2032' &&
+        String(prismaError?.meta?.field_name || '').includes('updatedAt')
+
+      const errorMessage = String((error as any)?.message || '')
+      const isParticipantRoleError =
+        errorMessage.includes(
+          "Value 'member' not found in enum 'participantRole'",
+        ) ||
+        errorMessage.includes(
+          "Value 'admin' not found in enum 'participantRole'",
+        ) ||
+        errorMessage.includes(
+          "Value 'owner' not found in enum 'participantRole'",
+        )
+
+      if (!isUpdatedAtTypeError && !isParticipantRoleError) {
+        throw error
+      }
+
+      if (isParticipantRoleError) {
+        await this.forceBackfillParticipantRole()
+      }
+
+      if (isUpdatedAtTypeError) {
+        await this.forceBackfillConversationUpdatedAt()
+      }
+
+      return await this.prisma.conversation.findMany(args)
+    }
+  }
+
   async findConversationByFriendId(friendId: string, userId: string) {
+    await this.ensureParticipantRoleNormalized()
+
     return await this.prisma.conversation.findFirst({
       where: {
         type: 'DIRECT',
@@ -22,10 +143,15 @@ export class ConversationRepository {
           take: 1,
           include: {
             senderMember: true,
+            medias: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
           },
         },
       },
-    })
+    } as any)
   }
 
   private normalizeString(str: string) {
@@ -62,6 +188,8 @@ export class ConversationRepository {
   }
 
   async findByIdWithMembers(id: string) {
+    await this.ensureParticipantRoleNormalized()
+
     return await this.prisma.conversation.findUnique({
       where: { id },
       include: {
@@ -79,13 +207,20 @@ export class ConversationRepository {
           take: 1,
           select: {
             id: true,
-            text: true,
+            content: true,
+            type: true,
+            clientMessageId: true,
             senderId: true,
             createdAt: true,
             conversationId: true,
             replyToMessageId: true,
             isDeleted: true,
             deleteType: true,
+            medias: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
             senderMember: {
               select: {
                 userId: true,
@@ -97,7 +232,7 @@ export class ConversationRepository {
           },
         },
       },
-    })
+    } as any)
   }
 
   async findByUserIdPaginated(
@@ -105,6 +240,9 @@ export class ConversationRepository {
     cursor: Date | null,
     take: number,
   ) {
+    await this.ensureConversationUpdatedAtNotNull()
+    await this.ensureParticipantRoleNormalized()
+
     const memberships = await this.prisma.conversationMember.findMany({
       where: {
         userId,
@@ -117,7 +255,7 @@ export class ConversationRepository {
       select: { conversationId: true },
     })
 
-    const conversations = await this.prisma.conversation.findMany({
+    const conversations = await this.findConversationsWithRetry({
       where: {
         id: { in: memberships.map((m) => m.conversationId) },
       },
@@ -128,10 +266,15 @@ export class ConversationRepository {
           take: 1,
           include: {
             senderMember: true,
+            medias: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
           },
         },
       },
-    })
+    } as any)
 
     //sort lại conver theo thứ tự member vì conver không có order by
     const map = new Map(conversations.map((c) => [c.id, c]))
@@ -141,10 +284,24 @@ export class ConversationRepository {
     return ordered
   }
 
-  async updateUpdatedAt(conversationId: string) {
+  async updateUpdatedAt(
+    conversationId: string,
+    data?: {
+      lastMessageId?: string
+      lastMessageAt?: Date
+      lastMessageType?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE'
+    },
+  ) {
     return await this.prisma.conversation.update({
       where: { id: conversationId },
-      data: { updatedAt: new Date() },
+      data: {
+        updatedAt: new Date(),
+        ...(data?.lastMessageId ? { lastMessageId: data.lastMessageId } : {}),
+        ...(data?.lastMessageAt ? { lastMessageAt: data.lastMessageAt } : {}),
+        ...(data?.lastMessageType
+          ? { lastMessageType: data.lastMessageType }
+          : {}),
+      },
     })
   }
 
@@ -231,7 +388,10 @@ export class ConversationRepository {
   // }
 
   async searchByKeyword(userId: string, keyword: string) {
-    return this.prisma.conversation.findMany({
+    await this.ensureConversationUpdatedAtNotNull()
+    await this.ensureParticipantRoleNormalized()
+
+    return this.findConversationsWithRetry({
       where: {
         type: 'GROUP',
         groupNameSearch: {
@@ -251,16 +411,23 @@ export class ConversationRepository {
           take: 1,
           include: {
             senderMember: true,
+            medias: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
           },
         },
       },
       orderBy: {
         updatedAt: 'desc',
       },
-    })
+    } as any)
   }
 
   async findDirectConversationOfFriend(userId: string, keyword: string) {
+    await this.ensureParticipantRoleNormalized()
+
     // 1️⃣ Tìm member KHÁC user match username
     const matchedMembers = await this.prisma.conversationMember.findMany({
       where: {
@@ -293,7 +460,9 @@ export class ConversationRepository {
     if (!memberships.length) return []
 
     // 3️⃣ Lấy conversation giống như cũ
-    const conversations = await this.prisma.conversation.findMany({
+    await this.ensureConversationUpdatedAtNotNull()
+
+    const conversations = await this.findConversationsWithRetry({
       where: {
         id: { in: memberships.map((m) => m.conversationId) },
       },
@@ -304,10 +473,15 @@ export class ConversationRepository {
           take: 1,
           include: {
             senderMember: true,
+            medias: {
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
           },
         },
       },
-    })
+    } as any)
 
     const map = new Map(conversations.map((c) => [c.id, c]))
     return memberships.map((m) => map.get(m.conversationId))

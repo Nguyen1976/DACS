@@ -7,6 +7,71 @@ import { Member } from 'interfaces/chat.grpc'
 export class ConversationMemberRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  private participantRoleBackfilled = false
+
+  private async forceBackfillParticipantRole() {
+    await this.prisma.$runCommandRaw({
+      update: 'conversationMember',
+      updates: [
+        {
+          q: {
+            $or: [
+              { role: null },
+              { role: { $exists: false } },
+              { role: 'member' },
+              { role: 'admin' },
+              { role: 'owner' },
+            ],
+          },
+          u: [
+            {
+              $set: {
+                role: {
+                  $switch: {
+                    branches: [
+                      { case: { $eq: ['$role', 'admin'] }, then: 'ADMIN' },
+                      { case: { $eq: ['$role', 'owner'] }, then: 'OWNER' },
+                      { case: { $eq: ['$role', 'member'] }, then: 'MEMBER' },
+                    ],
+                    default: 'MEMBER',
+                  },
+                },
+              },
+            },
+          ],
+          multi: true,
+        },
+      ],
+    })
+  }
+
+  private async ensureParticipantRoleNormalized() {
+    if (this.participantRoleBackfilled) return
+    await this.forceBackfillParticipantRole()
+    this.participantRoleBackfilled = true
+  }
+
+  private async withRoleRetry<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn()
+    } catch (error) {
+      const message = String((error as any)?.message || '')
+      const isParticipantRoleError =
+        message.includes(
+          "Value 'member' not found in enum 'participantRole'",
+        ) ||
+        message.includes("Value 'admin' not found in enum 'participantRole'") ||
+        message.includes("Value 'owner' not found in enum 'participantRole'")
+
+      if (!isParticipantRoleError) {
+        throw error
+      }
+
+      await this.forceBackfillParticipantRole()
+      return await fn()
+    }
+  }
+
   async createMany(
     conversationId: string,
     members: Member[],
@@ -20,8 +85,8 @@ export class ConversationMemberRepository {
         userId: member.userId,
         role:
           type === conversationType.GROUP && createrId === member.userId
-            ? 'admin'
-            : 'member',
+            ? 'ADMIN'
+            : 'MEMBER',
         lastReadMessageId: null,
         lastMessageAt: new Date(),
       })),
@@ -29,15 +94,19 @@ export class ConversationMemberRepository {
   }
 
   async findByConversationId(conversationId: string) {
-    return await this.prisma.conversationMember.findMany({
-      where: {
-        conversationId,
-      },
-      select: {
-        userId: true,
-        role: true,
-      },
-    })
+    await this.ensureParticipantRoleNormalized()
+
+    return await this.withRoleRetry(() =>
+      this.prisma.conversationMember.findMany({
+        where: {
+          conversationId,
+        },
+        select: {
+          userId: true,
+          role: true,
+        },
+      }),
+    )
   }
 
   async updateLastMessageAt(conversationId: string, lastMessageAt: Date) {
@@ -55,22 +124,30 @@ export class ConversationMemberRepository {
     conversationId: string,
     userIds: string[],
   ) {
-    return await this.prisma.conversationMember.findMany({
-      where: {
-        conversationId,
-        userId: { in: userIds },
-      },
-      select: { userId: true },
-    })
+    await this.ensureParticipantRoleNormalized()
+
+    return await this.withRoleRetry(() =>
+      this.prisma.conversationMember.findMany({
+        where: {
+          conversationId,
+          userId: { in: userIds },
+        },
+        select: { userId: true },
+      }),
+    )
   }
 
   async findByConversationIdAndUserId(conversationId: string, userId: string) {
-    return await this.prisma.conversationMember.findFirst({
-      where: {
-        conversationId,
-        userId,
-      },
-    })
+    await this.ensureParticipantRoleNormalized()
+
+    return await this.withRoleRetry(() =>
+      this.prisma.conversationMember.findFirst({
+        where: {
+          conversationId,
+          userId,
+        },
+      }),
+    )
   }
 
   async addMembers(conversationId: string, memberIds: string[]) {
@@ -78,8 +155,8 @@ export class ConversationMemberRepository {
       data: memberIds.map((memberId) => ({
         conversationId,
         userId: memberId,
-        role: 'member',
-        lastMessageAt: new Date(),//vì vừa mới được thêm lên mình sẽ để thời gian này conver sẽ ở đầu
+        role: 'MEMBER',
+        lastMessageAt: new Date(), //vì vừa mới được thêm lên mình sẽ để thời gian này conver sẽ ở đầu
       })),
     })
   }

@@ -43,4 +43,32 @@ export class ChatErrors {
       message: 'lastReadMessageId does not belong to the conversation',
     })
   }
+
+  static invalidMessagePayload(): never {
+    throw new RpcException({
+      code: status.INVALID_ARGUMENT,
+      message: 'Invalid message payload',
+    })
+  }
+
+  static invalidMediaType(): never {
+    throw new RpcException({
+      code: status.INVALID_ARGUMENT,
+      message: 'Invalid media type or mime type',
+    })
+  }
+
+  static fileSizeExceeded(): never {
+    throw new RpcException({
+      code: status.INVALID_ARGUMENT,
+      message: 'File size exceeded max limit',
+    })
+  }
+
+  static mediaNotUploaded(): never {
+    throw new RpcException({
+      code: status.FAILED_PRECONDITION,
+      message: 'Media file not found in storage',
+    })
+  }
 }

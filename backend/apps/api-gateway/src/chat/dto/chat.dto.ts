@@ -28,12 +28,21 @@ export class AddMemberToConversationDTO {
   members: Member[]
 }
 
-export class SendMessageDTO {
+export class CreateMessageUploadUrlDTO {
   @IsNotEmpty()
   conversationId: string
 
   @IsNotEmpty()
-  message: string
+  type: 'IMAGE' | 'VIDEO' | 'FILE'
+
+  @IsNotEmpty()
+  mimeType: string
+
+  @IsNotEmpty()
+  fileName: string
+
+  @IsNotEmpty()
+  size: string
 }
 
 export class ReadMessageDto {

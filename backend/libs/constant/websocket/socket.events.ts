@@ -5,6 +5,10 @@ export const SOCKET_EVENTS = {
   CHAT: {
     SEND_MESSAGE: 'chat.send_message', //emit
     NEW_MESSAGE: 'chat.new_message', //listen
+    MESSAGE_CREATE: 'message:create',
+    MESSAGE_NEW: 'message:new',
+    MESSAGE_ACK: 'message:ack',
+    MESSAGE_ERROR: 'message:error',
     NEW_CONVERSATION: 'chat.new_conversation', //listen
     NEW_MEMBER_ADDED: 'chat.new_member_added', //listen
   },

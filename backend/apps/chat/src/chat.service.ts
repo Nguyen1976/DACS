@@ -3,12 +3,14 @@ import { conversationType, Status } from '@prisma/client'
 import {
   AddMemberToConversationRequest,
   type AddMemberToConversationResponse,
+  ConversationAssetKind,
+  CreateMessageUploadUrlRequest,
+  CreateMessageUploadUrlResponse,
   CreateConversationRequest,
+  GetConversationAssetsResponse,
   GetMessagesResponse,
   ReadMessageRequest,
   ReadMessageResponse,
-  SendMessageRequest,
-  SendMessageResponse,
 } from 'interfaces/chat.grpc'
 import type {
   MessageSendPayload,
@@ -26,6 +28,26 @@ import { StorageR2Service } from '@app/storage-r2/storage-r2.service'
 
 @Injectable()
 export class ChatService {
+  private readonly uploadLimitByType: Record<string, number> = {
+    IMAGE: 10 * 1024 * 1024,
+    VIDEO: 100 * 1024 * 1024,
+    FILE: 50 * 1024 * 1024,
+  }
+
+  private readonly mimeAllowListByType: Record<string, string[]> = {
+    IMAGE: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    VIDEO: ['video/mp4', 'video/webm', 'video/quicktime'],
+    FILE: [
+      'application/pdf',
+      'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/zip',
+    ],
+  }
+
   constructor(
     private readonly conversationRepo: ConversationRepository,
     private readonly messageRepo: MessageRepository,
@@ -100,24 +122,107 @@ export class ChatService {
       ChatErrors.senderNotMember()
     }
 
-    const message = await this.messageRepo.create({
+    const type = this.normalizeMessageType(data.type || 'TEXT')
+    const content = data.text?.trim() || null
+    const medias = data.medias || []
+
+    if (type === 'TEXT' && !content) {
+      ChatErrors.invalidMessagePayload()
+    }
+
+    if (type !== 'TEXT' && medias.length === 0) {
+      ChatErrors.invalidMessagePayload()
+    }
+
+    if (type !== 'TEXT') {
+      await Promise.all(
+        medias.map(async (media) => {
+          this.validateMimeAndSize(type, media.mimeType, Number(media.size))
+          const exists = await this.checkObjectExistsWithRetry(media.objectKey)
+          if (!exists) {
+            ChatErrors.mediaNotUploaded()
+          }
+        }),
+      )
+    }
+
+    const saveResult = await this.messageRepo.create({
       conversationId: data.conversationId,
       senderId: data.senderId,
-      text: data.text,
+      type,
+      content,
+      clientMessageId:
+        data.clientMessageId || data.tempMessageId || crypto.randomUUID(),
       replyToMessageId: data.replyToMessageId,
+      medias,
     })
 
-    await this.conversationRepo.updateUpdatedAt(data.conversationId)
+    const message: any = saveResult.message
+
+    if (!message) {
+      ChatErrors.invalidMessagePayload()
+    }
+
+    await this.conversationRepo.updateUpdatedAt(data.conversationId, {
+      lastMessageId: message.id,
+      lastMessageAt: message.createdAt,
+      lastMessageType: message.type,
+    })
 
     await this.memberRepo.updateLastMessageAt(
       data.conversationId,
       message.createdAt,
     )
 
+    const normalizedMessage = this.normalizeMessage(message)
+
     this.eventsPublisher.publishMessageSent(
-      { ...message, tempMessageId: data.tempMessageId },
+      {
+        ...normalizedMessage,
+        tempMessageId: data.tempMessageId,
+        duplicated: saveResult.duplicated,
+      },
       memberIds as string[],
     )
+
+    return {
+      message: normalizedMessage,
+      duplicated: saveResult.duplicated,
+    }
+  }
+
+  async createMessageUploadUrl(
+    data: CreateMessageUploadUrlRequest,
+  ): Promise<CreateMessageUploadUrlResponse> {
+    const member = await this.memberRepo.findByConversationIdAndUserId(
+      data.conversationId,
+      data.userId,
+    )
+
+    if (!member) {
+      ChatErrors.userNotMember()
+    }
+
+    const type = data.type as unknown as 'IMAGE' | 'VIDEO' | 'FILE'
+    const size = Number(data.size)
+
+    const normalizedType = this.normalizeMessageType(type)
+
+    this.validateMimeAndSize(normalizedType, data.mimeType, size)
+
+    const upload = await this.storageR2Service.createPresignedUploadUrl({
+      folder: `chat-media/${data.conversationId}/${data.userId}`,
+      fileName: data.fileName,
+      mime: data.mimeType,
+      expiresInSeconds: 300,
+    })
+
+    return {
+      uploadUrl: upload.uploadUrl,
+      objectKey: upload.objectKey,
+      publicUrl: upload.publicUrl,
+      expiresInSeconds: String(upload.expiresInSeconds),
+    }
   }
 
   async addMemberToConversation(
@@ -140,7 +245,7 @@ export class ChatService {
     )
     //check role
     const checkRole = existingMembers.find(
-      (m) => m.userId === dto.userId && m.role === 'admin',
+      (m) => m.userId === dto.userId && m.role === 'ADMIN',
     )
     if (!checkRole) {
       ChatErrors.userNoPermission()
@@ -202,22 +307,67 @@ export class ChatService {
       ChatErrors.userNotMember()
     }
 
-    const take = params.limit || 20
-    const page = params.page || 1
-    const skip = (page - 1) * take
+    const take = Number(params.limit) || 20
+    const cursor = params.cursor ? new Date(params.cursor) : null
 
     const messages = await this.messageRepo.findByConversationIdPaginated(
       conversationId,
-      skip,
-      parseInt(take),
+      take,
+      cursor,
     )
 
     return {
       messages: messages.map((m) => ({
-        ...m,
-        createdAt: m.createdAt.toString(),
+        ...this.normalizeMessage(m),
       })),
     } as GetMessagesResponse
+  }
+
+  async getConversationAssets(
+    conversationId: string,
+    userId: string,
+    kind: ConversationAssetKind,
+    params: {
+      limit?: number | string
+      cursor?: string | null
+    },
+  ): Promise<GetConversationAssetsResponse> {
+    const isMember = await this.memberRepo.findByConversationIdAndUserId(
+      conversationId,
+      userId,
+    )
+
+    if (!isMember) {
+      ChatErrors.userNotMember()
+    }
+
+    const take = Number(params.limit) || 20
+    const cursor = params.cursor ? new Date(params.cursor) : null
+
+    const kindMap: Record<number, 'MEDIA' | 'LINK' | 'DOC'> = {
+      [ConversationAssetKind.ASSET_MEDIA]: 'MEDIA',
+      [ConversationAssetKind.ASSET_LINK]: 'LINK',
+      [ConversationAssetKind.ASSET_DOC]: 'DOC',
+    }
+
+    const mappedKind = kindMap[kind] || 'MEDIA'
+
+    const messages = await this.messageRepo.findConversationAssets(
+      conversationId,
+      mappedKind,
+      take,
+      cursor,
+    )
+
+    const nextCursor =
+      messages.length === take
+        ? messages[messages.length - 1]?.createdAt?.toISOString()
+        : undefined
+
+    return {
+      messages: messages.map((message) => this.normalizeMessage(message)),
+      nextCursor,
+    }
   }
 
   async readMessage(data: ReadMessageRequest): Promise<ReadMessageResponse> {
@@ -296,10 +446,8 @@ export class ChatService {
   }
 
   async getConversationByFriendId(friendId: string, userId: string) {
-    const conversation = await this.conversationRepo.findConversationByFriendId(
-      friendId,
-      userId,
-    )
+    const conversation: any =
+      await this.conversationRepo.findConversationByFriendId(friendId, userId)
 
     if (!conversation) {
       ChatErrors.conversationNotFound()
@@ -328,6 +476,72 @@ export class ChatService {
       bmp: 'image/bmp',
     }
     return mimeTypes[ext || ''] || 'application/octet-stream'
+  }
+
+  private validateMimeAndSize(type: string, mimeType: string, size: number) {
+    if (!this.uploadLimitByType[type] || !this.mimeAllowListByType[type]) {
+      ChatErrors.invalidMediaType()
+    }
+
+    if (
+      !Number.isFinite(size) ||
+      size <= 0 ||
+      size > this.uploadLimitByType[type]
+    ) {
+      ChatErrors.fileSizeExceeded()
+    }
+
+    if (!this.mimeAllowListByType[type].includes(mimeType)) {
+      ChatErrors.invalidMediaType()
+    }
+  }
+
+  private normalizeMessageType(type: any): 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE' {
+    if (typeof type === 'number') {
+      return ['TEXT', 'IMAGE', 'VIDEO', 'FILE'][type] as
+        | 'TEXT'
+        | 'IMAGE'
+        | 'VIDEO'
+        | 'FILE'
+    }
+
+    const normalized = String(type || 'TEXT').toUpperCase()
+
+    if (normalized.includes('IMAGE')) return 'IMAGE'
+    if (normalized.includes('VIDEO')) return 'VIDEO'
+    if (normalized.includes('FILE')) return 'FILE'
+    return 'TEXT'
+  }
+
+  private normalizeMessage(message: any) {
+    return {
+      ...message,
+      type: message.type || 'TEXT',
+      text: message.content || '',
+      createdAt: message.createdAt.toString(),
+      medias: (message.medias || []).map((media: any) => ({
+        ...media,
+        size: String(media.size),
+      })),
+    }
+  }
+
+  private async checkObjectExistsWithRetry(
+    objectKey: string,
+  ): Promise<boolean> {
+    const maxAttempts = 4
+    const delayMs = 300
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const exists = await this.storageR2Service.objectExists(objectKey)
+      if (exists) return true
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+      }
+    }
+
+    return false
   }
 
   private async calculateUnreadCounts(

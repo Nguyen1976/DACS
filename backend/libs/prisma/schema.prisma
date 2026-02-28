@@ -62,6 +62,32 @@ enum conversationType {
   GROUP
 }
 
+enum participantRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum messageType {
+  TEXT
+  IMAGE
+  VIDEO
+  FILE
+}
+
+enum mediaType {
+  IMAGE
+  VIDEO
+  FILE
+}
+
+enum mediaScanStatus {
+  PENDING
+  SAFE
+  QUARANTINED
+  FAILED
+}
+
 model conversation {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   type conversationType @default(DIRECT)
@@ -75,39 +101,46 @@ model conversation {
   members     conversationMember[]
   messages    message[]
 
+  lastMessageId String? @db.ObjectId
+  lastMessageAt DateTime?
+  lastMessageType messageType?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   groupNameSearch String?
 
   @@index([type, groupNameSearch, updatedAt])
+  @@index([lastMessageAt])
 }
 
 model conversationMember {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   conversationId String @db.ObjectId
   
-  userId String? @db.ObjectId
+  userId String @db.ObjectId
 
   username String?
   fullName String?
   avatar String? 
 
-  role String? //nếu là nhóm thì có vai trò như admin hay member
+  role participantRole @default(MEMBER) //nếu là nhóm thì có vai trò như admin hay member
 
   lastReadMessageId   String? @db.ObjectId
   lastReadAt          DateTime?
+  lastDeliveredAt     DateTime?
 
   joinedAt DateTime @default(now())
 
   conversation conversation @relation(fields: [conversationId], references: [id])
   
-  messages message[]
+  sentMessages message[] @relation("SenderMessages")
 
   lastMessageAt DateTime?
 
   @@unique([conversationId, userId])
   @@index([userId, lastMessageAt])
   @@index([username])
+  @@index([conversationId, lastReadAt])
 }
 
 enum deleteType {
@@ -118,15 +151,60 @@ model message {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   conversationId String @db.ObjectId
   senderId String @db.ObjectId
-  text String
+  type messageType @default(TEXT)
+  content String?
+  clientMessageId String
   replyToMessageId String? @db.ObjectId
+
   isDeleted Boolean @default(false)
+  deletedAt DateTime?
+  deletedByUserId String? @db.ObjectId
   deleteType deleteType?
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   conversation conversation @relation(fields: [conversationId], references: [id])
   
-  senderMember conversationMember @relation(fields: [conversationId, senderId], references: [conversationId, userId])
+  senderMember conversationMember @relation("SenderMessages", fields: [conversationId, senderId], references: [conversationId, userId])
 
-  @@index([conversationId, createdAt])
+  replyTo message? @relation("MessageReply", fields: [replyToMessageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies message[] @relation("MessageReply")
+
+  medias messageMedia[]
+
+  @@unique([conversationId, senderId, clientMessageId])
+  @@index([conversationId, createdAt, id])
+  @@index([conversationId, senderId, createdAt])
+  @@index([replyToMessageId])
+}
+
+model messageMedia {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  messageId String @db.ObjectId
+  mediaType mediaType
+
+  objectKey String @unique
+  url String
+  mimeType String
+  size BigInt
+
+  width Int?
+  height Int?
+  duration Float?
+
+  checksum String?
+  thumbnailKey String?
+  thumbnailUrl String?
+
+  scanStatus mediaScanStatus @default(PENDING)
+  scanProvider String?
+  scanDetail String?
+
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+
+  message message @relation(fields: [messageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([messageId, sortOrder])
 }

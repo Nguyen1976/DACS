@@ -11,6 +11,43 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "chat";
 
+export enum ConversationAssetKind {
+  ASSET_MEDIA = 0,
+  ASSET_LINK = 1,
+  ASSET_DOC = 2,
+  UNRECOGNIZED = -1,
+}
+
+export enum MessageType {
+  TEXT = 0,
+  IMAGE = 1,
+  VIDEO = 2,
+  FILE = 3,
+  UNRECOGNIZED = -1,
+}
+
+export enum MediaType {
+  MEDIA_IMAGE = 0,
+  MEDIA_VIDEO = 1,
+  MEDIA_FILE = 2,
+  UNRECOGNIZED = -1,
+}
+
+export interface MessageMedia {
+  id: string;
+  messageId: string;
+  mediaType: MediaType;
+  objectKey: string;
+  url: string;
+  mimeType: string;
+  size: string;
+  width?: number | undefined;
+  height?: number | undefined;
+  duration?: number | undefined;
+  thumbnailUrl?: string | undefined;
+  sortOrder: number;
+}
+
 export interface Member {
   username: string;
   avatar?: string | undefined;
@@ -58,6 +95,9 @@ export interface Message {
   deleteType: string;
   createdAt: string;
   senderMember: SenderMember | undefined;
+  type: MessageType;
+  clientMessageId?: string | undefined;
+  medias: MessageMedia[];
 }
 
 export interface ConversationMember {
@@ -92,6 +132,7 @@ export interface GetMessagesRequest {
   userId: string;
   limit: string;
   page: string;
+  cursor?: string | undefined;
 }
 
 export interface SenderMember {
@@ -105,15 +146,60 @@ export interface GetMessagesResponse {
   messages: Message[];
 }
 
+export interface GetConversationAssetsRequest {
+  conversationId: string;
+  userId: string;
+  kind: ConversationAssetKind;
+  limit: string;
+  cursor?: string | undefined;
+}
+
+export interface GetConversationAssetsResponse {
+  messages: Message[];
+  nextCursor?: string | undefined;
+}
+
 export interface SendMessageRequest {
   conversationId: string;
-  message: string;
+  message?: string | undefined;
   senderId: string;
   replyToMessageId?: string | undefined;
+  type: MessageType;
+  medias: SendMessageMediaInput[];
+  clientMessageId?: string | undefined;
+}
+
+export interface SendMessageMediaInput {
+  mediaType: MediaType;
+  objectKey: string;
+  url: string;
+  mimeType: string;
+  size: string;
+  width?: number | undefined;
+  height?: number | undefined;
+  duration?: number | undefined;
+  thumbnailUrl?: string | undefined;
+  sortOrder: number;
 }
 
 export interface SendMessageResponse {
   message: Message | undefined;
+}
+
+export interface CreateMessageUploadUrlRequest {
+  conversationId: string;
+  userId: string;
+  type: MessageType;
+  mimeType: string;
+  fileName: string;
+  size: string;
+}
+
+export interface CreateMessageUploadUrlResponse {
+  uploadUrl: string;
+  objectKey: string;
+  publicUrl: string;
+  expiresInSeconds: string;
 }
 
 export interface ReadMessageRequest {
@@ -158,7 +244,17 @@ export interface ChatGrpcServiceClient {
 
   getMessagesByConversationId(request: GetMessagesRequest, metadata?: Metadata): Observable<GetMessagesResponse>;
 
+  getConversationAssets(
+    request: GetConversationAssetsRequest,
+    metadata?: Metadata,
+  ): Observable<GetConversationAssetsResponse>;
+
   sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
+
+  createMessageUploadUrl(
+    request: CreateMessageUploadUrlRequest,
+    metadata?: Metadata,
+  ): Observable<CreateMessageUploadUrlResponse>;
 
   readMessage(request: ReadMessageRequest, metadata?: Metadata): Observable<ReadMessageResponse>;
 
@@ -194,10 +290,23 @@ export interface ChatGrpcServiceController {
     metadata?: Metadata,
   ): Promise<GetMessagesResponse> | Observable<GetMessagesResponse> | GetMessagesResponse;
 
+  getConversationAssets(
+    request: GetConversationAssetsRequest,
+    metadata?: Metadata,
+  ): Promise<GetConversationAssetsResponse> | Observable<GetConversationAssetsResponse> | GetConversationAssetsResponse;
+
   sendMessage(
     request: SendMessageRequest,
     metadata?: Metadata,
   ): Promise<SendMessageResponse> | Observable<SendMessageResponse> | SendMessageResponse;
+
+  createMessageUploadUrl(
+    request: CreateMessageUploadUrlRequest,
+    metadata?: Metadata,
+  ):
+    | Promise<CreateMessageUploadUrlResponse>
+    | Observable<CreateMessageUploadUrlResponse>
+    | CreateMessageUploadUrlResponse;
 
   readMessage(
     request: ReadMessageRequest,
@@ -225,7 +334,9 @@ export function ChatGrpcServiceControllerMethods() {
       "addMemberToConversation",
       "getConversations",
       "getMessagesByConversationId",
+      "getConversationAssets",
       "sendMessage",
+      "createMessageUploadUrl",
       "readMessage",
       "searchConversations",
       "getConversationByFriendId",

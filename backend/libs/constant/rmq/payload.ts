@@ -19,7 +19,12 @@ export interface UserUpdateStatusMakeFriendPayload {
   inviteeId: string
   inviteeName: string
   status: string
-  members: { userId: string; username: string; avatar: string, fullName: string }[]
+  members: {
+    userId: string
+    username: string
+    avatar: string
+    fullName: string
+  }[]
 }
 
 export interface SendMessagePayload {
@@ -30,15 +35,13 @@ export interface SendMessagePayload {
   tempMessageId: string
 }
 
-
 export interface UserUpdatedPayload {
   userId: string
   avatar?: string
   fullName?: string
 }
 
-
-export interface  EmitToUserPayload {
+export interface EmitToUserPayload {
   userIds: string[]
   event: string
   data: any
@@ -47,7 +50,40 @@ export interface  EmitToUserPayload {
 export interface MessageSendPayload {
   conversationId: string
   senderId: string
-  text: string
+  text?: string
+  type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE'
+  clientMessageId?: string
+  medias?: MessageMediaInput[]
   replyToMessageId?: string
   tempMessageId: string
+}
+
+export interface MessageMediaInput {
+  mediaType: 'IMAGE' | 'VIDEO' | 'FILE'
+  objectKey: string
+  url: string
+  mimeType: string
+  size: string
+  width?: number
+  height?: number
+  duration?: number
+  thumbnailUrl?: string
+  sortOrder?: number
+}
+
+export interface MessageAckPayload {
+  status: 'SUCCESS'
+  clientMessageId: string
+  serverMessageId: string
+  conversationId: string
+  duplicated: boolean
+  createdAt: string
+  message: any
+}
+
+export interface MessageErrorPayload {
+  clientMessageId?: string
+  code: string
+  message: string
+  retryable: boolean
 }

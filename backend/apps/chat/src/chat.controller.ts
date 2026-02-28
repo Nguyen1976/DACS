@@ -4,13 +4,20 @@ import { GrpcMethod } from '@nestjs/microservices'
 import {
   type AddMemberToConversationRequest,
   CHAT_GRPC_SERVICE_NAME,
+  ConversationAssetKind,
   type CreateConversationResponse,
   type CreateConversationRequest,
+  type CreateMessageUploadUrlRequest,
+  CreateMessageUploadUrlResponse,
   type GetConversationsRequest,
+  GetConversationAssetsResponse,
+  type GetConversationAssetsRequest,
   GetConversationsResponse,
   type GetMessagesRequest,
   ReadMessageResponse,
   type ReadMessageRequest,
+  SendMessageResponse,
+  type SendMessageRequest,
   type SearchConversationRequest,
   GetConversationByFriendIdResponse,
 } from 'interfaces/chat.grpc'
@@ -67,10 +74,38 @@ export class ChatController {
       this.chatService.getMessagesByConversationId(
         data.conversationId,
         data.userId,
-        { limit: data.limit, page: data.page },
+        { limit: data.limit, page: data.page, cursor: data.cursor },
       ),
     )
     return res
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'getConversationAssets')
+  async getConversationAssets(
+    data: GetConversationAssetsRequest,
+    metadata: Metadata,
+  ): Promise<GetConversationAssetsResponse> {
+    return await safeExecute(() =>
+      this.chatService.getConversationAssets(
+        data.conversationId,
+        data.userId,
+        data.kind as ConversationAssetKind,
+        {
+          limit: data.limit,
+          cursor: data.cursor,
+        },
+      ),
+    )
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'createMessageUploadUrl')
+  async createMessageUploadUrl(
+    data: CreateMessageUploadUrlRequest,
+    metadata: Metadata,
+  ): Promise<CreateMessageUploadUrlResponse> {
+    return await safeExecute(() =>
+      this.chatService.createMessageUploadUrl(data),
+    )
   }
 
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'readMessage')
@@ -80,6 +115,70 @@ export class ChatController {
   ): Promise<ReadMessageResponse> {
     const res = await safeExecute(() => this.chatService.readMessage(data))
     return res
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'sendMessage')
+  async sendMessage(
+    data: SendMessageRequest,
+    metadata: Metadata,
+  ): Promise<SendMessageResponse> {
+    const normalizeMessageType = (
+      type: any,
+    ): 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE' => {
+      if (typeof type === 'number') {
+        return (['TEXT', 'IMAGE', 'VIDEO', 'FILE'][type] || 'TEXT') as
+          | 'TEXT'
+          | 'IMAGE'
+          | 'VIDEO'
+          | 'FILE'
+      }
+      const normalized = String(type || 'TEXT').toUpperCase()
+      if (normalized.includes('IMAGE')) return 'IMAGE'
+      if (normalized.includes('VIDEO')) return 'VIDEO'
+      if (normalized.includes('FILE')) return 'FILE'
+      return 'TEXT'
+    }
+
+    const normalizeMediaType = (type: any): 'IMAGE' | 'VIDEO' | 'FILE' => {
+      if (typeof type === 'number') {
+        return (['IMAGE', 'VIDEO', 'FILE'][type] || 'FILE') as
+          | 'IMAGE'
+          | 'VIDEO'
+          | 'FILE'
+      }
+      const normalized = String(type || 'MEDIA_FILE').toUpperCase()
+      if (normalized.includes('IMAGE')) return 'IMAGE'
+      if (normalized.includes('VIDEO')) return 'VIDEO'
+      return 'FILE'
+    }
+
+    const res = await safeExecute(() =>
+      this.chatService.sendMessage({
+        conversationId: data.conversationId,
+        senderId: data.senderId,
+        text: data.message || '',
+        replyToMessageId: data.replyToMessageId,
+        tempMessageId: data.clientMessageId || `grpc-${Date.now()}`,
+        clientMessageId: data.clientMessageId,
+        type: normalizeMessageType(data.type),
+        medias: (data.medias || []).map((media) => ({
+          mediaType: normalizeMediaType(media.mediaType),
+          objectKey: media.objectKey,
+          url: media.url,
+          mimeType: media.mimeType,
+          size: media.size,
+          width: media.width,
+          height: media.height,
+          duration: media.duration,
+          thumbnailUrl: media.thumbnailUrl,
+          sortOrder: media.sortOrder,
+        })),
+      }),
+    )
+
+    return {
+      message: res?.message,
+    } as SendMessageResponse
   }
 
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'searchConversations')

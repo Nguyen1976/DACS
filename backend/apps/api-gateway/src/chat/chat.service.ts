@@ -2,14 +2,21 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import type { ClientGrpc } from '@nestjs/microservices'
 import {
   CHAT_GRPC_SERVICE_NAME,
+  ConversationAssetKind,
+  GetConversationAssetsResponse,
+  CreateMessageUploadUrlResponse,
+  MessageType,
   CreateConversationRequest,
   CreateConversationResponse,
   Member,
-  SendMessageRequest,
 } from 'interfaces/chat.grpc'
 import { NotificationGrpcServiceClient } from 'interfaces/notification.grpc'
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom'
-import { AddMemberToConversationDTO, ReadMessageDto } from './dto/chat.dto'
+import {
+  AddMemberToConversationDTO,
+  CreateMessageUploadUrlDTO,
+  ReadMessageDto,
+} from './dto/chat.dto'
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { CreateConversationDTO } from './dto/chat.dto'
 import type { Multer } from 'multer'
@@ -76,13 +83,51 @@ export class ChatService implements OnModuleInit {
       userId,
       limit: params.limit,
       page: params.page,
+      cursor: params.cursor,
     })
     const res = await firstValueFrom(observable)
     return res
   }
 
-  async sendMessage(dto: SendMessageRequest) {
-    const observable = this.chatClientService.sendMessage(dto)
+  async getConversationAssets(
+    conversationId: string,
+    userId: string,
+    kind: 'MEDIA' | 'LINK' | 'DOC',
+    params: {
+      limit?: number
+      cursor?: string | null
+    },
+  ): Promise<GetConversationAssetsResponse> {
+    const kindMap: Record<'MEDIA' | 'LINK' | 'DOC', ConversationAssetKind> = {
+      MEDIA: ConversationAssetKind.ASSET_MEDIA,
+      LINK: ConversationAssetKind.ASSET_LINK,
+      DOC: ConversationAssetKind.ASSET_DOC,
+    }
+
+    const observable = this.chatClientService.getConversationAssets({
+      conversationId,
+      userId,
+      kind: kindMap[kind],
+      limit: String(params.limit || 20),
+      cursor: params.cursor || undefined,
+    })
+
+    return await firstValueFrom(observable)
+  }
+
+  async createMessageUploadUrl(
+    dto: CreateMessageUploadUrlDTO & { userId: string },
+  ): Promise<CreateMessageUploadUrlResponse> {
+    const mapMessageType = (type: 'IMAGE' | 'VIDEO' | 'FILE') => {
+      if (type === 'IMAGE') return MessageType.IMAGE
+      if (type === 'VIDEO') return MessageType.VIDEO
+      return MessageType.FILE
+    }
+
+    const observable = this.chatClientService.createMessageUploadUrl({
+      ...dto,
+      type: mapMessageType(dto.type),
+    })
     return await firstValueFrom(observable)
   }
 

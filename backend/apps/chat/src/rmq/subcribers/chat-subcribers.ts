@@ -10,10 +10,14 @@ import type {
   UserUpdatedPayload,
   UserUpdateStatusMakeFriendPayload,
 } from 'libs/constant/rmq/payload'
+import { ChatEventsPublisher } from '../publishers/chat-events.publisher'
 
 @Injectable()
 export class MessageSubscriber {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatEventsPublisher: ChatEventsPublisher,
+  ) {}
 
   @RabbitSubscribe({
     exchange: EXCHANGE_RMQ.USER_EVENTS,
@@ -43,6 +47,19 @@ export class MessageSubscriber {
     queue: QUEUE_RMQ.CHAT_SEND_MESSAGE,
   })
   async sendMessage(data: MessageSendPayload): Promise<void> {
-    await safeExecute(() => this.chatService.sendMessage(data))
+    try {
+      await safeExecute(() => this.chatService.sendMessage(data))
+    } catch (error: any) {
+      this.chatEventsPublisher.publishMessageError(data.senderId, {
+        clientMessageId: data.clientMessageId || data.tempMessageId,
+        conversationId: data.conversationId,
+        code: 'MESSAGE_CREATE_FAILED',
+        message:
+          error?.message ||
+          'Unable to create message. Please retry or upload again.',
+        retryable: true,
+      })
+      throw error
+    }
   }
 }

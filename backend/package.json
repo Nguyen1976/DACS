@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "proto:gen": "protoc -I ./proto   --ts_proto_out=interfaces   --ts_proto_opt=nestJs=true,addGrpcMetadata=true   ./proto/*.proto",
+    "db:normalize-chat-legacy": "ts-node scripts/normalize-chat-legacy.ts",
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",

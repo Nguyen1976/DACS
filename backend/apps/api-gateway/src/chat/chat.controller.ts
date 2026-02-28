@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common'
 import {
   AddMemberToConversationDTO,
+  CreateMessageUploadUrlDTO,
   CreateConversationDTO,
   ReadMessageDto,
-  SendMessageDTO,
 } from './dto/chat.dto'
 import { ChatService } from './chat.service'
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
@@ -94,10 +94,12 @@ export class ChatController {
     @UserInfo() userInfo: any,
     @Query('limit') limit?: string,
     @Query('page') page?: string,
+    @Query('cursor') cursor?: string,
   ) {
     const params = {
       limit: limit ? parseInt(limit, 10) : 20,
       page: page ? parseInt(page, 10) : 1,
+      cursor: cursor || null,
     }
     const res = await this.chatService.getMessagesByConversationId(
       conversationId,
@@ -107,12 +109,37 @@ export class ChatController {
     return res
   }
 
-  @Post('send_message')
+  @Get('assets')
   @RequireLogin()
-  async sendMessage(@Body() data: SendMessageDTO, @UserInfo() userInfo: any) {
-    return await this.chatService.sendMessage({
+  async getConversationAssets(
+    @Query('conversationId') conversationId: string,
+    @Query('kind') kind: 'MEDIA' | 'LINK' | 'DOC',
+    @Query('limit') limit?: string,
+    @Query('cursor') cursor?: string,
+    @UserInfo() userInfo?: any,
+  ) {
+    const assetKind = ['MEDIA', 'LINK', 'DOC'].includes(kind) ? kind : 'MEDIA'
+
+    return await this.chatService.getConversationAssets(
+      conversationId,
+      userInfo.userId,
+      assetKind,
+      {
+        limit: limit ? parseInt(limit, 10) : 20,
+        cursor: cursor || null,
+      },
+    )
+  }
+
+  @Post('media/presign')
+  @RequireLogin()
+  async createMessageUploadUrl(
+    @Body() data: CreateMessageUploadUrlDTO,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.createMessageUploadUrl({
       ...data,
-      senderId: userInfo.userId,
+      userId: userInfo.userId,
     })
   }
 
