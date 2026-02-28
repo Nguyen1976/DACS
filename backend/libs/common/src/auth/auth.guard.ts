@@ -73,14 +73,14 @@ export class AuthGuard implements CanActivate {
               userId: refreshPayload['userId'],
               username: refreshPayload['username'],
             },
-            { expiresIn: '15m' },
+            { expiresIn: '7d' },
           )
 
           response.cookie('accessToken', newAccessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 30 * 60 * 1000,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
             path: '/',
           })
 
