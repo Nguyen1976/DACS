@@ -201,3 +201,93 @@ export const searchConversationsAPI = async (
   );
   return response.data.data.conversations || [];
 };
+
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "FILE";
+
+export interface UploadMediaUrlResponse {
+  uploadUrl: string;
+  objectKey: string;
+  publicUrl: string;
+  expiresInSeconds: string;
+}
+
+export interface MessageMediaInput {
+  mediaType: "IMAGE" | "VIDEO" | "FILE";
+  objectKey: string;
+  url: string;
+  mimeType: string;
+  size: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+  thumbnailUrl?: string;
+  sortOrder?: number;
+}
+
+export const createMessageUploadUrlAPI = async (payload: {
+  conversationId: string;
+  type: "IMAGE" | "VIDEO" | "FILE";
+  mimeType: string;
+  fileName: string;
+  size: string;
+}): Promise<UploadMediaUrlResponse> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/chat/media/presign`,
+    payload,
+  );
+  return response.data.data;
+};
+
+export const uploadFileToSignedUrl = async (
+  uploadUrl: string,
+  file: File,
+  _mimeType: string,
+): Promise<void> => {
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    body: file,
+  });
+
+  if (!response.ok) {
+    throw new Error("Upload media to storage failed");
+  }
+};
+
+export interface ConversationAssetMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  type?: "TEXT" | "IMAGE" | "VIDEO" | "FILE";
+  createdAt: string;
+  medias?: Array<{
+    id?: string;
+    mediaType: "IMAGE" | "VIDEO" | "FILE" | string;
+    url: string;
+    mimeType: string;
+    size: string;
+    sortOrder?: number;
+  }>;
+}
+
+export const getConversationAssetsAPI = async ({
+  conversationId,
+  kind,
+  limit = 20,
+  cursor,
+}: {
+  conversationId: string;
+  kind: "MEDIA" | "LINK" | "DOC";
+  limit?: number;
+  cursor?: string | null;
+}): Promise<{ messages: ConversationAssetMessage[]; nextCursor?: string }> => {
+  const response = await authorizeAxiosInstance.get(
+    `${API_ROOT}/chat/assets?conversationId=${encodeURIComponent(
+      conversationId,
+    )}&kind=${kind}&limit=${limit}${
+      cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""
+    }`,
+  );
+
+  return response.data.data;
+};

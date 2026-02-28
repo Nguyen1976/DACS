@@ -21,21 +21,45 @@ export interface Message {
   conversationId: string;
   senderId: string;
   text: string;
+  type?: "TEXT" | "IMAGE" | "VIDEO" | "FILE";
+  content?: string;
+  clientMessageId?: string;
   replyToMessageId?: string | undefined;
   isDeleted?: boolean;
   deleteType?: string;
   createdAt?: string;
   senderMember?: SenderMember | undefined;
-  status?: "sent" | "pending";
+  medias?: {
+    id?: string;
+    mediaType: "IMAGE" | "VIDEO" | "FILE";
+    objectKey?: string;
+    url: string;
+    mimeType: string;
+    size: string;
+    width?: number;
+    height?: number;
+    duration?: number;
+    thumbnailUrl?: string;
+    sortOrder?: number;
+  }[];
+  status?: "sent" | "pending" | "failed";
   tempMessageId?: string;
 }
 
 export interface MessageState {
   messages: Record<string, Message[]>;
+  pagination: Record<
+    string,
+    {
+      oldestCursor: string | null;
+      hasMore: boolean;
+    }
+  >;
 }
 
 const initialState: MessageState = {
   messages: {},
+  pagination: {},
 };
 
 export const getMessages = createAsyncThunk(
@@ -43,16 +67,23 @@ export const getMessages = createAsyncThunk(
   async ({
     conversationId,
     limit = 20,
-    page = 1,
+    cursor,
   }: {
     conversationId: string;
     limit?: number;
-    page?: number;
+    cursor?: string | null;
   }) => {
     const response = await authorizeAxiosInstance.get(
-      `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}&page=${page}`,
+      `${API_ROOT}/chat/messages/${conversationId}?limit=${limit}${
+        cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""
+      }`,
     );
-    return response.data.data;
+    return {
+      ...response.data.data,
+      conversationId,
+      limit,
+      cursor: cursor || null,
+    };
   },
 );
 
@@ -72,7 +103,12 @@ export const messageSlice = createSlice({
       const currentMessages = state.messages[message.conversationId];
       //check trong message có message nào tồn tại id giống với tempId k
       const index = currentMessages.findIndex(
-        (m) => m.id === message.tempMessageId,
+        (m) =>
+          m.id === message.id ||
+          m.id === message.tempMessageId ||
+          (message.clientMessageId &&
+            m.clientMessageId &&
+            m.clientMessageId === message.clientMessageId),
       );
       if (index !== -1) {
         //messsage của mình
@@ -87,20 +123,99 @@ export const messageSlice = createSlice({
         state.messages[message.conversationId].unshift(message);
       }
     },
+    ackMessage: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        clientMessageId?: string;
+        serverMessageId: string;
+        message?: Message;
+      }>,
+    ) => {
+      const { conversationId, clientMessageId, serverMessageId, message } =
+        action.payload;
+      const currentMessages = state.messages[conversationId] || [];
+
+      const index = currentMessages.findIndex(
+        (m) =>
+          (clientMessageId && m.clientMessageId === clientMessageId) ||
+          m.id === clientMessageId,
+      );
+
+      if (index !== -1) {
+        currentMessages[index] = {
+          ...currentMessages[index],
+          ...(message || {}),
+          id: serverMessageId,
+          status: "sent",
+          tempMessageId: undefined,
+        };
+      }
+    },
+    failMessage: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        clientMessageId?: string;
+      }>,
+    ) => {
+      const { conversationId, clientMessageId } = action.payload;
+      const currentMessages = state.messages[conversationId] || [];
+      const index = currentMessages.findIndex(
+        (m) =>
+          m.id === clientMessageId ||
+          (clientMessageId && m.clientMessageId === clientMessageId),
+      );
+      if (index !== -1) {
+        currentMessages[index] = {
+          ...currentMessages[index],
+          status: "failed",
+        };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(
       getMessages.fulfilled,
-      (state, action: PayloadAction<{ messages: Message[] }>) => {
-        const { messages } = action.payload;
-        const conversationId = messages[0]?.conversationId;
-        if (!state.messages[conversationId || ""]) {
-          state.messages[conversationId || ""] = [];
-        }
-        state.messages[conversationId || ""] = [
-          ...messages,
-          ...state.messages[conversationId || ""],
-        ];
+      (
+        state,
+        action: PayloadAction<{
+          messages: Message[];
+          conversationId: string;
+          limit: number;
+          cursor: string | null;
+        }>,
+      ) => {
+        const { messages, conversationId, limit, cursor } = action.payload;
+        const current = state.messages[conversationId] || [];
+
+        const mergedSource = cursor
+          ? [...current, ...messages]
+          : [...messages, ...current];
+
+        const merged = mergedSource.filter((message, index, array) => {
+          return (
+            index ===
+            array.findIndex(
+              (item) =>
+                item.id === message.id ||
+                (Boolean(item.clientMessageId) &&
+                  item.clientMessageId === message.clientMessageId),
+            )
+          );
+        });
+
+        state.messages[conversationId] = merged;
+
+        const oldestCursor =
+          merged.length > 0
+            ? (merged[merged.length - 1]?.createdAt ?? null)
+            : null;
+
+        state.pagination[conversationId] = {
+          oldestCursor,
+          hasMore: messages.length >= limit,
+        };
       },
     );
 
@@ -122,5 +237,27 @@ export const selectMessage = createSelector(
   },
 );
 
-export const { addMessage } = messageSlice.actions;
+export const selectMessagePagination = createSelector(
+  [
+    (state: RootState) => state.message.pagination,
+    (_: RootState, conversationId?: string) => conversationId,
+  ],
+  (paginationMap, conversationId) => {
+    if (!conversationId) {
+      return {
+        oldestCursor: null,
+        hasMore: true,
+      };
+    }
+
+    return (
+      paginationMap[conversationId] || {
+        oldestCursor: null,
+        hasMore: true,
+      }
+    );
+  },
+);
+
+export const { addMessage, ackMessage, failMessage } = messageSlice.actions;
 export default messageSlice.reducer;

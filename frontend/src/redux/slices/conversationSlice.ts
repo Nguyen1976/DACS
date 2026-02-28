@@ -27,7 +27,7 @@ export interface Conversation {
   type: string;
   unreadCount?: string;
   groupName?: string | undefined;
-  groupAvatar?: unknown;
+  groupAvatar?: string | undefined;
   createdAt: string;
   updatedAt?: string | undefined;
   members: ConversationMember[];

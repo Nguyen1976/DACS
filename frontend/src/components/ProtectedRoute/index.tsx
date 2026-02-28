@@ -1,65 +1,125 @@
-import { socket } from '@/lib/socket'
-import { selectUser } from '@/redux/slices/userSlice'
-import { useDispatch, useSelector } from 'react-redux'
-import { Navigate, useParams } from 'react-router'
-import { useEffect, useRef } from 'react'
-import { addMessage, type Message } from '@/redux/slices/messageSlice'
-import type { AppDispatch } from '@/redux/store'
+import { socket } from "@/lib/socket";
+import { selectUser } from "@/redux/slices/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { Navigate, useParams } from "react-router";
+import { useEffect, useRef } from "react";
+import {
+  ackMessage,
+  addMessage,
+  failMessage,
+  type Message,
+} from "@/redux/slices/messageSlice";
+import type { AppDispatch } from "@/redux/store";
 import {
   updateNewMessage,
   upUnreadCount,
-} from '@/redux/slices/conversationSlice'
-import { useSound } from 'use-sound'
-import notificationSound from '@/assets/notification.mp3'
+} from "@/redux/slices/conversationSlice";
+import { useSound } from "use-sound";
+import notificationSound from "@/assets/notification.mp3";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { conversationId } = useParams()
+  const { conversationId } = useParams();
 
-  const selectedChatIdRef = useRef<string | null>(conversationId)
+  const selectedChatIdRef = useRef<string | null>(conversationId);
 
-  const [play] = useSound(notificationSound, { volume: 0.5 })
+  const [play] = useSound(notificationSound, { volume: 0.5 });
 
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    selectedChatIdRef.current = conversationId ?? null
-  }, [conversationId])
+    selectedChatIdRef.current = conversationId ?? null;
+  }, [conversationId]);
 
   useEffect(() => {
     const handler = (data: Message) => {
-      dispatch(addMessage(data))
+      dispatch(addMessage(data));
 
       dispatch(
         updateNewMessage({
           conversationId: data.conversationId,
           lastMessage: { ...data },
         }),
-      )
-      
+      );
+
       if (data.conversationId !== selectedChatIdRef.current) {
         dispatch(
           upUnreadCount({
             conversationId: data.conversationId,
           }),
-        )
+        );
       }
-      play()
-    }
+      play();
+    };
 
-    socket.on('chat.new_message', handler)
+    const newMessageHandler = (payload: { message: Message }) => {
+      const message = payload.message;
+      dispatch(addMessage(message));
+      dispatch(
+        updateNewMessage({
+          conversationId: message.conversationId,
+          lastMessage: { ...message },
+        }),
+      );
+
+      if (message.conversationId !== selectedChatIdRef.current) {
+        dispatch(
+          upUnreadCount({
+            conversationId: message.conversationId,
+          }),
+        );
+      }
+      play();
+    };
+
+    const ackHandler = (payload: {
+      conversationId: string;
+      clientMessageId?: string;
+      serverMessageId: string;
+      message?: Message;
+    }) => {
+      dispatch(
+        ackMessage({
+          conversationId: payload.conversationId,
+          clientMessageId: payload.clientMessageId,
+          serverMessageId: payload.serverMessageId,
+          message: payload.message,
+        }),
+      );
+    };
+
+    const errorHandler = (payload: {
+      clientMessageId?: string;
+      conversationId?: string;
+    }) => {
+      if (!payload.conversationId) return;
+      dispatch(
+        failMessage({
+          conversationId: payload.conversationId,
+          clientMessageId: payload.clientMessageId,
+        }),
+      );
+    };
+
+    socket.on("chat.new_message", handler);
+    socket.on("message:new", newMessageHandler);
+    socket.on("message:ack", ackHandler);
+    socket.on("message:error", errorHandler);
 
     return () => {
-      socket.off('chat.new_message', handler)
-    }
-  }, [dispatch, play])
+      socket.off("chat.new_message", handler);
+      socket.off("message:new", newMessageHandler);
+      socket.off("message:ack", ackHandler);
+      socket.off("message:error", errorHandler);
+    };
+  }, [dispatch, play]);
 
-  const user = useSelector(selectUser)
+  const user = useSelector(selectUser);
   if (!user?.id) {
-    console.log('no user')
-    return <Navigate to='/auth' replace />
+    console.log("no user");
+    return <Navigate to="/auth" replace />;
   }
 
-  return children
-}
+  return children;
+};
 
-export default ProtectedRoute
+export default ProtectedRoute;

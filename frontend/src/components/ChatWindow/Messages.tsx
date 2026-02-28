@@ -1,90 +1,196 @@
-import { cn } from '@/lib/utils'
-import type { Message } from '@/redux/slices/messageSlice'
-import { selectUser } from '@/redux/slices/userSlice'
-import { formatDateTime } from '@/utils/formatDateTime'
-import { useSelector } from 'react-redux'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { User } from 'lucide-react'
+import { cn } from "@/lib/utils";
+import type { Message } from "@/redux/slices/messageSlice";
+import { selectUser } from "@/redux/slices/userSlice";
+import { formatDateTime } from "@/utils/formatDateTime";
+import { useSelector } from "react-redux";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { FileText, User } from "lucide-react";
 
-const MessageComponent = ({ messages }: { messages: Message[] }) => {
-  const user = useSelector(selectUser)
+const MessageComponent = ({
+  messages,
+  highlightMessageId,
+}: {
+  messages: Message[];
+  highlightMessageId?: string | null;
+}) => {
+  const user = useSelector(selectUser);
+
+  const resolveMediaKind = (media: {
+    mediaType?: string;
+    mimeType?: string;
+  }): "IMAGE" | "VIDEO" | "FILE" => {
+    const mediaType = String(media.mediaType || "").toUpperCase();
+    const mimeType = String(media.mimeType || "").toLowerCase();
+
+    if (mediaType.includes("IMAGE") || mimeType.startsWith("image/")) {
+      return "IMAGE";
+    }
+
+    if (mediaType.includes("VIDEO") || mimeType.startsWith("video/")) {
+      return "VIDEO";
+    }
+
+    return "FILE";
+  };
+
+  const getFileNameFromUrl = (url?: string) => {
+    if (!url) return "attachment";
+    try {
+      const parsed = new URL(url);
+      const rawName = parsed.pathname.split("/").pop() || "attachment";
+      return decodeURIComponent(rawName);
+    } catch {
+      const rawName = url.split("/").pop() || "attachment";
+      return decodeURIComponent(rawName);
+    }
+  };
+
+  const formatBytes = (size?: string) => {
+    const value = Number(size || 0);
+    if (!Number.isFinite(value) || value <= 0) return "";
+    const units = ["B", "KB", "MB", "GB"];
+    let index = 0;
+    let current = value;
+    while (current >= 1024 && index < units.length - 1) {
+      current /= 1024;
+      index += 1;
+    }
+    return `${current.toFixed(current >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+  };
 
   return (
     <>
       {messages.map((message, index) => {
-        const prevMessage = messages[index - 1]
-        const nextMessage = messages[index + 1]
+        const prevMessage = messages[index - 1];
+        const nextMessage = messages[index + 1];
 
-        const isMine = message.senderId === user.id
+        const isMine = message.senderId === user.id;
 
-        const isSameAsPrev = prevMessage?.senderId === message.senderId
+        const isSameAsPrev = prevMessage?.senderId === message.senderId;
 
-        const isSameAsNext = nextMessage?.senderId === message.senderId
+        const isSameAsNext = nextMessage?.senderId === message.senderId;
 
-        const showAvatar = !isSameAsPrev
+        const showAvatar = !isSameAsPrev;
 
         return (
-          <div key={message.id} className='mb-1'>
+          <div
+            key={message.id}
+            id={`message-${message.id}`}
+            className={cn(
+              "mb-1 scroll-mt-24 rounded-md transition-colors duration-300",
+              highlightMessageId === message.id && "bg-bg-box-message-incoming",
+            )}
+          >
             <div
               className={cn(
-                'flex items-end gap-2',
-                isMine ? 'justify-end' : 'justify-start'
+                "flex items-end gap-2",
+                isMine ? "justify-end" : "justify-start",
               )}
             >
               {!isMine && showAvatar ? (
-                <Avatar className='w-10 h-10 border border-bg-box-message-incoming'>
+                <Avatar className="w-10 h-10 border border-bg-box-message-incoming">
                   <AvatarImage src={message.senderMember?.avatar} />
                   <AvatarFallback>
                     <User />
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                !isMine && <div className='w-10 h-10' />
+                !isMine && <div className="w-10 h-10" />
               )}
 
               <div
                 className={cn(
-                  'max-w-md px-4 py-2 text-sm',
+                  "max-w-md px-4 py-2 text-sm",
                   isMine
-                    ? 'bg-bg-box-message-out text-text'
-                    : 'bg-bg-box-message-incoming text-text',
+                    ? "bg-bg-box-message-out text-text"
+                    : "bg-bg-box-message-incoming text-text",
 
                   // Bo góc theo chuỗi
                   isMine
                     ? cn(
-                        'rounded-2xl',
-                        isSameAsPrev && 'rounded-tr-md',
-                        isSameAsNext && 'rounded-br-md'
+                        "rounded-2xl",
+                        isSameAsPrev && "rounded-tr-md",
+                        isSameAsNext && "rounded-br-md",
                       )
                     : cn(
-                        'rounded-2xl',
-                        isSameAsPrev && 'rounded-tl-md',
-                        isSameAsNext && 'rounded-bl-md'
-                      )
+                        "rounded-2xl",
+                        isSameAsPrev && "rounded-tl-md",
+                        isSameAsNext && "rounded-bl-md",
+                      ),
                 )}
               >
-                <p className='break-words'>{message.text}</p>
+                {message.medias?.map((media, mediaIndex) => {
+                  const mediaKind = resolveMediaKind(media);
+
+                  if (mediaKind === "IMAGE") {
+                    return (
+                      <img
+                        key={`${message.id}-${mediaIndex}`}
+                        src={media.url}
+                        alt="image-message"
+                        className="max-w-70 max-h-90 rounded-lg mb-2 object-cover"
+                      />
+                    );
+                  }
+
+                  if (mediaKind === "VIDEO") {
+                    return (
+                      <video
+                        key={`${message.id}-${mediaIndex}`}
+                        src={media.url}
+                        controls
+                        className="max-w-75 max-h-90 rounded-lg mb-2"
+                      />
+                    );
+                  }
+
+                  return (
+                    <a
+                      key={`${message.id}-${mediaIndex}`}
+                      href={media.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-2 block rounded-lg border border-bg-box-message-incoming px-3 py-2 hover:opacity-90"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 shrink-0 text-blue-300" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm text-blue-300">
+                            {getFileNameFromUrl(media.url)}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {formatBytes(media.size) || "Open file"}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+
+                {message.text ? (
+                  <p className="wrap-break-word">{message.text}</p>
+                ) : null}
 
                 {/* Hiện time ở tin cuối */}
                 {!isSameAsNext && (
-                  <span className='text-xs opacity-70 mt-1 block'>
+                  <span className="text-xs opacity-70 mt-1 block">
                     {formatDateTime(message.createdAt)}
                   </span>
                 )}
               </div>
             </div>
             {isMine && !isSameAsNext && (
-              <div className='flex justify-end mr-10 h-3'>
-                <span className='mt-1 text-[11px] text-gray-400'>
+              <div className="flex justify-end mr-10 h-3">
+                <span className="mt-1 text-[11px] text-gray-400">
                   {message?.status}
                 </span>
               </div>
             )}
           </div>
-        )
+        );
       })}
     </>
-  )
-}
+  );
+};
 
-export default MessageComponent
+export default MessageComponent;

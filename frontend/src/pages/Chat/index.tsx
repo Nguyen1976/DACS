@@ -1,16 +1,17 @@
-import { useState } from 'react'
-import { ChatSidebar } from '@/components/ChatSidebar'
-import ChatWindow from '@/components/ChatWindow'
-import ProfilePanel from '@/components/ProfilePanel'
-import VoiceCallModal from '@/components/VoiceCallModal'
-import MainLayout from '@/layouts/MainLayout'
-import { useParams } from 'react-router'
+import { useState } from "react";
+import { ChatSidebar } from "@/components/ChatSidebar";
+import ChatWindow from "@/components/ChatWindow";
+import ProfilePanel from "@/components/ProfilePanel";
+import VoiceCallModal from "@/components/VoiceCallModal";
+import MainLayout from "@/layouts/MainLayout";
+import { useParams } from "react-router";
 
 export default function ChatPage() {
-  const [showProfile, setShowProfile] = useState(false)
-  const [showVoiceCall, setShowVoiceCall] = useState(false)
+  const [showProfile, setShowProfile] = useState(false);
+  const [showVoiceCall, setShowVoiceCall] = useState(false);
+  const [focusMessageId, setFocusMessageId] = useState<string | null>(null);
 
-  const selectedChatId = useParams().conversationId || ''
+  const selectedChatId = useParams().conversationId || "";
   return (
     <MainLayout>
       <ChatSidebar />
@@ -20,9 +21,11 @@ export default function ChatPage() {
           conversationId={selectedChatId || undefined}
           onToggleProfile={() => setShowProfile(!showProfile)}
           onVoiceCall={() => setShowVoiceCall(true)}
+          focusMessageId={focusMessageId}
+          onFocusHandled={() => setFocusMessageId(null)}
         />
       ) : (
-        <div className='flex-1 flex items-center justify-center bg-bg-box-chat text-gray-500'>
+        <div className="flex-1 flex items-center justify-center bg-bg-box-chat text-gray-500">
           Select a chat to start messaging
         </div>
       )}
@@ -31,6 +34,9 @@ export default function ChatPage() {
         <ProfilePanel
           conversationId={selectedChatId}
           onClose={() => setShowProfile(false)}
+          onJumpToMessage={(messageId) => {
+            setFocusMessageId(messageId);
+          }}
         />
       )}
 
@@ -41,5 +47,5 @@ export default function ChatPage() {
         />
       )}
     </MainLayout>
-  )
+  );
 }

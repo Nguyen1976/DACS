@@ -20,8 +20,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { selectUser } from "@/redux/slices/userSlice";
 import {
+  failMessage,
   addMessage,
   getMessages,
+  selectMessagePagination,
   selectMessage,
   type Message,
 } from "@/redux/slices/messageSlice";
@@ -34,23 +36,38 @@ import {
 } from "@/components/ui/popover";
 import { socket } from "@/lib/socket";
 import { useLocation } from "react-router";
+import {
+  createMessageUploadUrlAPI,
+  uploadFileToSignedUrl,
+  type MessageMediaInput,
+} from "@/apis";
 
 interface ChatWindowProps {
   conversationId?: string;
   onToggleProfile: () => void;
   onVoiceCall: () => void;
+  focusMessageId?: string | null;
+  onFocusHandled?: () => void;
 }
 
 export default function ChatWindow({
   conversationId,
   onToggleProfile,
   onVoiceCall,
+  focusMessageId,
+  onFocusHandled,
 }: ChatWindowProps) {
   const [msg, setMsg] = useState<string>("");
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const topSentinelRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [highlightMessageId, setHighlightMessageId] = useState<string | null>(
+    null,
+  );
 
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
@@ -88,6 +105,9 @@ export default function ChatWindow({
   const messages = useSelector((state: RootState) =>
     selectMessage(state, conversationId),
   );
+  const pagination = useSelector((state: RootState) =>
+    selectMessagePagination(state, conversationId),
+  );
 
   useEffect(() => {
     if (!isAtBottom) return;
@@ -99,9 +119,105 @@ export default function ChatWindow({
 
   useEffect(() => {
     if (messages.length === 0) {
-      dispatch(getMessages({ conversationId: conversationId || "" }));
+      dispatch(
+        getMessages({
+          conversationId: conversationId || "",
+          limit: 20,
+          cursor: null,
+        }),
+      );
     }
   }, [dispatch, messages.length, conversationId]);
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!conversationId) return;
+    if (!pagination.hasMore) return;
+    if (isLoadingOlder) return;
+
+    const container = containerRef.current;
+    const previousHeight = container?.scrollHeight || 0;
+
+    setIsLoadingOlder(true);
+    try {
+      await dispatch(
+        getMessages({
+          conversationId,
+          limit: 20,
+          cursor: pagination.oldestCursor,
+        }),
+      ).unwrap();
+    } finally {
+      requestAnimationFrame(() => {
+        const current = containerRef.current;
+        if (current) {
+          const nextHeight = current.scrollHeight;
+          current.scrollTop = nextHeight - previousHeight + current.scrollTop;
+        }
+      });
+      setIsLoadingOlder(false);
+    }
+  }, [
+    conversationId,
+    dispatch,
+    pagination.hasMore,
+    pagination.oldestCursor,
+    isLoadingOlder,
+  ]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const sentinel = topSentinelRef.current;
+
+    if (!container || !sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (!first?.isIntersecting) return;
+        void loadOlderMessages();
+      },
+      {
+        root: container,
+        rootMargin: "120px 0px 0px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadOlderMessages, conversationId]);
+
+  useEffect(() => {
+    if (!focusMessageId || !conversationId) return;
+
+    const targetElement = document.getElementById(`message-${focusMessageId}`);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightMessageId(focusMessageId);
+      window.setTimeout(() => {
+        setHighlightMessageId((prev) =>
+          prev === focusMessageId ? null : prev,
+        );
+      }, 1800);
+      onFocusHandled?.();
+      return;
+    }
+
+    if (pagination.hasMore && !isLoadingOlder) {
+      void loadOlderMessages();
+    }
+  }, [
+    focusMessageId,
+    conversationId,
+    messages,
+    pagination.hasMore,
+    isLoadingOlder,
+    loadOlderMessages,
+    onFocusHandled,
+  ]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -123,11 +239,16 @@ export default function ChatWindow({
   const handleSendMessage = useCallback(() => {
     if (msg.trim() === "" || !conversationId) return;
 
+    const clientMessageId = "temp-id-" + Date.now();
+
     const tempMessage: Message = {
-      id: "temp-id-" + Date.now(),
+      id: clientMessageId,
       conversationId,
       senderId: user.id,
       text: msg,
+      content: msg,
+      type: "TEXT",
+      clientMessageId,
       status: "pending",
       createdAt: new Date().toISOString(),
     };
@@ -148,12 +269,12 @@ export default function ChatWindow({
       );
     }
 
-    //bắn sự kiện chat.send_message qua socket io ở đây
-    socket.emit("chat.send_message", {
+    socket.emit("message:create", {
       conversationId,
-      text: msg,
-      tempMessageId: tempMessage.id,
-      senderId: user.id,
+      type: "TEXT",
+      content: msg,
+      clientMessageId,
+      media: [],
     });
     setMsg("");
 
@@ -168,6 +289,108 @@ export default function ChatWindow({
     conversation,
     effectiveConversation,
   ]);
+
+  const getMessageTypeFromFile = (file: File): "IMAGE" | "VIDEO" | "FILE" => {
+    if (file.type.startsWith("image/")) return "IMAGE";
+    if (file.type.startsWith("video/")) return "VIDEO";
+    return "FILE";
+  };
+
+  const handleUploadMedia = useCallback(
+    async (file: File) => {
+      if (!conversationId) return;
+
+      const mediaType = getMessageTypeFromFile(file);
+      const clientMessageId = `temp-media-${Date.now()}`;
+
+      const tempMedia: MessageMediaInput = {
+        mediaType,
+        objectKey: "",
+        url: URL.createObjectURL(file),
+        mimeType: file.type,
+        size: String(file.size),
+        width: undefined,
+        height: undefined,
+        duration: undefined,
+        sortOrder: 0,
+      };
+
+      const tempMessage: Message = {
+        id: clientMessageId,
+        conversationId,
+        senderId: user.id,
+        text: msg,
+        content: msg,
+        type: mediaType,
+        medias: [tempMedia],
+        clientMessageId,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      dispatch(addMessage(tempMessage));
+
+      if (!conversation && effectiveConversation) {
+        dispatch(
+          addConversation({
+            conversation: {
+              ...effectiveConversation,
+              lastMessage: tempMessage,
+              updatedAt: tempMessage.createdAt,
+            },
+            userId: user.id,
+          }),
+        );
+      }
+
+      try {
+        const upload = await createMessageUploadUrlAPI({
+          conversationId,
+          type: mediaType,
+          mimeType: file.type,
+          fileName: file.name,
+          size: String(file.size),
+        });
+
+        await uploadFileToSignedUrl(upload.uploadUrl, file, file.type);
+
+        socket.emit("message:create", {
+          conversationId,
+          type: mediaType,
+          content: msg.trim() || null,
+          clientMessageId,
+          media: [
+            {
+              mediaType,
+              objectKey: upload.objectKey,
+              url: upload.publicUrl,
+              mimeType: file.type,
+              size: String(file.size),
+              sortOrder: 0,
+            },
+          ],
+        });
+
+        setMsg("");
+      } catch (error) {
+        console.error("upload media failed", error);
+        dispatch(
+          failMessage({
+            conversationId,
+            clientMessageId,
+          }),
+        );
+      }
+    },
+    [
+      conversationId,
+      user.id,
+      msg,
+      dispatch,
+      conversation,
+      effectiveConversation,
+    ],
+  );
 
   return (
     <div className="flex-1 flex flex-col bg-bg-box-chat">
@@ -232,9 +455,17 @@ export default function ChatWindow({
             el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
 
           setIsAtBottom(atBottom);
+
+          if (el.scrollTop <= 24) {
+            void loadOlderMessages();
+          }
         }}
       >
-        <MessageComponent messages={messages} />
+        <div ref={topSentinelRef} className="h-px w-full" />
+        <MessageComponent
+          messages={messages}
+          highlightMessageId={highlightMessageId}
+        />
         <div ref={bottomRef} />
       </div>
 
@@ -250,9 +481,21 @@ export default function ChatWindow({
         </button>
       )}
       <div className="h-16 bg-black-bland border-t border-bg-box-message-incoming flex items-center gap-3 px-6">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            void handleUploadMedia(file);
+            e.currentTarget.value = "";
+          }}
+        />
         <Button
           variant="ghost"
           size="icon"
+          onClick={() => fileInputRef.current?.click()}
           className="hover:bg-bg-box-message-incoming text-gray-400 hover:text-text"
         >
           <Paperclip className="w-5 h-5" />
