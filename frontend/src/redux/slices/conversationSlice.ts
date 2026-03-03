@@ -261,6 +261,14 @@ export const conversationSlice = createSlice({
         (member) => member.userId !== action.payload.userId,
       );
     },
+    removeConversationById: (
+      state,
+      action: PayloadAction<{ conversationId: string }>,
+    ) => {
+      return state.filter(
+        (conversation) => conversation.id !== action.payload.conversationId,
+      );
+    },
     upUnreadCount: (
       state,
       action: PayloadAction<{ conversationId: string }>,
@@ -383,5 +391,6 @@ export const {
   applyConversationUpdate,
   addConversationMembers,
   removeConversationMember,
+  removeConversationById,
 } = conversationSlice.actions;
 export default conversationSlice.reducer;

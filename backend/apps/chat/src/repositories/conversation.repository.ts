@@ -320,6 +320,39 @@ export class ConversationRepository {
     })
   }
 
+  async deleteConversationById(conversationId: string) {
+    const messages = await this.prisma.message.findMany({
+      where: { conversationId },
+      select: { id: true },
+    })
+
+    const messageIds = messages.map((message) => message.id)
+
+    await this.prisma.$transaction(async (transaction) => {
+      if (messageIds.length > 0) {
+        await transaction.messageMedia.deleteMany({
+          where: {
+            messageId: {
+              in: messageIds,
+            },
+          },
+        })
+      }
+
+      await transaction.message.deleteMany({
+        where: { conversationId },
+      })
+
+      await transaction.conversationMember.deleteMany({
+        where: { conversationId },
+      })
+
+      await transaction.conversation.delete({
+        where: { id: conversationId },
+      })
+    })
+  }
+
   // async searchByKeyword(userId: string, keyword: string) {
   //   const memberships = await this.prisma.conversationMember.findMany({
   //     where: {

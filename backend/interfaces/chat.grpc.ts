@@ -5,11 +5,11 @@
 // source: chat.grpc.proto
 
 /* eslint-disable */
-import type { Metadata } from "@grpc/grpc-js";
-import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
-import { Observable } from "rxjs";
+import type { Metadata } from '@grpc/grpc-js'
+import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices'
+import { Observable } from 'rxjs'
 
-export const protobufPackage = "chat";
+export const protobufPackage = 'chat'
 
 export enum ConversationAssetKind {
   ASSET_MEDIA = 0,
@@ -34,271 +34,309 @@ export enum MediaType {
 }
 
 export interface MessageMedia {
-  id: string;
-  messageId: string;
-  mediaType: MediaType;
-  objectKey: string;
-  url: string;
-  mimeType: string;
-  size: string;
-  width?: number | undefined;
-  height?: number | undefined;
-  duration?: number | undefined;
-  thumbnailUrl?: string | undefined;
-  sortOrder: number;
+  id: string
+  messageId: string
+  mediaType: MediaType
+  objectKey: string
+  url: string
+  mimeType: string
+  size: string
+  width?: number | undefined
+  height?: number | undefined
+  duration?: number | undefined
+  thumbnailUrl?: string | undefined
+  sortOrder: number
 }
 
 export interface Member {
-  username: string;
-  avatar?: string | undefined;
-  userId: string;
-  lastReadAt?: string | undefined;
-  fullName?: string | undefined;
+  username: string
+  avatar?: string | undefined
+  userId: string
+  lastReadAt?: string | undefined
+  fullName?: string | undefined
 }
 
 export interface CreateConversationRequest {
-  type: string;
-  members: Member[];
-  groupName?: string | undefined;
-  groupAvatar?: Uint8Array | undefined;
-  groupAvatarFilename?: string | undefined;
-  createrId?: string | undefined;
+  type: string
+  members: Member[]
+  groupName?: string | undefined
+  groupAvatar?: Uint8Array | undefined
+  groupAvatarFilename?: string | undefined
+  createrId?: string | undefined
 }
 
 export interface CreateConversationResponse {
-  conversation: Conversation | undefined;
+  conversation: Conversation | undefined
 }
 
 export interface AddMemberToConversationRequest {
-  conversationId: string;
-  members: Member[];
-  userId: string;
+  conversationId: string
+  members: Member[]
+  userId: string
 }
 
 export interface AddMemberToConversationResponse {
-  status: string;
+  status: string
 }
 
 export interface RemoveMemberFromConversationRequest {
-  conversationId: string;
-  targetUserId: string;
-  userId: string;
+  conversationId: string
+  targetUserId: string
+  userId: string
 }
 
 export interface RemoveMemberFromConversationResponse {
-  status: string;
+  status: string
 }
 
 export interface LeaveConversationRequest {
-  conversationId: string;
-  userId: string;
+  conversationId: string
+  userId: string
 }
 
 export interface LeaveConversationResponse {
-  status: string;
-  promotedUserId?: string | undefined;
+  status: string
+  promotedUserId?: string | undefined
+}
+
+export interface DeleteConversationRequest {
+  conversationId: string
+  userId: string
+}
+
+export interface DeleteConversationResponse {
+  status: string
 }
 
 export interface GetConversationsRequest {
-  userId: string;
-  limit: string;
-  cursor: string;
+  userId: string
+  limit: string
+  cursor: string
 }
 
 export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  text: string;
-  replyToMessageId?: string | undefined;
-  isDeleted: boolean;
-  deleteType: string;
-  createdAt: string;
-  senderMember: SenderMember | undefined;
-  type: MessageType;
-  clientMessageId?: string | undefined;
-  medias: MessageMedia[];
+  id: string
+  conversationId: string
+  senderId: string
+  text: string
+  replyToMessageId?: string | undefined
+  isDeleted: boolean
+  deleteType: string
+  createdAt: string
+  senderMember: SenderMember | undefined
+  type: MessageType
+  clientMessageId?: string | undefined
+  medias: MessageMedia[]
 }
 
 export interface ConversationMember {
-  userId: string;
+  userId: string
   /** timestamp (ms) */
-  lastReadAt?: string | undefined;
-  username?: string | undefined;
-  avatar?: string | undefined;
-  lastReadMessageId?: string | undefined;
-  fullName?: string | undefined;
-  lastMessageAt: string;
-  role?: string | undefined;
+  lastReadAt?: string | undefined
+  username?: string | undefined
+  avatar?: string | undefined
+  lastReadMessageId?: string | undefined
+  fullName?: string | undefined
+  lastMessageAt: string
+  role?: string | undefined
 }
 
 export interface Conversation {
-  id: string;
-  type: string;
-  unreadCount: string;
-  groupName?: string | undefined;
-  groupAvatar?: string | undefined;
-  createdAt: string;
-  updatedAt?: string | undefined;
-  members: ConversationMember[];
-  lastMessage?: Message | undefined;
+  id: string
+  type: string
+  unreadCount: string
+  groupName?: string | undefined
+  groupAvatar?: string | undefined
+  createdAt: string
+  updatedAt?: string | undefined
+  members: ConversationMember[]
+  lastMessage?: Message | undefined
 }
 
 export interface GetConversationsResponse {
-  conversations: Conversation[];
+  conversations: Conversation[]
 }
 
 export interface GetMessagesRequest {
-  conversationId: string;
-  userId: string;
-  limit: string;
-  page: string;
-  cursor?: string | undefined;
+  conversationId: string
+  userId: string
+  limit: string
+  page: string
+  cursor?: string | undefined
 }
 
 export interface SenderMember {
-  userId: string;
-  username: string;
-  avatar: string;
-  fullName?: string | undefined;
+  userId: string
+  username: string
+  avatar: string
+  fullName?: string | undefined
 }
 
 export interface GetMessagesResponse {
-  messages: Message[];
+  messages: Message[]
 }
 
 export interface GetConversationAssetsRequest {
-  conversationId: string;
-  userId: string;
-  kind: ConversationAssetKind;
-  limit: string;
-  cursor?: string | undefined;
+  conversationId: string
+  userId: string
+  kind: ConversationAssetKind
+  limit: string
+  cursor?: string | undefined
 }
 
 export interface GetConversationAssetsResponse {
-  messages: Message[];
-  nextCursor?: string | undefined;
+  messages: Message[]
+  nextCursor?: string | undefined
 }
 
 export interface SendMessageRequest {
-  conversationId: string;
-  message?: string | undefined;
-  senderId: string;
-  replyToMessageId?: string | undefined;
-  type: MessageType;
-  medias: SendMessageMediaInput[];
-  clientMessageId?: string | undefined;
+  conversationId: string
+  message?: string | undefined
+  senderId: string
+  replyToMessageId?: string | undefined
+  type: MessageType
+  medias: SendMessageMediaInput[]
+  clientMessageId?: string | undefined
 }
 
 export interface SendMessageMediaInput {
-  mediaType: MediaType;
-  objectKey: string;
-  url: string;
-  mimeType: string;
-  size: string;
-  width?: number | undefined;
-  height?: number | undefined;
-  duration?: number | undefined;
-  thumbnailUrl?: string | undefined;
-  sortOrder: number;
+  mediaType: MediaType
+  objectKey: string
+  url: string
+  mimeType: string
+  size: string
+  width?: number | undefined
+  height?: number | undefined
+  duration?: number | undefined
+  thumbnailUrl?: string | undefined
+  sortOrder: number
 }
 
 export interface SendMessageResponse {
-  message: Message | undefined;
+  message: Message | undefined
 }
 
 export interface CreateMessageUploadUrlRequest {
-  conversationId: string;
-  userId: string;
-  type: MessageType;
-  mimeType: string;
-  fileName: string;
-  size: string;
+  conversationId: string
+  userId: string
+  type: MessageType
+  mimeType: string
+  fileName: string
+  size: string
 }
 
 export interface CreateMessageUploadUrlResponse {
-  uploadUrl: string;
-  objectKey: string;
-  publicUrl: string;
-  expiresInSeconds: string;
+  uploadUrl: string
+  objectKey: string
+  publicUrl: string
+  expiresInSeconds: string
 }
 
 export interface ReadMessageRequest {
-  conversationId: string;
-  lastReadMessageId: string;
-  userId: string;
+  conversationId: string
+  lastReadMessageId: string
+  userId: string
 }
 
 export interface ReadMessageResponse {
-  lastReadMessageId: string;
+  lastReadMessageId: string
 }
 
 export interface SearchConversationRequest {
-  userId: string;
-  keyword: string;
+  userId: string
+  keyword: string
 }
 
 export interface SearchConversationResponse {
-  conversations: Conversation[];
+  conversations: Conversation[]
 }
 
 export interface GetConversationByFriendIdRequest {
-  friendId: string;
-  userId: string;
+  friendId: string
+  userId: string
 }
 
 export interface GetConversationByFriendIdResponse {
-  conversation: Conversation | undefined;
+  conversation: Conversation | undefined
 }
 
-export const CHAT_PACKAGE_NAME = "chat";
+export const CHAT_PACKAGE_NAME = 'chat'
 
 export interface ChatGrpcServiceClient {
-  createConversation(request: CreateConversationRequest, metadata?: Metadata): Observable<CreateConversationResponse>;
+  createConversation(
+    request: CreateConversationRequest,
+    metadata?: Metadata,
+  ): Observable<CreateConversationResponse>
 
   addMemberToConversation(
     request: AddMemberToConversationRequest,
     metadata?: Metadata,
-  ): Observable<AddMemberToConversationResponse>;
+  ): Observable<AddMemberToConversationResponse>
 
   removeMemberFromConversation(
     request: RemoveMemberFromConversationRequest,
     metadata?: Metadata,
-  ): Observable<RemoveMemberFromConversationResponse>;
+  ): Observable<RemoveMemberFromConversationResponse>
 
-  leaveConversation(request: LeaveConversationRequest, metadata?: Metadata): Observable<LeaveConversationResponse>;
+  leaveConversation(
+    request: LeaveConversationRequest,
+    metadata?: Metadata,
+  ): Observable<LeaveConversationResponse>
 
-  getConversations(request: GetConversationsRequest, metadata?: Metadata): Observable<GetConversationsResponse>;
+  deleteConversation(
+    request: DeleteConversationRequest,
+    metadata?: Metadata,
+  ): Observable<DeleteConversationResponse>
 
-  getMessagesByConversationId(request: GetMessagesRequest, metadata?: Metadata): Observable<GetMessagesResponse>;
+  getConversations(
+    request: GetConversationsRequest,
+    metadata?: Metadata,
+  ): Observable<GetConversationsResponse>
+
+  getMessagesByConversationId(
+    request: GetMessagesRequest,
+    metadata?: Metadata,
+  ): Observable<GetMessagesResponse>
 
   getConversationAssets(
     request: GetConversationAssetsRequest,
     metadata?: Metadata,
-  ): Observable<GetConversationAssetsResponse>;
+  ): Observable<GetConversationAssetsResponse>
 
-  sendMessage(request: SendMessageRequest, metadata?: Metadata): Observable<SendMessageResponse>;
+  sendMessage(
+    request: SendMessageRequest,
+    metadata?: Metadata,
+  ): Observable<SendMessageResponse>
 
   createMessageUploadUrl(
     request: CreateMessageUploadUrlRequest,
     metadata?: Metadata,
-  ): Observable<CreateMessageUploadUrlResponse>;
+  ): Observable<CreateMessageUploadUrlResponse>
 
-  readMessage(request: ReadMessageRequest, metadata?: Metadata): Observable<ReadMessageResponse>;
+  readMessage(
+    request: ReadMessageRequest,
+    metadata?: Metadata,
+  ): Observable<ReadMessageResponse>
 
-  searchConversations(request: SearchConversationRequest, metadata?: Metadata): Observable<SearchConversationResponse>;
+  searchConversations(
+    request: SearchConversationRequest,
+    metadata?: Metadata,
+  ): Observable<SearchConversationResponse>
 
   getConversationByFriendId(
     request: GetConversationByFriendIdRequest,
     metadata?: Metadata,
-  ): Observable<GetConversationByFriendIdResponse>;
+  ): Observable<GetConversationByFriendIdResponse>
 }
 
 export interface ChatGrpcServiceController {
   createConversation(
     request: CreateConversationRequest,
     metadata?: Metadata,
-  ): Promise<CreateConversationResponse> | Observable<CreateConversationResponse> | CreateConversationResponse;
+  ):
+    | Promise<CreateConversationResponse>
+    | Observable<CreateConversationResponse>
+    | CreateConversationResponse
 
   addMemberToConversation(
     request: AddMemberToConversationRequest,
@@ -306,7 +344,7 @@ export interface ChatGrpcServiceController {
   ):
     | Promise<AddMemberToConversationResponse>
     | Observable<AddMemberToConversationResponse>
-    | AddMemberToConversationResponse;
+    | AddMemberToConversationResponse
 
   removeMemberFromConversation(
     request: RemoveMemberFromConversationRequest,
@@ -314,32 +352,55 @@ export interface ChatGrpcServiceController {
   ):
     | Promise<RemoveMemberFromConversationResponse>
     | Observable<RemoveMemberFromConversationResponse>
-    | RemoveMemberFromConversationResponse;
+    | RemoveMemberFromConversationResponse
 
   leaveConversation(
     request: LeaveConversationRequest,
     metadata?: Metadata,
-  ): Promise<LeaveConversationResponse> | Observable<LeaveConversationResponse> | LeaveConversationResponse;
+  ):
+    | Promise<LeaveConversationResponse>
+    | Observable<LeaveConversationResponse>
+    | LeaveConversationResponse
+
+  deleteConversation(
+    request: DeleteConversationRequest,
+    metadata?: Metadata,
+  ):
+    | Promise<DeleteConversationResponse>
+    | Observable<DeleteConversationResponse>
+    | DeleteConversationResponse
 
   getConversations(
     request: GetConversationsRequest,
     metadata?: Metadata,
-  ): Promise<GetConversationsResponse> | Observable<GetConversationsResponse> | GetConversationsResponse;
+  ):
+    | Promise<GetConversationsResponse>
+    | Observable<GetConversationsResponse>
+    | GetConversationsResponse
 
   getMessagesByConversationId(
     request: GetMessagesRequest,
     metadata?: Metadata,
-  ): Promise<GetMessagesResponse> | Observable<GetMessagesResponse> | GetMessagesResponse;
+  ):
+    | Promise<GetMessagesResponse>
+    | Observable<GetMessagesResponse>
+    | GetMessagesResponse
 
   getConversationAssets(
     request: GetConversationAssetsRequest,
     metadata?: Metadata,
-  ): Promise<GetConversationAssetsResponse> | Observable<GetConversationAssetsResponse> | GetConversationAssetsResponse;
+  ):
+    | Promise<GetConversationAssetsResponse>
+    | Observable<GetConversationAssetsResponse>
+    | GetConversationAssetsResponse
 
   sendMessage(
     request: SendMessageRequest,
     metadata?: Metadata,
-  ): Promise<SendMessageResponse> | Observable<SendMessageResponse> | SendMessageResponse;
+  ):
+    | Promise<SendMessageResponse>
+    | Observable<SendMessageResponse>
+    | SendMessageResponse
 
   createMessageUploadUrl(
     request: CreateMessageUploadUrlRequest,
@@ -347,17 +408,23 @@ export interface ChatGrpcServiceController {
   ):
     | Promise<CreateMessageUploadUrlResponse>
     | Observable<CreateMessageUploadUrlResponse>
-    | CreateMessageUploadUrlResponse;
+    | CreateMessageUploadUrlResponse
 
   readMessage(
     request: ReadMessageRequest,
     metadata?: Metadata,
-  ): Promise<ReadMessageResponse> | Observable<ReadMessageResponse> | ReadMessageResponse;
+  ):
+    | Promise<ReadMessageResponse>
+    | Observable<ReadMessageResponse>
+    | ReadMessageResponse
 
   searchConversations(
     request: SearchConversationRequest,
     metadata?: Metadata,
-  ): Promise<SearchConversationResponse> | Observable<SearchConversationResponse> | SearchConversationResponse;
+  ):
+    | Promise<SearchConversationResponse>
+    | Observable<SearchConversationResponse>
+    | SearchConversationResponse
 
   getConversationByFriendId(
     request: GetConversationByFriendIdRequest,
@@ -365,35 +432,50 @@ export interface ChatGrpcServiceController {
   ):
     | Promise<GetConversationByFriendIdResponse>
     | Observable<GetConversationByFriendIdResponse>
-    | GetConversationByFriendIdResponse;
+    | GetConversationByFriendIdResponse
 }
 
 export function ChatGrpcServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "createConversation",
-      "addMemberToConversation",
-      "removeMemberFromConversation",
-      "leaveConversation",
-      "getConversations",
-      "getMessagesByConversationId",
-      "getConversationAssets",
-      "sendMessage",
-      "createMessageUploadUrl",
-      "readMessage",
-      "searchConversations",
-      "getConversationByFriendId",
-    ];
+      'createConversation',
+      'addMemberToConversation',
+      'removeMemberFromConversation',
+      'leaveConversation',
+      'deleteConversation',
+      'getConversations',
+      'getMessagesByConversationId',
+      'getConversationAssets',
+      'sendMessage',
+      'createMessageUploadUrl',
+      'readMessage',
+      'searchConversations',
+      'getConversationByFriendId',
+    ]
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("ChatGrpcService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      )
+      GrpcMethod('ChatGrpcService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      )
     }
-    const grpcStreamMethods: string[] = [];
+    const grpcStreamMethods: string[] = []
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("ChatGrpcService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method,
+      )
+      GrpcStreamMethod('ChatGrpcService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor,
+      )
     }
-  };
+  }
 }
 
-export const CHAT_GRPC_SERVICE_NAME = "ChatGrpcService";
+export const CHAT_GRPC_SERVICE_NAME = 'ChatGrpcService'

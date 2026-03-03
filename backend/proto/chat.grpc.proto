@@ -7,6 +7,7 @@ service ChatGrpcService {
   rpc addMemberToConversation (AddMemberToConversationRequest) returns (AddMemberToConversationResponse) {}
   rpc removeMemberFromConversation (RemoveMemberFromConversationRequest) returns (RemoveMemberFromConversationResponse) {}
   rpc leaveConversation (LeaveConversationRequest) returns (LeaveConversationResponse) {}
+  rpc deleteConversation (DeleteConversationRequest) returns (DeleteConversationResponse) {}
   rpc getConversations (GetConversationsRequest) returns (GetConversationsResponse) {}
   rpc getMessagesByConversationId (GetMessagesRequest) returns (GetMessagesResponse) {}
   rpc getConversationAssets (GetConversationAssetsRequest) returns (GetConversationAssetsResponse) {}
@@ -100,6 +101,15 @@ message LeaveConversationRequest {
 message LeaveConversationResponse {
   string status = 1;
   optional string promotedUserId = 2;
+}
+
+message DeleteConversationRequest {
+  string conversationId = 1;
+  string userId = 2;
+}
+
+message DeleteConversationResponse {
+  string status = 1;
 }
 
 message GetConversationsRequest {

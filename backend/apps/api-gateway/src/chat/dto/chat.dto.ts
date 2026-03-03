@@ -49,6 +49,13 @@ export class LeaveConversationDTO {
   conversationId: string
 }
 
+export class DeleteConversationDTO {
+  @IsNotEmpty({
+    message: 'conversationId is required',
+  })
+  conversationId: string
+}
+
 export class CreateMessageUploadUrlDTO {
   @IsNotEmpty()
   conversationId: string

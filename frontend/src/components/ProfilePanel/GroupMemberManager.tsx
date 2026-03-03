@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   addMembersToConversationAPI,
+  deleteConversationAPI,
   getUserProfileByIdAPI,
   leaveConversationAPI,
   removeMemberFromConversationAPI,
@@ -17,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Plus, User, Users, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  removeConversationById,
   selectConversationById,
   setConversationAccessState,
 } from "@/redux/slices/conversationSlice";
@@ -26,7 +28,7 @@ import {
   selectFriend,
   selectFriendPage,
 } from "@/redux/slices/friendSlice";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { selectUser } from "@/redux/slices/userSlice";
 import { toast } from "sonner";
 
@@ -37,6 +39,7 @@ export function GroupMemberManager() {
   const [selectedTab, setSelectedTab] = useState("members");
   const [open, setOpen] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isDeletingConversation, setIsDeletingConversation] = useState(false);
   const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
   const [memberProfileMap, setMemberProfileMap] = useState<
     Record<
@@ -51,6 +54,7 @@ export function GroupMemberManager() {
   const requestedMemberIdsRef = useRef<Set<string>>(new Set());
 
   const conversationId = useLocation().pathname.split("/").pop() || "";
+  const navigate = useNavigate();
 
   const conversation = useSelector((state: RootState) =>
     selectConversationById(state, conversationId),
@@ -72,7 +76,9 @@ export function GroupMemberManager() {
   )?.role;
 
   const isAdmin = myRole === "ADMIN" || myRole === "OWNER";
+  const isDeleteAdmin = myRole === "ADMIN";
   const canLeaveGroup = !isAdmin && conversation?.membershipStatus === "ACTIVE";
+  const canDeleteConversation = isDeleteAdmin && conversation?.type === "GROUP";
 
   useEffect(() => {
     if (friends.length === 0) {
@@ -247,6 +253,42 @@ export function GroupMemberManager() {
     }
   };
 
+  const handleDeleteConversation = async () => {
+    if (!conversationId || !canDeleteConversation || isDeletingConversation) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Bạn có chắc muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác.",
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDeletingConversation(true);
+      await deleteConversationAPI({
+        conversationId,
+      });
+
+      dispatch(
+        removeConversationById({
+          conversationId,
+        }),
+      );
+
+      toast.success("Đã xóa cuộc trò chuyện");
+      setOpen(false);
+      navigate("/");
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        "Không thể xóa cuộc trò chuyện";
+      toast.error(String(backendMessage));
+    } finally {
+      setIsDeletingConversation(false);
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -278,6 +320,15 @@ export function GroupMemberManager() {
                 : isAdmin
                   ? "Admin cannot leave"
                   : "Leave group"}
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDeleteConversation}
+              disabled={!canDeleteConversation || isDeletingConversation}
+              className="mt-2 h-8 gap-2"
+            >
+              {isDeletingConversation ? "Deleting..." : "Delete conversation"}
             </Button>
           </div>
         </div>

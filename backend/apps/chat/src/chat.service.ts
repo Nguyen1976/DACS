@@ -7,6 +7,8 @@ import {
   CreateMessageUploadUrlRequest,
   CreateMessageUploadUrlResponse,
   CreateConversationRequest,
+  DeleteConversationRequest,
+  DeleteConversationResponse,
   GetConversationAssetsResponse,
   GetMessagesResponse,
   LeaveConversationRequest,
@@ -335,9 +337,7 @@ export class ChatService {
     )
 
     const actor = existingMembers.find(
-      (member) =>
-        member.userId === dto.userId &&
-        (member.role === 'ADMIN' || member.role === 'OWNER'),
+      (member) => member.userId === dto.userId && member.role === 'ADMIN',
     )
     if (!actor) {
       ChatErrors.userNoPermission()
@@ -457,6 +457,42 @@ export class ChatService {
         ),
       }),
     )
+
+    return {
+      status: 'SUCCESS',
+    }
+  }
+
+  async deleteConversation(
+    dto: DeleteConversationRequest,
+  ): Promise<DeleteConversationResponse> {
+    const conversation = await this.conversationRepo.findById(
+      dto.conversationId,
+    )
+
+    if (!conversation) {
+      ChatErrors.conversationNotFound()
+    }
+
+    if (conversation.type === conversationType.DIRECT) {
+      ChatErrors.userNoPermission()
+    }
+
+    const existingMembers = await this.memberRepo.findByConversationId(
+      dto.conversationId,
+    )
+
+    const actor = existingMembers.find(
+      (member) =>
+        member.userId === dto.userId &&
+        (member.role === 'ADMIN' || member.role === 'OWNER'),
+    )
+
+    if (!actor) {
+      ChatErrors.userNoPermission()
+    }
+
+    await this.conversationRepo.deleteConversationById(dto.conversationId)
 
     return {
       status: 'SUCCESS',

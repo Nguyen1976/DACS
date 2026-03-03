@@ -329,3 +329,13 @@ export const leaveConversationAPI = async (payload: {
   );
   return response.data.data;
 };
+
+export const deleteConversationAPI = async (payload: {
+  conversationId: string;
+}): Promise<{ status: string }> => {
+  const response = await authorizeAxiosInstance.post(
+    `${API_ROOT}/chat/delete-conversation`,
+    payload,
+  );
+  return response.data.data;
+};

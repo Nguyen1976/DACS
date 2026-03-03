@@ -4,6 +4,7 @@ import {
   AddMemberToConversationRequest,
   CHAT_GRPC_SERVICE_NAME,
   ConversationAssetKind,
+  DeleteConversationRequest,
   GetConversationAssetsResponse,
   CreateMessageUploadUrlResponse,
   LeaveConversationRequest,
@@ -65,6 +66,11 @@ export class ChatService implements OnModuleInit {
 
   async leaveConversation(dto: LeaveConversationRequest) {
     const observable = this.chatClientService.leaveConversation(dto)
+    return await firstValueFrom(observable)
+  }
+
+  async deleteConversation(dto: DeleteConversationRequest) {
+    const observable = this.chatClientService.deleteConversation(dto)
     return await firstValueFrom(observable)
   }
 

@@ -12,6 +12,7 @@ import {
   AddMemberToConversationDTO,
   CreateMessageUploadUrlDTO,
   CreateConversationDTO,
+  DeleteConversationDTO,
   LeaveConversationDTO,
   ReadMessageDto,
   RemoveMemberFromConversationDTO,
@@ -112,6 +113,18 @@ export class ChatController {
     @UserInfo() userInfo: any,
   ) {
     return await this.chatService.leaveConversation({
+      conversationId: body.conversationId,
+      userId: userInfo.userId,
+    })
+  }
+
+  @Post('delete-conversation')
+  @RequireLogin()
+  async deleteConversation(
+    @Body() body: DeleteConversationDTO,
+    @UserInfo() userInfo: any,
+  ) {
+    return await this.chatService.deleteConversation({
       conversationId: body.conversationId,
       userId: userInfo.userId,
     })

@@ -9,6 +9,8 @@ import {
   type CreateConversationRequest,
   type CreateMessageUploadUrlRequest,
   CreateMessageUploadUrlResponse,
+  type DeleteConversationRequest,
+  type DeleteConversationResponse,
   type GetConversationsRequest,
   GetConversationAssetsResponse,
   type GetConversationAssetsRequest,
@@ -71,6 +73,14 @@ export class ChatController {
     metadata: Metadata,
   ): Promise<LeaveConversationResponse> {
     return await safeExecute(() => this.chatService.leaveConversation(data))
+  }
+
+  @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'deleteConversation')
+  async deleteConversation(
+    data: DeleteConversationRequest,
+    metadata: Metadata,
+  ): Promise<DeleteConversationResponse> {
+    return await safeExecute(() => this.chatService.deleteConversation(data))
   }
 
   @GrpcMethod(CHAT_GRPC_SERVICE_NAME, 'getConversations')
