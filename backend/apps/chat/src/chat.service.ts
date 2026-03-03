@@ -99,9 +99,13 @@ export class ChatService {
       groupAvatar: avatarUrl,
     })
 
+    const uniqueMembers = Array.from(
+      new Map(data.members.map((m) => [m.userId, m])).values(),
+    )
+
     await this.memberRepo.createMany(
       conversation.id,
-      data.members,
+      uniqueMembers,
       data.createrId as string,
       data.type as conversationType,
     )

@@ -246,14 +246,14 @@ export const selectMessagePagination = createSelector(
     if (!conversationId) {
       return {
         oldestCursor: null,
-        hasMore: true,
+        hasMore: false,
       };
     }
 
     return (
       paginationMap[conversationId] || {
         oldestCursor: null,
-        hasMore: true,
+        hasMore: false,
       }
     );
   },

@@ -121,11 +121,12 @@ export default function ChatWindow({
   }, [messages.length, isAtBottom]);
 
   useEffect(() => {
+    if (!conversationId) return;
     if (!canLoadMessages) return;
     if (messages.length === 0) {
       dispatch(
         getMessages({
-          conversationId: conversationId || "",
+          conversationId,
           limit: 20,
           cursor: null,
         }),
@@ -137,6 +138,7 @@ export default function ChatWindow({
     if (!conversationId) return;
     if (!canLoadMessages) return;
     if (!pagination.hasMore) return;
+    if (!pagination.oldestCursor) return;
     if (isLoadingOlder) return;
 
     const container = containerRef.current;

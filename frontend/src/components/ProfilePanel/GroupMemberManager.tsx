@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,9 @@ import { selectUser } from "@/redux/slices/userSlice";
 import { toast } from "sonner";
 
 export function GroupMemberManager() {
+  const PROFILE_ENRICH_MEMBER_LIMIT = 200;
+  const PROFILE_ENRICH_BATCH_SIZE = 20;
+
   const [selectedTab, setSelectedTab] = useState("members");
   const [open, setOpen] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -45,6 +48,7 @@ export function GroupMemberManager() {
       }
     >
   >({});
+  const requestedMemberIdsRef = useRef<Set<string>>(new Set());
 
   const conversationId = useLocation().pathname.split("/").pop() || "";
 
@@ -77,35 +81,49 @@ export function GroupMemberManager() {
   }, [dispatch, friends.length]);
 
   useEffect(() => {
+    requestedMemberIdsRef.current.clear();
+    setMemberProfileMap({});
+  }, [conversationId]);
+
+  useEffect(() => {
     const members = conversation?.members || [];
+
+    if (members.length > PROFILE_ENRICH_MEMBER_LIMIT) {
+      return;
+    }
+
     const unresolvedMemberIds = members
       .filter((member) => {
         const hasDisplayName = Boolean(member.username || member.fullName);
         const hasAvatar = Boolean(member.avatar);
         const hasCachedProfile = Boolean(memberProfileMap[member.userId]);
+        const wasRequested = requestedMemberIdsRef.current.has(member.userId);
 
-        return (!hasDisplayName || !hasAvatar) && !hasCachedProfile;
+        return (
+          (!hasDisplayName || !hasAvatar) && !hasCachedProfile && !wasRequested
+        );
       })
-      .map((member) => member.userId);
+      .map((member) => member.userId)
+      .slice(0, PROFILE_ENRICH_BATCH_SIZE);
 
     if (unresolvedMemberIds.length === 0) return;
 
-    Promise.all(
+    unresolvedMemberIds.forEach((id) => requestedMemberIdsRef.current.add(id));
+
+    Promise.allSettled(
       unresolvedMemberIds.map(async (userId) => {
-        try {
-          const profile = await getUserProfileByIdAPI(userId);
-          return {
-            userId,
-            username: profile.username,
-            fullName: profile.fullName,
-            avatar: profile.avatar,
-          };
-        } catch {
-          return null;
-        }
+        const profile = await getUserProfileByIdAPI(userId);
+        return {
+          userId,
+          username: profile.username,
+          fullName: profile.fullName,
+          avatar: profile.avatar,
+        };
       }),
     ).then((profiles) => {
-      const validProfiles = profiles.filter(Boolean) as Array<{
+      const validProfiles = profiles
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value) as Array<{
         userId: string;
         username?: string;
         fullName?: string;
@@ -126,7 +144,12 @@ export function GroupMemberManager() {
         return next;
       });
     });
-  }, [conversation?.members, memberProfileMap]);
+  }, [
+    conversation?.members,
+    memberProfileMap,
+    PROFILE_ENRICH_BATCH_SIZE,
+    PROFILE_ENRICH_MEMBER_LIMIT,
+  ]);
   // Get available friends not already in the group
   const availableFriends = friends.filter(
     (friend) =>
