@@ -88,7 +88,6 @@ export class UserService implements OnModuleInit {
       inviterId: dto.inviterId,
       inviteeName: dto.inviteeName,
     })
-    //bắn sự kiện sang notifications service để tạo thông báo hoặc gửi mail
     return await firstValueFrom(observable)
   }
 

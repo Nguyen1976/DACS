@@ -3,7 +3,7 @@ export const SOCKET_EVENTS = {
   DISCONNECTION: 'user_offline',
 
   CHAT: {
-    SEND_MESSAGE: 'chat.send_message', //emit
+    // SEND_MESSAGE: 'chat.send_message', //emit
     NEW_MESSAGE: 'chat.new_message', //listen
     MESSAGE_CREATE: 'message:create',
     MESSAGE_NEW: 'message:new',

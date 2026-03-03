@@ -59,7 +59,6 @@ export class ChatController {
     })
   }
 
-  //mai sẽ làm chức năng add member sau
   @Post('add-member')
   @RequireLogin()
   async addMemberToConversation(

@@ -148,30 +148,30 @@ export class RealtimeGateway
   }
 
   //nhận sự kiện send_message ở đây
-  @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
-  async handleSendMessage(
-    @MessageBody() data: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    if (!client.data.userId) {
-      client.emit(SOCKET_EVENTS.CHAT.MESSAGE_ERROR, {
-        code: 'UNAUTHORIZED',
-        message: 'Unauthorized socket client',
-        retryable: false,
-      })
-      return
-    }
+  // @SubscribeMessage(SOCKET_EVENTS.CHAT.SEND_MESSAGE)
+  // async handleSendMessage(
+  //   @MessageBody() data: any,
+  //   @ConnectedSocket() client: Socket,
+  // ) {
+  //   if (!client.data.userId) {
+  //     client.emit(SOCKET_EVENTS.CHAT.MESSAGE_ERROR, {
+  //       code: 'UNAUTHORIZED',
+  //       message: 'Unauthorized socket client',
+  //       retryable: false,
+  //     })
+  //     return
+  //   }
 
-    //tin nhan duoc gui di qua rabbitmq
-    this.amqpConnection.publish(
-      EXCHANGE_RMQ.REALTIME_EVENTS,
-      ROUTING_RMQ.SEND_MESSAGE,
-      {
-        ...data,
-        senderId: client.data.userId,
-      },
-    )
-  }
+  //   //tin nhan duoc gui di qua rabbitmq
+  //   this.amqpConnection.publish(
+  //     EXCHANGE_RMQ.REALTIME_EVENTS,
+  //     ROUTING_RMQ.SEND_MESSAGE,
+  //     {
+  //       ...data,
+  //       senderId: client.data.userId,
+  //     },
+  //   )
+  // }
 
   @SubscribeMessage(SOCKET_EVENTS.CHAT.MESSAGE_CREATE)
   async handleCreateMessage(
