@@ -34,13 +34,13 @@ const MessageComponent = ({
   };
 
   const getFileNameFromUrl = (url?: string) => {
-    if (!url) return "attachment";
+    if (!url) return "tệp đính kèm";
     try {
       const parsed = new URL(url);
-      const rawName = parsed.pathname.split("/").pop() || "attachment";
+      const rawName = parsed.pathname.split("/").pop() || "tệp đính kèm";
       return decodeURIComponent(rawName);
     } catch {
-      const rawName = url.split("/").pop() || "attachment";
+      const rawName = url.split("/").pop() || "tệp đính kèm";
       return decodeURIComponent(rawName);
     }
   };
@@ -159,7 +159,7 @@ const MessageComponent = ({
                             {getFileNameFromUrl(media.url)}
                           </p>
                           <p className="text-xs text-gray-400">
-                            {formatBytes(media.size) || "Open file"}
+                            {formatBytes(media.size) || "Mở tệp"}
                           </p>
                         </div>
                       </div>
@@ -182,7 +182,13 @@ const MessageComponent = ({
             {isMine && !isSameAsNext && (
               <div className="flex justify-end mr-10 h-3">
                 <span className="mt-1 text-[11px] text-gray-400">
-                  {message?.status}
+                  {message?.status === "pending"
+                    ? "Đang gửi"
+                    : message?.status === "sent"
+                      ? "Đã gửi"
+                      : message?.status === "failed"
+                        ? "Gửi thất bại"
+                        : message?.status}
                 </span>
               </div>
             )}

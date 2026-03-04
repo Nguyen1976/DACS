@@ -23,7 +23,7 @@ interface NewChatModalProps {
 }
 
 const formConversationScheme = z.object({
-  groupName: z.string().min(1, "Group name is required"),
+  groupName: z.string().min(1, "Vui lòng nhập tên nhóm"),
   groupAvatar: z.instanceof(File).optional(), // cho phép không đổi ảnh
 });
 
@@ -93,7 +93,9 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="flex items-center justify-between p-6 border-b border-button">
-          <h2 className="text-xl font-semibold text-text">New Chat</h2>
+          <h2 className="text-xl font-semibold text-text">
+            Tạo cuộc trò chuyện mới
+          </h2>
           <Button
             variant="ghost"
             size="icon"
@@ -126,21 +128,21 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               {!preview ? (
                 <Camera className="w-6 h-6 text-muted-foreground" />
               ) : (
-                <AvatarImage src={preview} alt="Preview" />
+                <AvatarImage src={preview} alt="Xem trước" />
               )}
             </Avatar>
             <Input
               className="border-none mb-4 focus:ring-bg-box-message-out! bg-button! text-text outline-none"
               type="text"
-              placeholder="Group name"
-              {...register("groupName", { required: "Group name is required" })}
+              placeholder="Tên nhóm"
+              {...register("groupName", { required: "Vui lòng nhập tên nhóm" })}
             />
           </div>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Tìm người dùng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-button text-text placeholder:text-gray-500 rounded-lg pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-bg-box-message-out"
@@ -186,13 +188,13 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                 loadMoreFriends();
               }}
             >
-              Load More
+              Tải thêm
             </Button>
           </div>
         </div>
         <div className="w-full flex justify-end">
           <Button type="submit" className="m-4 interceptor-loading">
-            Start Chat
+            Bắt đầu chat
           </Button>
         </div>
       </form>

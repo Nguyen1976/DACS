@@ -26,7 +26,7 @@ export default function ChatPage() {
         />
       ) : (
         <div className="flex-1 flex items-center justify-center bg-bg-box-chat text-gray-500">
-          Select a chat to start messaging
+          Hãy chọn một cuộc trò chuyện để bắt đầu nhắn tin
         </div>
       )}
 

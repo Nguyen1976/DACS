@@ -1,9 +1,9 @@
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
-import { useForm } from 'react-hook-form'
-import { formLoginScheme } from './scheme'
-import { zodResolver } from '@hookform/resolvers/zod'
-import type z from 'zod'
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { useForm } from "react-hook-form";
+import { formLoginScheme } from "./scheme";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type z from "zod";
 import {
   Form,
   FormControl,
@@ -11,72 +11,72 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { loginAPI } from '@/redux/slices/userSlice'
-import { useDispatch } from 'react-redux'
-import type { AppDispatch } from '@/redux/store'
-import { useNavigate } from 'react-router'
+} from "@/components/ui/form";
+import { loginAPI } from "@/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
+import { useNavigate } from "react-router";
 
 const Login = () => {
   const form = useForm<z.infer<typeof formLoginScheme>>({
     resolver: zodResolver(formLoginScheme),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
-  })
+  });
 
-  const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: z.infer<typeof formLoginScheme>) => {
-    console.log(data)
+    console.log(data);
     dispatch(loginAPI(data)).then((res) => {
       if (loginAPI.fulfilled.match(res)) {
-        navigate('/')
+        navigate("/");
       }
-    })
-  }
+    });
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <div className='space-y-2'>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
           <FormField
             control={form.control}
-            name='email'
+            name="email"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder='email' {...field} />
+                  <Input placeholder="Nhập email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <FormField
             control={form.control}
-            name='password'
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>Mật khẩu</FormLabel>
                 <FormControl>
-                  <Input placeholder='******' {...field} type='password' />
+                  <Input placeholder="******" {...field} type="password" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <Button type='submit' className='w-full'>
-          Sign in
+        <Button type="submit" className="w-full">
+          Đăng nhập
         </Button>
       </form>
     </Form>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

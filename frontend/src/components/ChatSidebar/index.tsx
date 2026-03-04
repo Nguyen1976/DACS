@@ -1,40 +1,40 @@
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { ModeToggle } from '../ModeToggle'
-import type { AppDispatch } from '@/redux/store'
-import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ModeToggle } from "../ModeToggle";
+import type { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
 import {
   getConversations,
   selectConversation,
   type Conversation,
-} from '@/redux/slices/conversationSlice'
-import { formatDateTime } from '@/utils/formatDateTime'
-import MenuCustome from './Menu'
-import { NotificationsDropdown } from '../NotificationDropdown'
-import { useNavigate, useParams } from 'react-router'
-import { selectUser } from '@/redux/slices/userSlice'
+} from "@/redux/slices/conversationSlice";
+import { formatDateTime } from "@/utils/formatDateTime";
+import MenuCustome from "./Menu";
+import { NotificationsDropdown } from "../NotificationDropdown";
+import { useNavigate, useParams } from "react-router";
+import { selectUser } from "@/redux/slices/userSlice";
 
 export function ChatSidebar() {
-  const user = useSelector(selectUser)
+  const user = useSelector(selectUser);
 
-  const selectedChatId = useParams().conversationId || ''
+  const selectedChatId = useParams().conversationId || "";
 
-  const conversations = useSelector(selectConversation)
+  const conversations = useSelector(selectConversation);
 
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (conversations.length === 0) {
-      dispatch(getConversations({ limit: 10, cursor: null }))
+      dispatch(getConversations({ limit: 10, cursor: null }));
     }
-  }, [dispatch, conversations?.length])
+  }, [dispatch, conversations?.length]);
 
   const loadMoreConversations = () => {
-    console.log(conversations[conversations.length - 1])
+    console.log(conversations[conversations.length - 1]);
     dispatch(
       getConversations({
         limit: 10,
@@ -43,41 +43,41 @@ export function ChatSidebar() {
             (m) => m.userId === user?.id,
           )?.lastMessageAt || null,
       }),
-    )
-  }
+    );
+  };
 
   return (
-    <div className='w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar'>
-      <div className='flex items-center justify-end p-4 border-b border-bg-box-message-incoming'>
-        <div className='flex gap-2 items-center'>
+    <div className="w-1/3 bg-black-bland border-r border-bg-box-message-incoming flex flex-col custom-scrollbar">
+      <div className="flex items-center justify-end p-4 border-b border-bg-box-message-incoming">
+        <div className="flex gap-2 items-center">
           <ModeToggle />
           <NotificationsDropdown />
           <MenuCustome />
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto custom-scrollbar'>
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {conversations?.map((conversation: Conversation) => (
           <button
             key={conversation.id}
             onClick={() => {
-              navigate(`/chat/${conversation.id}`)
+              navigate(`/chat/${conversation.id}`);
             }}
             className={cn(
-              'w-full p-4 flex items-start gap-3 hover:bg-bg-box-message-incoming/50 transition-colors border-b border-bg-box-message-incoming/30',
+              "w-full p-4 flex items-start gap-3 hover:bg-bg-box-message-incoming/50 transition-colors border-b border-bg-box-message-incoming/30",
               selectedChatId === conversation.id &&
-                'bg-bg-box-message-incoming',
+                "bg-bg-box-message-incoming",
             )}
           >
-            <div className='relative'>
-              {conversation.type === 'DIRECT' ? (
-                <Avatar className='w-12 h-12'>
+            <div className="relative">
+              {conversation.type === "DIRECT" ? (
+                <Avatar className="w-12 h-12">
                   <AvatarImage
-                    src={conversation.groupAvatar || ''}
-                    alt={conversation.groupName || ''}
+                    src={conversation.groupAvatar || ""}
+                    alt={conversation.groupName || ""}
                   />
                   <AvatarFallback>
-                    {(conversation.groupName || 'C')[0]}
+                    {(conversation.groupName || "C")[0]}
                   </AvatarFallback>
                 </Avatar>
               ) : (
@@ -85,18 +85,18 @@ export function ChatSidebar() {
                 //   <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black-bland' />
                 // )} */}
 
-                <div className='*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale'>
+                <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale">
                   <Avatar>
                     <AvatarImage
                       src={
                         conversation.groupAvatar ||
                         conversation.members?.[0]?.avatar ||
-                        ''
+                        ""
                       }
-                      alt={conversation.groupName || ''}
+                      alt={conversation.groupName || ""}
                     />
                     <AvatarFallback>
-                      {(conversation.groupName || 'C')[0]}
+                      {(conversation.groupName || "C")[0]}
                     </AvatarFallback>
                   </Avatar>
                   {conversation.members.length >= 2 && (
@@ -104,7 +104,7 @@ export function ChatSidebar() {
                       <AvatarFallback>
                         {conversation.members.length - 1 <= 99
                           ? conversation.members.length - 1
-                          : '99+'}
+                          : "99+"}
                       </AvatarFallback>
                     </Avatar>
                   )}
@@ -112,42 +112,42 @@ export function ChatSidebar() {
               )}
             </div>
 
-            <div className='flex-1 min-w-0 text-left'>
-              <div className='flex items-center justify-between mb-1'>
-                <span className='font-medium text-text truncate'>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-text truncate">
                   {conversation.groupName}
                 </span>
-                <span className='text-xs text-gray-400 ml-2'>
+                <span className="text-xs text-gray-400 ml-2">
                   {formatDateTime(conversation.updatedAt)}
                 </span>
               </div>
-              <p className='text-sm text-gray-400 truncate'>
+              <p className="text-sm text-gray-400 truncate">
                 {conversation?.lastMessage
                   ? conversation.lastMessage.text
-                  : 'No messages yet.'}
+                  : "Chưa có tin nhắn nào."}
               </p>
             </div>
 
             {conversation.unreadCount &&
               (Number(conversation.unreadCount) > 0 ||
-                conversation.unreadCount === '5+') && (
-                <div className='w-6 h-6 bg-bg-box-message-out rounded-full flex items-center justify-center'>
-                  <span className='text-xs text-text font-medium'>
+                conversation.unreadCount === "5+") && (
+                <div className="w-6 h-6 bg-bg-box-message-out rounded-full flex items-center justify-center">
+                  <span className="text-xs text-text font-medium">
                     {conversation.unreadCount}
                   </span>
                 </div>
               )}
           </button>
         ))}
-        <div className='w-full flex items-center justify-center my-4'>
+        <div className="w-full flex items-center justify-center my-4">
           <Button
-            className='interceptor-loading'
+            className="interceptor-loading"
             onClick={() => loadMoreConversations()}
           >
-            Load More
+            Tải thêm
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

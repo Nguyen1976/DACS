@@ -36,7 +36,7 @@ export function LeftNavigation() {
             (pathname === "/" || pathname.startsWith("/chat")) &&
               "bg-primary text-primary-foreground",
           )}
-          title="Chats"
+          title="Trò chuyện"
           onClick={() => navigate("/")}
         >
           <MessageSquare className="w-6 h-6" />
@@ -53,7 +53,7 @@ export function LeftNavigation() {
               pathname === "/friend_requests") &&
               "bg-primary text-primary-foreground",
           )}
-          title="Friends"
+          title="Bạn bè"
           onClick={() => navigate("/friends")}
         >
           <Users className="w-6 h-6" />
@@ -84,7 +84,7 @@ export function LeftNavigation() {
         variant="ghost"
         size="icon"
         className="w-12 h-12 rounded-lg text-muted-foreground hover:text-destructive transition-colors"
-        title="Logout"
+        title="Đăng xuất"
         onClick={handleLogout}
       >
         <LogOut className="w-6 h-6" />

@@ -133,7 +133,7 @@ const ListGroupCommunity = () => {
                         src={
                           (group.groupAvatar as string) || "/placeholder.svg"
                         }
-                        alt={group.groupName || "Group"}
+                        alt={group.groupName || "Nhóm"}
                       />
                       <AvatarFallback>
                         {(group.groupName || "G")[0]}
@@ -181,7 +181,7 @@ const ListGroupCommunity = () => {
           {!debouncedKeyword && (
             <div className="w-full flex items-center justify-center my-4">
               <Button className="interceptor-loading" onClick={loadMoreGroups}>
-                Load More
+                Tải thêm
               </Button>
             </div>
           )}

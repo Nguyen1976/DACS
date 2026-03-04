@@ -39,7 +39,7 @@ export function FriendsPage({ children }: { children?: React.ReactNode }) {
               size="sm"
               className="whitespace-nowrap bg-transparent"
             >
-              Tiên (A-Z)
+              Tên (A-Z)
             </Button>
             <Button variant="outline" size="icon">
               <Settings className="w-4 h-4" />

@@ -39,8 +39,8 @@ export default function ProfilePanel({
   ) as Conversation;
 
   const title = useMemo(() => {
-    if (!conversation) return "Conversation";
-    return conversation.groupName || "Conversation";
+    if (!conversation) return "Cuộc trò chuyện";
+    return conversation.groupName || "Cuộc trò chuyện";
   }, [conversation]);
 
   const canAccessConversationData =
@@ -108,14 +108,14 @@ export default function ProfilePanel({
 
   const resolveFileName = (message: ConversationAssetMessage) => {
     const mediaUrl = message.medias?.[0]?.url || message.text || "";
-    if (!mediaUrl) return "attachment";
+    if (!mediaUrl) return "tệp đính kèm";
     try {
       const parsed = new URL(mediaUrl);
       return decodeURIComponent(
-        parsed.pathname.split("/").pop() || "attachment",
+        parsed.pathname.split("/").pop() || "tệp đính kèm",
       );
     } catch {
-      return decodeURIComponent(mediaUrl.split("/").pop() || "attachment");
+      return decodeURIComponent(mediaUrl.split("/").pop() || "tệp đính kèm");
     }
   };
 
@@ -129,7 +129,9 @@ export default function ProfilePanel({
   return (
     <div className="bg-black-bland border-l border-bg-box-message-incoming flex flex-col custom-scrollbar">
       <div className="flex items-center justify-between p-4 border-b border-bg-box-message-incoming">
-        <h2 className="text-lg font-semibold text-text">Profile</h2>
+        <h2 className="text-lg font-semibold text-text">
+          Thông tin cuộc trò chuyện
+        </h2>
         <Button
           variant="ghost"
           size="icon"
@@ -174,14 +176,16 @@ export default function ProfilePanel({
           {/* Settings */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-text">Mute Chat</span>
+              <span className="text-sm text-text">
+                Tắt thông báo cuộc trò chuyện
+              </span>
               <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-bg-box-message-incoming transition-colors">
                 <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
               </button>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-text">Disappearing Messages</span>
+              <span className="text-sm text-text">Tin nhắn tự biến mất</span>
               <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-bg-box-message-incoming transition-colors">
                 <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
               </button>
@@ -193,15 +197,15 @@ export default function ProfilePanel({
           {/* Media */}
           <div>
             <h4 className="text-sm font-medium text-gray-400 mb-3">
-              Media, Links & Docs
+              Ảnh, liên kết & tài liệu
             </h4>
 
             <div className="mb-3 flex gap-2">
               {(
                 [
-                  ["MEDIA", "Media"],
-                  ["LINK", "Links"],
-                  ["DOC", "Docs"],
+                  ["MEDIA", "Ảnh/Video"],
+                  ["LINK", "Liên kết"],
+                  ["DOC", "Tài liệu"],
                 ] as const
               ).map(([kind, label]) => (
                 <Button
@@ -232,11 +236,11 @@ export default function ProfilePanel({
                         <ImageIcon className="h-4 w-4 text-gray-400" />
                         <img
                           src={url}
-                          alt="media"
+                          alt="tệp phương tiện"
                           className="h-12 w-12 rounded-md object-cover"
                         />
                         <p className="truncate text-xs text-gray-300">
-                          {message.text || "Media"}
+                          {message.text || "Tệp phương tiện"}
                         </p>
                       </div>
                     </button>
@@ -276,12 +280,14 @@ export default function ProfilePanel({
                 );
               })}
 
-              {isLoading && <p className="text-xs text-gray-400">Loading...</p>}
+              {isLoading && (
+                <p className="text-xs text-gray-400">Đang tải...</p>
+              )}
 
               {!isLoading && assets.length === 0 && (
                 <p className="text-xs text-gray-500">
                   {canAccessConversationData
-                    ? "No data"
+                    ? "Không có dữ liệu"
                     : "Bạn không còn trong nhóm này"}
                 </p>
               )}
@@ -297,7 +303,7 @@ export default function ProfilePanel({
                     }
                   }}
                 >
-                  Load more
+                  Tải thêm
                 </Button>
               )}
             </div>

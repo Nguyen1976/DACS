@@ -114,7 +114,7 @@ const ListFriendRequests = () => {
                 className="interceptor-loading"
                 onClick={() => void fetchRequests({ nextPage: page + 1 })}
               >
-                Load More
+                Tải thêm
               </Button>
             </div>
           )}

@@ -214,7 +214,7 @@ const ListFriend = () => {
                         {friend.username}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {friend.status ? "Online" : "Offline"}
+                        {friend.status ? "Đang online" : "Đang offline"}
                       </p>
                     </div>
 
@@ -251,7 +251,7 @@ const ListFriend = () => {
                     className="interceptor-loading"
                     onClick={loadMoreFriends}
                   >
-                    Load More
+                    Tải thêm
                   </Button>
                 </div>
               )}
@@ -275,7 +275,7 @@ const ListFriend = () => {
               <Avatar className="w-24 h-24">
                 <AvatarImage
                   src={selectedProfile?.avatar || "/placeholder.svg"}
-                  alt={selectedProfile?.username || "User avatar"}
+                  alt={selectedProfile?.username || "Ảnh đại diện người dùng"}
                 />
                 <AvatarFallback>
                   {(selectedProfile?.username || "U")[0]}

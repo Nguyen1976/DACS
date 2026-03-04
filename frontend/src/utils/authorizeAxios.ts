@@ -21,11 +21,22 @@ authorizeAxiosInstance.interceptors.response.use(
   (error) => {
     console.error("Axios error:", error);
     if (error.response?.status === 401) {
-      console.log("Unauthorized, logging out...");
+      console.log("Phiên đăng nhập đã hết hạn, đang đăng xuất...");
       axiosReduxStore?.dispatch(logoutAPI());
     }
 
-    toast.error(error.message);
+    const backendMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error?.message ||
+      error?.message ||
+      "Đã xảy ra lỗi";
+
+    const translatedMessage =
+      backendMessage === "Network Error"
+        ? "Không thể kết nối đến máy chủ"
+        : backendMessage;
+
+    toast.error(translatedMessage);
     return Promise.reject(error);
   },
 );

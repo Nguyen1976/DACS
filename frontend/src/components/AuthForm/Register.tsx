@@ -30,7 +30,7 @@ const Register = () => {
     const { username, email, password } = data;
 
     await registerAPI({ username, email, password });
-    toast.success("Register successfully, please sign in");
+    toast.success("Đăng ký thành công, vui lòng đăng nhập");
     form.reset();
   };
 
@@ -43,9 +43,9 @@ const Register = () => {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>Tên người dùng</FormLabel>
                 <FormControl>
-                  <Input placeholder="johndoe" {...field} />
+                  <Input placeholder="Nhập tên người dùng" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -60,7 +60,7 @@ const Register = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="your@email.com" {...field} />
+                  <Input placeholder="Nhập email của bạn" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -73,7 +73,7 @@ const Register = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>Mật khẩu</FormLabel>
                 <FormControl>
                   <Input placeholder="••••••••" type="password" {...field} />
                 </FormControl>
@@ -88,7 +88,7 @@ const Register = () => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm password</FormLabel>
+                <FormLabel>Xác nhận mật khẩu</FormLabel>
                 <FormControl>
                   <Input placeholder="••••••••" type="password" {...field} />
                 </FormControl>
@@ -102,7 +102,7 @@ const Register = () => {
           className="w-full"
           disabled={form.formState.isSubmitting}
         >
-          Register
+          Đăng ký
         </Button>
       </form>
     </Form>

@@ -32,11 +32,11 @@ const ProfileSetting = () => {
         <DropdownMenuContent className="w-56" align="start">
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => setShowSetting(true)}>
-              Profile
+              Hồ sơ
             </DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
+            <DropdownMenuItem>Thanh toán</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowSetting(true)}>
-              Settings
+              Cài đặt
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

@@ -1,27 +1,24 @@
 import { z } from "zod";
 
 const formLoginScheme = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
+  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
 });
 
 const formRegisterScheme = z
   .object({
     username: z
       .string()
-      .min(3, "Username must be at least 3 characters long")
-      .max(30, "Username must be at most 30 characters long"),
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters long"),
+      .min(3, "Tên người dùng phải có ít nhất 3 ký tự")
+      .max(30, "Tên người dùng tối đa 30 ký tự"),
+    email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z
       .string()
-      .min(6, "Confirm password must be at least 6 characters long"),
+      .min(6, "Mật khẩu xác nhận phải có ít nhất 6 ký tự"),
   })
   .refine((values) => values.password === values.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Mật khẩu xác nhận không khớp",
     path: ["confirmPassword"],
   });
 

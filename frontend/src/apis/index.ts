@@ -249,7 +249,7 @@ export const uploadFileToSignedUrl = async (
   });
 
   if (!response.ok) {
-    throw new Error("Upload media to storage failed");
+    throw new Error("Tải tệp lên kho lưu trữ thất bại");
   }
 };
 

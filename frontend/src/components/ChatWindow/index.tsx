@@ -96,8 +96,8 @@ export default function ChatWindow({
           (member) => member.userId !== user.id,
         )?.username ||
         effectiveConversation.groupName ||
-        "Direct Chat"
-      : effectiveConversation?.groupName || "Group Chat";
+        "Trò chuyện trực tiếp"
+      : effectiveConversation?.groupName || "Nhóm chat";
 
   const conversationAvatar =
     effectiveConversation?.type === "DIRECT"
@@ -419,14 +419,16 @@ export default function ChatWindow({
           <Avatar className="w-10 h-10">
             <AvatarImage
               src={conversationAvatar || "/placeholder.svg"}
-              alt={conversationName || "Group Avatar"}
+              alt={conversationName || "Ảnh đại diện nhóm"}
             />
             <AvatarFallback>{conversationName?.[0]}</AvatarFallback>
           </Avatar>
           <div className="text-left">
             <div className="font-medium text-text">{conversationName}</div>
             <div className="text-xs text-gray-400">
-              {effectiveConversation?.type}
+              {effectiveConversation?.type === "DIRECT"
+                ? "Trò chuyện trực tiếp"
+                : "Nhóm"}
             </div>
           </div>
         </button>
@@ -528,7 +530,7 @@ export default function ChatWindow({
 
         <input
           type="text"
-          placeholder="Write a message..."
+          placeholder="Nhập tin nhắn..."
           disabled={!canSendMessage}
           className="flex-1 bg-transparent text-text placeholder:text-gray-500 outline-none text-sm"
           onChange={(e) => setMsg(e.target.value)}

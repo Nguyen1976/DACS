@@ -298,7 +298,7 @@ export function GroupMemberManager() {
           className="h-8 gap-1 border-accent/20 hover:bg-accent/10 bg-transparent"
         >
           <Users className="w-4 h-4" />
-          Manage
+          Quản lý
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 bg-background border-accent/20">
@@ -316,10 +316,10 @@ export function GroupMemberManager() {
             >
               <LogOut className="w-3 h-3" />
               {isLeaving
-                ? "Leaving..."
+                ? "Đang rời nhóm..."
                 : isAdmin
-                  ? "Admin cannot leave"
-                  : "Leave group"}
+                  ? "Quản trị viên không thể rời nhóm"
+                  : "Rời nhóm"}
             </Button>
             <Button
               size="sm"
@@ -328,7 +328,7 @@ export function GroupMemberManager() {
               disabled={!canDeleteConversation || isDeletingConversation}
               className="mt-2 h-8 gap-2"
             >
-              {isDeletingConversation ? "Deleting..." : "Delete conversation"}
+              {isDeletingConversation ? "Đang xóa..." : "Xóa cuộc trò chuyện"}
             </Button>
           </div>
         </div>
@@ -344,14 +344,14 @@ export function GroupMemberManager() {
               className="flex items-center gap-2 text-xs"
             >
               <User className="w-3 h-3" />
-              Members ({conversation?.members.length || 0})
+              Thành viên ({conversation?.members.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="add"
               className="flex items-center gap-2 text-xs"
             >
               <Plus className="w-3 h-3" />
-              Add
+              Thêm
             </TabsTrigger>
           </TabsList>
 
@@ -361,7 +361,7 @@ export function GroupMemberManager() {
               <div className="space-y-2">
                 {conversation?.members.length === 0 ? (
                   <div className="flex items-center justify-center h-40 text-muted-foreground">
-                    No members in this group
+                    Nhóm này chưa có thành viên
                   </div>
                 ) : (
                   conversation?.members.map((member) =>
@@ -387,7 +387,7 @@ export function GroupMemberManager() {
                             <Avatar className="w-10 h-10">
                               <AvatarImage
                                 src={displayAvatar}
-                                alt={displayName || "User"}
+                                alt={displayName || "Người dùng"}
                               />
                               <AvatarFallback>
                                 {displayName?.[0] || "?"}
@@ -407,12 +407,12 @@ export function GroupMemberManager() {
                               <div className="flex items-center gap-2 mt-0.5">
                                 {member.role === "ADMIN" && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
-                                    ADMIN
+                                    QUẢN TRỊ VIÊN
                                   </span>
                                 )}
                                 {member.userId === user.id && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
-                                    YOU
+                                    BẠN
                                   </span>
                                 )}
                               </div>
@@ -444,7 +444,7 @@ export function GroupMemberManager() {
               <div className="space-y-2">
                 {availableFriends.length === 0 ? (
                   <div className="flex items-center justify-center h-40 text-muted-foreground">
-                    All friends are already in this group
+                    Tất cả bạn bè đã ở trong nhóm này
                   </div>
                 ) : (
                   availableFriends.map((friend) => (
@@ -456,7 +456,7 @@ export function GroupMemberManager() {
                         <Avatar className="w-10 h-10">
                           <AvatarImage
                             src={friend.avatar || "/placeholder.svg"}
-                            alt={friend.username || "User"}
+                            alt={friend.username || "Người dùng"}
                           />
                           <AvatarFallback>
                             {friend.username?.[0] || "?"}
@@ -495,7 +495,7 @@ export function GroupMemberManager() {
                     className="interceptor-loading"
                     onClick={() => loadMoreFriends()}
                   >
-                    Load More
+                    Tải thêm
                   </Button>
                 </div>
               </div>
