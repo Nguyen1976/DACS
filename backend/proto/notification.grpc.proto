@@ -5,6 +5,8 @@ package notification;
 service NotificationGrpcService {
   rpc createNotification (createNotificationRequest) returns (createNotificationResponse) {}
   rpc getNotifications (GetNotificationsRequest) returns (GetNotificationsResponse) {}
+  rpc markNotificationAsRead (MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse) {}
+  rpc markAllNotificationsAsRead (MarkAllNotificationsAsReadRequest) returns (MarkAllNotificationsAsReadResponse) {}
 }
 
 message createNotificationRequest {
@@ -42,4 +44,22 @@ message GetNotificationsRequest {
 
 message GetNotificationsResponse {
   repeated Notification notifications = 1;
+}
+
+message MarkNotificationAsReadRequest {
+  string userId = 1;
+  string notificationId = 2;
+}
+
+message MarkNotificationAsReadResponse {
+  bool success = 1;
+}
+
+message MarkAllNotificationsAsReadRequest {
+  string userId = 1;
+}
+
+message MarkAllNotificationsAsReadResponse {
+  bool success = 1;
+  int32 updatedCount = 2;
 }

@@ -1,5 +1,5 @@
 import { RequireLogin, UserInfo } from '@app/common/common.decorator'
-import { Body, Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Param, Patch, Query } from '@nestjs/common'
 import { NotificationService } from './notification.service'
 import { GetNotificationsDto } from './dto'
 
@@ -19,7 +19,27 @@ export class NotificationController {
       limit: limit || '5',
       page: page || '1',
     }
-    
+
     return this.notificationService.getNotifications(dto)
+  }
+
+  @Patch(':notificationId/read')
+  @RequireLogin()
+  markNotificationAsRead(
+    @UserInfo() user: any,
+    @Param('notificationId') notificationId: string,
+  ) {
+    return this.notificationService.markNotificationAsRead({
+      userId: user.userId,
+      notificationId,
+    })
+  }
+
+  @Patch('read-all')
+  @RequireLogin()
+  markAllNotificationsAsRead(@UserInfo() user: any) {
+    return this.notificationService.markAllNotificationsAsRead({
+      userId: user.userId,
+    })
   }
 }

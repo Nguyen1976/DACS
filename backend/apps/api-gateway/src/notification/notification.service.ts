@@ -4,6 +4,10 @@ import {
   createNotificationResponse,
   GetNotificationsRequest,
   GetNotificationsResponse,
+  MarkAllNotificationsAsReadRequest,
+  MarkAllNotificationsAsReadResponse,
+  MarkNotificationAsReadRequest,
+  MarkNotificationAsReadResponse,
   NOTIFICATION_GRPC_SERVICE_NAME,
   NotificationGrpcServiceClient,
 } from 'interfaces/notification.grpc'
@@ -38,6 +42,21 @@ export class NotificationService implements OnModuleInit {
     dto: GetNotificationsRequest,
   ): Promise<GetNotificationsResponse> {
     let observable = this.notificationClientService.getNotifications(dto)
+    return await firstValueFrom(observable)
+  }
+
+  async markNotificationAsRead(
+    dto: MarkNotificationAsReadRequest,
+  ): Promise<MarkNotificationAsReadResponse> {
+    let observable = this.notificationClientService.markNotificationAsRead(dto)
+    return await firstValueFrom(observable)
+  }
+
+  async markAllNotificationsAsRead(
+    dto: MarkAllNotificationsAsReadRequest,
+  ): Promise<MarkAllNotificationsAsReadResponse> {
+    let observable =
+      this.notificationClientService.markAllNotificationsAsRead(dto)
     return await firstValueFrom(observable)
   }
 }

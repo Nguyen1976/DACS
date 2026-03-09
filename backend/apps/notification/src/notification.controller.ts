@@ -4,6 +4,10 @@ import { GrpcMethod } from '@nestjs/microservices'
 import {
   type GetNotificationsRequest,
   type GetNotificationsResponse,
+  type MarkAllNotificationsAsReadRequest,
+  type MarkAllNotificationsAsReadResponse,
+  type MarkNotificationAsReadRequest,
+  type MarkNotificationAsReadResponse,
   NOTIFICATION_GRPC_SERVICE_NAME,
   type createNotificationRequest,
   type NotificationGrpcServiceController,
@@ -30,6 +34,24 @@ export class NotificationController implements NotificationGrpcServiceController
     metadata: Metadata,
   ): Promise<GetNotificationsResponse> {
     const res = await this.notificationService.getNotifications(data)
+    return res
+  }
+
+  @GrpcMethod(NOTIFICATION_GRPC_SERVICE_NAME, 'markNotificationAsRead')
+  async markNotificationAsRead(
+    data: MarkNotificationAsReadRequest,
+    metadata: Metadata,
+  ): Promise<MarkNotificationAsReadResponse> {
+    const res = await this.notificationService.markNotificationAsRead(data)
+    return res
+  }
+
+  @GrpcMethod(NOTIFICATION_GRPC_SERVICE_NAME, 'markAllNotificationsAsRead')
+  async markAllNotificationsAsRead(
+    data: MarkAllNotificationsAsReadRequest,
+    metadata: Metadata,
+  ): Promise<MarkAllNotificationsAsReadResponse> {
+    const res = await this.notificationService.markAllNotificationsAsRead(data)
     return res
   }
 }

@@ -24,7 +24,29 @@ export const getNotifications = createAsyncThunk(
     const response = await authorizeAxiosInstance.get(
       `${API_ROOT}/notification?limit=${limit}&page=${page}`,
     );
-    return response.data.data;
+    return {
+      ...response.data.data,
+      page,
+      limit,
+    };
+  },
+);
+
+export const markNotificationAsRead = createAsyncThunk(
+  `/notification/mark-read`,
+  async ({ notificationId }: { notificationId: string }) => {
+    await authorizeAxiosInstance.patch(
+      `${API_ROOT}/notification/${notificationId}/read`,
+    );
+    return { notificationId };
+  },
+);
+
+export const markAllNotificationsAsRead = createAsyncThunk(
+  `/notification/mark-all-read`,
+  async () => {
+    await authorizeAxiosInstance.patch(`${API_ROOT}/notification/read-all`);
+    return true;
   },
 );
 
@@ -33,17 +55,61 @@ export const notificationSlice = createSlice({
   initialState,
   reducers: {
     addNotification: (state, action: PayloadAction<Notification>) => {
-      state.unshift(action.payload);
+      const incoming = action.payload;
+      const existedIndex = state.findIndex((n) => n.id === incoming.id);
+      if (existedIndex !== -1) {
+        state[existedIndex] = incoming;
+        return;
+      }
+
+      state.unshift(incoming);
     },
   },
   extraReducers: (builder) => {
     builder.addCase(
       getNotifications.fulfilled,
-      (state, action: PayloadAction<{ notifications: NotificationState }>) => {
-        state = action.payload.notifications || [];
-        return state;
+      (
+        state,
+        action: PayloadAction<{
+          notifications: NotificationState;
+          page: number;
+          limit: number;
+        }>,
+      ) => {
+        const incoming = action.payload.notifications || [];
+
+        if (action.payload.page <= 1) {
+          return incoming;
+        }
+
+        const merged = [...state];
+        for (const notification of incoming) {
+          if (!merged.some((n) => n.id === notification.id)) {
+            merged.push(notification);
+          }
+        }
+
+        return merged;
       },
     );
+
+    builder.addCase(
+      markNotificationAsRead.fulfilled,
+      (state, action: PayloadAction<{ notificationId: string }>) => {
+        const target = state.find(
+          (n) => n.id === action.payload.notificationId,
+        );
+        if (target) {
+          target.isRead = true;
+        }
+      },
+    );
+
+    builder.addCase(markAllNotificationsAsRead.fulfilled, (state) => {
+      state.forEach((notification) => {
+        notification.isRead = true;
+      });
+    });
 
     builder.addCase(logoutAPI.fulfilled, () => initialState);
   },

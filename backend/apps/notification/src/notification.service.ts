@@ -7,6 +7,10 @@ import { NotificationType, Status } from '@prisma/client'
 import {
   GetNotificationsRequest,
   GetNotificationsResponse,
+  MarkAllNotificationsAsReadRequest,
+  MarkAllNotificationsAsReadResponse,
+  MarkNotificationAsReadRequest,
+  MarkNotificationAsReadResponse,
 } from 'interfaces/notification.grpc'
 import { Redis as RedisClient } from 'ioredis'
 import { EXCHANGE_RMQ } from 'libs/constant/rmq/exchange'
@@ -27,8 +31,12 @@ export class NotificationService {
   @Inject(PrismaService)
   private readonly prisma: PrismaService
   private readonly redisService: RedisService
-  constructor(private readonly amqpConnection: AmqpConnection) {}
-
+  constructor(
+    private readonly amqpConnection: AmqpConnection,
+    redisService: RedisService,
+  ) {
+    this.redisService = redisService
+  }
 
   @RabbitSubscribe({
     exchange: EXCHANGE_RMQ.USER_EVENTS,
@@ -152,5 +160,44 @@ export class NotificationService {
         createdAt: n.createdAt.toString(),
       })),
     } as GetNotificationsResponse
+  }
+
+  async markNotificationAsRead(
+    data: MarkNotificationAsReadRequest,
+  ): Promise<MarkNotificationAsReadResponse> {
+    const { userId, notificationId } = data
+
+    await this.prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        userId,
+      },
+      data: {
+        isRead: true,
+      },
+    })
+
+    return { success: true }
+  }
+
+  async markAllNotificationsAsRead(
+    data: MarkAllNotificationsAsReadRequest,
+  ): Promise<MarkAllNotificationsAsReadResponse> {
+    const { userId } = data
+
+    const result = await this.prisma.notification.updateMany({
+      where: {
+        userId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    })
+
+    return {
+      success: true,
+      updatedCount: result.count,
+    }
   }
 }
