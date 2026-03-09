@@ -25,6 +25,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { conversationId } = useParams();
 
   const selectedChatIdRef = useRef<string | null>(conversationId);
+  const processedMessageKeysRef = useRef<Map<string, number>>(new Map());
 
   const [play] = useSound(notificationSound, { volume: 0.5 });
 
@@ -36,28 +37,32 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [conversationId]);
 
   useEffect(() => {
-    const handler = (data: Message) => {
-      dispatch(addMessage(data));
-
-      dispatch(
-        updateNewMessage({
-          conversationId: data.conversationId,
-          lastMessage: { ...data },
-        }),
-      );
-
-      if (data.conversationId !== selectedChatIdRef.current) {
-        dispatch(
-          upUnreadCount({
-            conversationId: data.conversationId,
-          }),
-        );
-      }
-      play();
+    const getMessageDedupKey = (message: Message) => {
+      if (message.id) return `id:${message.id}`;
+      if (message.clientMessageId) return `client:${message.clientMessageId}`;
+      return `fallback:${message.conversationId}:${message.senderId}:${message.createdAt ?? ""}:${message.text ?? ""}`;
     };
 
-    const newMessageHandler = (payload: { message: Message }) => {
-      const message = payload.message;
+    const isDuplicateIncomingMessage = (message: Message) => {
+      const key = getMessageDedupKey(message);
+      const now = Date.now();
+      const ttlMs = 5000;
+      const tracked = processedMessageKeysRef.current;
+
+      for (const [trackedKey, timestamp] of tracked.entries()) {
+        if (now - timestamp > ttlMs) {
+          tracked.delete(trackedKey);
+        }
+      }
+
+      if (tracked.has(key)) return true;
+      tracked.set(key, now);
+      return false;
+    };
+
+    const processIncomingMessage = (message: Message) => {
+      const isDuplicate = isDuplicateIncomingMessage(message);
+
       dispatch(addMessage(message));
       dispatch(
         updateNewMessage({
@@ -65,6 +70,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           lastMessage: { ...message },
         }),
       );
+
+      if (isDuplicate) return;
 
       if (message.conversationId !== selectedChatIdRef.current) {
         dispatch(
@@ -74,6 +81,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         );
       }
       play();
+    };
+
+    const handler = (data: Message) => {
+      processIncomingMessage(data);
+    };
+
+    const newMessageHandler = (payload: { message: Message }) => {
+      processIncomingMessage(payload.message);
     };
 
     const ackHandler = (payload: {
